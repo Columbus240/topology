@@ -4,6 +4,8 @@ From Coq Require Import Classical Description
 From ZornsLemma Require Import Classical_Wf EnsemblesSpec
      Relation_Definitions_Implicit ZornsLemma.
 
+Export Set Universe Polymorphism.
+
 Section WellOrder.
 
 (* this definition is for the strict order, e.g. the
