@@ -187,3 +187,50 @@ Proof.
     destruct H0; [left|right]; exists x0; auto.
   - destruct H, H; exists S; auto; [left|right]; auto.
 Qed.
+
+Lemma FamilyIntersection_Add {X : Type} (F : Family X) (S : Ensemble X) :
+  FamilyIntersection (Add F S) = Intersection (FamilyIntersection F) S.
+Proof.
+  apply Extensionality_Ensembles; split; red; intros.
+  - destruct H.
+    constructor.
+    + constructor. intros. apply H.
+      left. assumption.
+    + apply H. right. constructor.
+  - destruct H. destruct H.
+    constructor. intros.
+    destruct H1.
+    + apply H. assumption.
+    + destruct H1. assumption.
+Qed.
+
+Lemma FamilyUnion_Add {X : Type} (F : Family X) (S : Ensemble X) :
+  FamilyUnion (Add F S) = Union (FamilyUnion F) S.
+Proof.
+  apply Extensionality_Ensembles; split; red; intros.
+  - destruct H. destruct H.
+    + left. exists x0; assumption.
+    + destruct H. right. assumption.
+  - destruct H.
+    + destruct H. exists S0; auto with sets.
+    + exists S; auto with sets.
+Qed.
+
+Lemma Intersection_as_FamilyIntersection {X : Type} (U V : Ensemble X) :
+  Intersection U V = FamilyIntersection (Couple U V).
+Proof.
+  apply Extensionality_Ensembles; split; red; intros.
+  - destruct H. constructor; intros.
+    destruct H1; assumption.
+  - destruct H. constructor; apply H; constructor.
+Qed.
+
+Lemma Union_as_FamilyUnion {X : Type} (U V : Ensemble X) :
+  Union U V = FamilyUnion (Couple U V).
+Proof.
+  apply Extensionality_Ensembles; split; red; intros.
+  - destruct H.
+    + exists U; auto; constructor.
+    + exists V; auto; constructor.
+  - destruct H. destruct H; [left|right]; assumption.
+Qed.
