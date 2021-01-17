@@ -1,6 +1,6 @@
 From ZornsLemma Require Import Powerset_facts.
 From Topology Require Export TopologicalSpaces.
-From Topology Require Export Filters.
+From ZornsLemma Require Export Filters.
 From Topology Require Export Neighborhoods.
 From Topology Require Export Continuity.
 
