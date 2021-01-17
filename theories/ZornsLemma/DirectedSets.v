@@ -1,7 +1,6 @@
-Require Export Relation_Definitions.
+From Coq Require Export Relation_Definitions.
 From ZornsLemma Require Import Relation_Definitions_Implicit.
-Require Import Classical.
-Require Import Arith.
+From Coq Require Import Arith Classical.
 
 Record DirectedSet := {
   DS_set : Type;
