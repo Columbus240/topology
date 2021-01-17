@@ -1,8 +1,8 @@
 From ZornsLemma Require Import Powerset_facts.
-Require Export TopologicalSpaces.
-Require Export Filters.
-Require Export Neighborhoods.
-Require Export Continuity.
+From Topology Require Export TopologicalSpaces.
+From Topology Require Export Filters.
+From Topology Require Export Neighborhoods.
+From Topology Require Export Continuity.
 
 Program Definition neighborhood_filter {X:TopologicalSpace} (x0:point_set X) :
   Filter (point_set X) :=
