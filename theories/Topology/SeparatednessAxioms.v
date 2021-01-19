@@ -74,13 +74,16 @@ Proof.
     now f_equal.
 Qed.
 
-Definition T3_sep (X:TopologicalSpace) : Prop :=
-  T1_sep X /\
+Definition regular_sep (X:TopologicalSpace) : Prop :=
   forall (x:point_set X) (F:Ensemble (point_set X)),
-  closed F -> ~ In F x -> exists U:Ensemble (point_set X),
-                          exists V:Ensemble (point_set X),
-        open U /\ open V /\ In U x /\ Included F V /\
-        Intersection U V = Empty_set.
+    closed F -> ~ In F x ->
+    exists U:Ensemble (point_set X),
+    exists V:Ensemble (point_set X),
+      open U /\ open V /\ In U x /\ Included F V /\
+      Intersection U V = Empty_set.
+
+Definition T3_sep (X:TopologicalSpace) : Prop :=
+  T1_sep X /\ regular_sep X.
 
 Lemma topological_property_T3_sep : topological_property T3_sep.
 Proof.
@@ -185,7 +188,7 @@ Proof.
 intros.
 destruct H.
 split; trivial.
-intros.
+red; intros.
 pose proof (H0 (Singleton x) F).
 match type of H3 with | ?A -> ?B -> ?C -> ?D => assert D end.
 - apply H3; trivial.

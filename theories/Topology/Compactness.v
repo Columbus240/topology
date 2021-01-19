@@ -468,7 +468,7 @@ assert (T3_sep X).
   clearbody choice_fun_U choice_fun_V; clear choice_fun H1.
   split.
   + now apply Hausdorff_impl_T1_sep.
-  + intros.
+  + red; intros.
     pose proof (closed_compact _ _ H H1).
     assert (forall y:point_set X, In F y -> x <> y).
   { intros. congruence. }
