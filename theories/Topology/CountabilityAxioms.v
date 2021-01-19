@@ -1,7 +1,8 @@
-Require Export TopologicalSpaces NeighborhoodBases.
+From Topology Require Export TopologicalSpaces NeighborhoodBases.
 From ZornsLemma Require Export CountableTypes.
 From ZornsLemma Require Import EnsemblesSpec EnsemblesTactics InfiniteTypes.
 From Coq Require ProofIrrelevance ClassicalChoice.
+From Topology Require Export Nets.
 
 Global Set Asymmetric Patterns.
 
@@ -34,8 +35,6 @@ split.
          auto with sets.
 - now apply countable_img.
 Qed.
-
-Require Export Nets.
 
 Lemma first_countable_sequence_closure:
   forall (X:TopologicalSpace) (S:Ensemble (point_set X)) (x:point_set X),

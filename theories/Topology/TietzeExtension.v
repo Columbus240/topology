@@ -1,10 +1,14 @@
-Require Export RTopology.
-Require Export SeparatednessAxioms.
-Require Import RFuncContinuity.
-Require Import UniformTopology.
-Require Import Description.
-Require Import Max.
-Require Import Psatz.
+From Topology Require Export RTopology.
+From Topology Require Export SeparatednessAxioms.
+From Topology Require Import RFuncContinuity.
+From Topology Require Import UniformTopology.
+From Coq Require Import Description.
+From Coq Require Import Max.
+From Coq Require Import Psatz.
+From Coq Require Import ClassicalChoice.
+From Topology Require Import UrysohnsLemma.
+From Topology Require Import ContinuousFactorization.
+From ZornsLemma Require Import Proj1SigInjective.
 
 (* This proof of the Tietze extension theorem is heavily based on
    the proof described on planetmath.org. *)
@@ -607,9 +611,6 @@ Qed.
 
 End Tietze_extension_construction.
 
-Require Import ClassicalChoice.
-Require Import UrysohnsLemma.
-
 Lemma bounded_Tietze_extension_theorem: forall (X:TopologicalSpace)
   (F:Ensemble (point_set X)) (f:point_set (SubspaceTopology F) ->
                                 point_set RTop),
@@ -749,9 +750,6 @@ pattern (Rabs (g0 x)) at 2; replace (Rabs (g0 x)) with (1*Rabs (g0 x)) by
 apply Rmult_le_compat_r; trivial.
 apply Rabs_pos.
 Qed.
-
-Require Import ContinuousFactorization.
-From ZornsLemma Require Import Proj1SigInjective.
 
 Theorem Tietze_extension_theorem: forall (X:TopologicalSpace)
   (F:Ensemble (point_set X)) (f:point_set (SubspaceTopology F) ->

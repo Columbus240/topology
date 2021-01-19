@@ -1,9 +1,9 @@
-Require Export TopologicalSpaces.
-Require Export Neighborhoods.
+From Topology Require Export TopologicalSpaces.
+From Topology Require Export Neighborhoods.
 From ZornsLemma Require Export InverseImage.
-Require Export OpenBases.
-Require Export NeighborhoodBases.
-Require Export Subbases.
+From Topology Require Export OpenBases.
+From Topology Require Export NeighborhoodBases.
+From Topology Require Export Subbases.
 
 Section continuity.
 

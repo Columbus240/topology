@@ -1,7 +1,7 @@
-Require Export TopologicalSpaces.
-Require Export Subbases.
-Require Export Continuity.
-Require Export Nets.
+From Topology Require Export TopologicalSpaces.
+From Topology Require Export Subbases.
+From Topology Require Export Continuity.
+From Topology Require Export Nets.
 From ZornsLemma Require Export InverseImage.
 From ZornsLemma Require Import FiniteIntersections.
 
@@ -128,7 +128,7 @@ End WeakTopology.
 Arguments WeakTopology {X} {A} {Y}.
 Arguments weak_topology_subbasis {X} {A} {Y}.
 
-Require Import ClassicalChoice.
+From Coq Require Import ClassicalChoice.
 
 Section WeakTopology1.
 

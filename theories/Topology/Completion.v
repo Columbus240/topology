@@ -1,6 +1,7 @@
-Require Export Completeness.
+From Topology Require Export Completeness.
 Require Import UniformTopology RTopology Psatz.
 From Coq Require Import ProofIrrelevance.
+From Coq Require Import Description.
 
 Lemma completion_exists: forall (X:Type) (d:X->X->R) (d_metric:metric d),
   exists Y:Type, exists i:X->Y, exists d':Y->Y->R,
@@ -51,7 +52,6 @@ cut (exists Y:Type, exists i:X->Y, exists d':Y->Y->R,
     * destruct i0, H3.
       assert (forall n:nat, { x:X | x0 n = i x }).
     { intros.
-      Require Import Description.
       apply constructive_definite_description.
       apply -> unique_existence.
       split.

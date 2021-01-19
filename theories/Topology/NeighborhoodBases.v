@@ -1,4 +1,4 @@
-Require Export TopologicalSpaces Neighborhoods OpenBases.
+From Topology Require Export TopologicalSpaces Neighborhoods OpenBases.
 From ZornsLemma Require Export IndexedFamilies EnsemblesSpec.
 
 Record neighborhood_basis {X:TopologicalSpace}

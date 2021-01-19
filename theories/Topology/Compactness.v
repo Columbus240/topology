@@ -1,5 +1,5 @@
 From ZornsLemma Require Import EnsemblesTactics Powerset_facts.
-Require Export TopologicalSpaces Nets FilterLimits Homeomorphisms SeparatednessAxioms SubspaceTopology.
+From Topology Require Export TopologicalSpaces Nets FilterLimits Homeomorphisms SeparatednessAxioms SubspaceTopology.
 Require Import FiltersAndNets ClassicalChoice.
 Set Asymmetric Patterns.
 

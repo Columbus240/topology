@@ -99,7 +99,7 @@ intros.
 apply Build_TopologicalSpace_from_open_neighborhood_bases_basis.
 Qed.
 
-Require Export Nets.
+From Topology Require Export Nets.
 
 Lemma metric_space_net_limit: forall (X:TopologicalSpace)
   (d:point_set X -> point_set X -> R), metrizes X d ->

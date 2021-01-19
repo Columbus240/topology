@@ -1,5 +1,5 @@
-Require Export TopologicalSpaces.
-Require Import StrongTopology Compactness.
+From Topology Require Export TopologicalSpaces.
+From Topology Require Import StrongTopology Compactness.
 From ZornsLemma Require Import DependentTypeChoice EnsemblesTactics.
 
 Section SumTopology.

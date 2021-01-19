@@ -1,9 +1,9 @@
-Require Export MetricSpaces.
-Require Import FunctionalExtensionality.
-Require Export Completeness.
-Require Import Description.
-Require Import Max.
-Require Import Psatz.
+From Topology Require Export MetricSpaces.
+From Coq Require Import FunctionalExtensionality.
+From Topology Require Export Completeness.
+From Coq Require Import Description.
+From Coq Require Import Max.
+From Coq Require Import Psatz.
 From Coq Require ProofIrrelevance.
 
 Section UniformTopology.

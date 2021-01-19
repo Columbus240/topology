@@ -1,5 +1,5 @@
-Require Export MetricSpaces.
-Require Import Psatz.
+From Topology Require Export MetricSpaces.
+From Coq Require Import Psatz.
 From Coq Require Import ProofIrrelevance.
 
 Section Completeness.

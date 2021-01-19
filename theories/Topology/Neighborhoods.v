@@ -1,4 +1,5 @@
-Require Export TopologicalSpaces Ensembles InteriorsClosures.
+From Coq Require Export Ensembles.
+From Topology Require Export TopologicalSpaces InteriorsClosures.
 From ZornsLemma Require Import EnsemblesImplicit.
 
 Definition open_neighborhood {X:TopologicalSpace}

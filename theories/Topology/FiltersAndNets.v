@@ -1,6 +1,6 @@
 From ZornsLemma Require Import Powerset_facts.
-Require Export FilterLimits.
-Require Export Nets.
+From Topology Require Export FilterLimits.
+From Topology Require Export Nets.
 
 Section net_tail_filter.
 

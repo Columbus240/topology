@@ -1,4 +1,5 @@
-Require Export TopologicalSpaces DirectedSets InteriorsClosures Continuity.
+From Topology Require Export TopologicalSpaces InteriorsClosures Continuity.
+From ZornsLemma Require Export DirectedSets.
 
 Set Asymmetric Patterns.
 

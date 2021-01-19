@@ -1,6 +1,5 @@
-Require Export TopologicalSpaces.
+From Topology Require Export TopologicalSpaces Continuity.
 From ZornsLemma Require Export InverseImage.
-Require Export Continuity.
 
 (* Also called "final topology". Its construction is dual
    (in the categorical sense) to the construction of the weak topology. *)

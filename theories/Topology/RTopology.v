@@ -1,8 +1,8 @@
-Require Export TopologicalSpaces OrderTopology Completeness MetricSpaces.
+From Topology Require Export TopologicalSpaces OrderTopology Completeness MetricSpaces.
 From Coq Require Import Lra.
 From ZornsLemma Require Import EnsemblesTactics FiniteIntersections.
-Require Import RationalsInReals.
-Require Export Compactness Connectedness.
+From Topology Require Import RationalsInReals.
+From Topology Require Export Compactness Connectedness.
 
 Definition RTop := OrderTopology Rle.
 Definition R_metric (x y:R) : R := Rabs (y-x).

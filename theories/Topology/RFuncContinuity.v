@@ -1,5 +1,5 @@
-Require Export RTopology ProductTopology Homeomorphisms.
-Require Import ContinuousFactorization.
+From Topology Require Export RTopology ProductTopology Homeomorphisms.
+From Topology Require Import ContinuousFactorization.
 From Coq Require Import FunctionalExtensionality Lra ProofIrrelevance.
 From ZornsLemma Require Import EnsemblesTactics.
 

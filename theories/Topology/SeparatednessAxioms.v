@@ -1,6 +1,7 @@
-Require Export TopologicalSpaces.
-Require Import InteriorsClosures.
-Require Import Homeomorphisms.
+From Topology Require Export TopologicalSpaces.
+From Topology Require Import InteriorsClosures.
+From Topology Require Import Homeomorphisms.
+From Topology Require Export Nets.
 
 Definition T0_sep (X:TopologicalSpace) : Prop :=
   forall x y:point_set X, x <> y ->
@@ -210,8 +211,6 @@ match type of H3 with | ?A -> ?B -> ?C -> ?D => assert D end.
 destruct H4 as [U [V [? [? [? [? ?]]]]]].
 exists U; exists V; repeat split; auto with sets.
 Qed.
-
-Require Export Nets.
 
 Section Hausdorff_and_nets.
 

@@ -1,5 +1,5 @@
-Require Export TopologicalSpaces.
-Require Import WeakTopology.
+From Topology Require Export TopologicalSpaces.
+From Topology Require Import WeakTopology.
 
 Section Subspace.
 

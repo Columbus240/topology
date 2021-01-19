@@ -1,5 +1,5 @@
-Require Export TopologicalSpaces WeakTopology FilterLimits Compactness.
-Require Import FunctionalExtensionality.
+From Topology Require Export TopologicalSpaces WeakTopology FilterLimits Compactness.
+From Coq Require Import FunctionalExtensionality.
 From ZornsLemma Require Import DependentTypeChoice FiniteIntersections.
 
 Section product_topology.

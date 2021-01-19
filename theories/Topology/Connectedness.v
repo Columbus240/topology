@@ -1,4 +1,4 @@
-Require Export TopologicalSpaces Homeomorphisms SubspaceTopology.
+From Topology Require Export TopologicalSpaces Homeomorphisms SubspaceTopology.
 From ZornsLemma Require Import EnsemblesTactics.
 
 Definition clopen {X:TopologicalSpace} (S:Ensemble (point_set X))

@@ -1,7 +1,7 @@
 From Coq Require Import ProofIrrelevance.
 From ZornsLemma Require Import Families Quotients EnsemblesTactics.
-Require Export TopologicalSpaces.
-Require Import Connectedness Compactness CountabilityAxioms StrongTopology.
+From Topology Require Export TopologicalSpaces.
+From Topology Require Import Connectedness Compactness CountabilityAxioms StrongTopology.
 
 Definition QuotientTopology {X : TopologicalSpace} (R : Relation (point_set X)) :
   TopologicalSpace := StrongTopology (True_rect (quotient_projection R)).

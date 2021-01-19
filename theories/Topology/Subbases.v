@@ -1,7 +1,5 @@
-Require Export TopologicalSpaces.
-Require Export OpenBases.
-From ZornsLemma Require Export FiniteTypes.
-From ZornsLemma Require Export EnsemblesSpec.
+From Topology Require Export TopologicalSpaces OpenBases.
+From ZornsLemma Require Export FiniteTypes EnsemblesSpec.
 
 Section Subbasis.
 

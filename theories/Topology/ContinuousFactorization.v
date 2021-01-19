@@ -1,5 +1,5 @@
 From ZornsLemma Require Import EnsemblesTactics.
-Require Export TopologicalSpaces Continuity SubspaceTopology.
+From Topology Require Export TopologicalSpaces Continuity SubspaceTopology.
 
 Section continuous_factorization.
 

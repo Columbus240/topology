@@ -1,6 +1,4 @@
-Require Export Reals.
-Require Export QArith.
-Require Export Qreals.
+From Coq Require Export Reals QArith Qreals.
 
 Open Scope R_scope.
 Lemma inverses_of_nats_approach_0:
