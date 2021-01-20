@@ -2,6 +2,89 @@ Require Export Nets.
 Require Import Homeomorphisms.
 From ZornsLemma Require Import EnsemblesTactics.
 
+Definition separated_sets {X : TopologicalSpace} (A B : Ensemble (point_set X)) :=
+  Disjoint A (closure B) /\ Disjoint (closure A) B.
+
+Lemma sep_sets_disjoint {X : TopologicalSpace} (A B : Ensemble (point_set X)) :
+  separated_sets A B -> Disjoint A B.
+Proof.
+  intros.
+  constructor.
+  intros. intro.
+  destruct H0.
+  destruct H as [[] []].
+  specialize (H x). specialize (H2 x).
+  pose proof (closure_inflationary _ _ H0).
+  pose proof (closure_inflationary _ _ H1).
+  auto with sets.
+Qed.
+
+Definition sep_by_nbhd {X : TopologicalSpace} (A B : Ensemble (point_set X)) :=
+  exists U V, open U /\ open V /\ Included A U /\ Included B V /\ Disjoint U V.
+
+(* TODO: Replace the "branching" of the proof with "withouth loss of
+   generality", if possible. *)
+Lemma sep_by_nbhd_sep_sets {X : TopologicalSpace} (A B : Ensemble (point_set X)) :
+  sep_by_nbhd A B -> separated_sets A B.
+Proof.
+  intros. red.
+  destruct H as [U [V [? [? [? [? ?]]]]]].
+  split; constructor.
+  - intros. intro. destruct H4.
+    (* X\U is a closed set that includes B, so X\U is a superset of (closure B). *)
+    (* So x is in X\U. But x is also in A, so also in U. Contradiction. *)
+    assert (In (Complement U) x).
+    { apply closure_minimal with B; try assumption.
+      - red. rewrite Complement_Complement. apply H.
+      - red; intros. intro.
+        destruct H3; specialize (H3 x0).
+        apply H3. auto with sets.
+    }
+    auto with sets.
+  - intros. intro. destruct H4.
+    assert (In (Complement V) x).
+    { apply closure_minimal with A.
+      - red. rewrite Complement_Complement. assumption.
+      - red; intros. intro.
+        destruct H3; specialize (H3 x0). apply H3; auto with sets.
+      - assumption.
+    }
+    auto with sets.
+Qed.
+
+Definition sep_by_closed_nbhd {X : TopologicalSpace} (A B : Ensemble (point_set X)) :=
+  exists U V, closed U /\ closed V /\ Included A U /\ Included B V /\ Disjoint U V.
+
+Lemma Disjoint_Included_Complement {X : Type} (A B : Ensemble X) :
+  Disjoint A B <->
+  Included A (Complement B).
+Proof.
+  split.
+  - intros. destruct H.
+    red; intros.
+    intro.
+    specialize (H x). contradict H; constructor; assumption.
+  - intros. constructor; intros.
+    intro. destruct H0.
+    apply H in H0. contradiction.
+Qed.
+
+Lemma Disjoint_sym {X : Type} (A B : Ensemble X) :
+  Disjoint A B -> Disjoint B A.
+Proof.
+  intros.
+  destruct H; constructor.
+  intros. intro. destruct H0.
+  apply (H x). constructor; assumption.
+Qed.
+
+Lemma seperated_by_closed_nbhd_impl_sep_by_nbhd {X : TopologicalSpace} (A B : Ensemble (point_set X)) :
+  sep_by_closed_nbhd A B -> sep_by_nbhd A B.
+Proof.
+  intros. red.
+  destruct H as [U [V [? [? [? [? ?]]]]]].
+Admitted.
+
 Definition T0_sep (X:TopologicalSpace) : Prop :=
   forall x y:point_set X, x <> y ->
   (exists U:Ensemble (point_set X), open U /\ In U x /\ ~ In U y) \/
