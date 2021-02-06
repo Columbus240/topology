@@ -1,5 +1,6 @@
 -R theories/Topology Topology
 -R theories/ZornsLemma ZornsLemma
+-R ../category-theory Category
 -arg -set -arg "'Default Goal Selector=!'"
 
 theories/Topology/AdjunctionSpace.v
@@ -14,6 +15,7 @@ theories/Topology/CountabilityAxioms.v
 theories/Topology/FilterLimits.v
 theories/Topology/FiltersAndNets.v
 theories/Topology/Homeomorphisms.v
+theories/Topology/Homotopy.v
 theories/Topology/InteriorsClosures.v
 theories/Topology/LipschitzMaps.v
 theories/Topology/MetricSpaces.v
