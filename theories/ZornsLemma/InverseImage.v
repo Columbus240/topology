@@ -3,6 +3,7 @@ From Coq Require Export Ensembles.
 From ZornsLemma Require Import EnsemblesImplicit.
 From ZornsLemma Require Export EnsemblesSpec.
 From ZornsLemma Require Import IndexedFamilies.
+From ZornsLemma Require Import FiniteImplicit.
 
 Definition inverse_image {X Y:Type} (f:X->Y) (T:Ensemble Y) : Ensemble X :=
   [ x:X | In T (f x) ].

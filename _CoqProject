@@ -31,6 +31,7 @@ theories/Topology/SeparatednessAxioms.v
 theories/Topology/StrongTopology.v
 theories/Topology/Subbases.v
 theories/Topology/SubspaceTopology.v
+theories/Topology/SubsetPoints.v
 theories/Topology/SumTopology.v
 theories/Topology/SupInf.v
 theories/Topology/TietzeExtension.v
@@ -38,6 +39,9 @@ theories/Topology/TopologicalSpaces.v
 theories/Topology/UniformTopology.v
 theories/Topology/UrysohnsLemma.v
 theories/Topology/WeakTopology.v
+theories/Topology/Examples/Discrete.v
+theories/Topology/Examples/Indiscrete.v
+theories/Topology/Examples/PartitionTopology.v
 theories/Topology/Examples/S1.v
 theories/ZornsLemma/Cardinals.v
 theories/ZornsLemma/Classical_Wf.v
@@ -54,6 +58,8 @@ theories/ZornsLemma/EnsemblesTactics.v
 theories/ZornsLemma/EnsemblesUtf8.v
 theories/ZornsLemma/Families.v
 theories/ZornsLemma/Filters.v
+theories/ZornsLemma/FiniteCardinals.v
+theories/ZornsLemma/FiniteTypeCardinals.v
 theories/ZornsLemma/FiniteImplicit.v
 theories/ZornsLemma/FiniteIntersections.v
 theories/ZornsLemma/Finite_sets.v

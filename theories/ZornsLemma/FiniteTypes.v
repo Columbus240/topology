@@ -11,10 +11,15 @@ From ZornsLemma Require Import Powerset_facts.
 From Coq Require Import FunctionalExtensionality.
 From ZornsLemma Require Import FiniteImplicit.
 From Coq Require Import PeanoNat.
+From ZornsLemma Require Import InverseImage.
+From Coq Require Import ClassicalDescription.
+From ZornsLemma Require Import IndexedFamilies.
+From ZornsLemma Require Import FiniteCardinals.
+From ZornsLemma Require Import FiniteTypeCardinals.
 
 Set Asymmetric Patterns.
 
-Inductive FiniteT : Type -> Prop :=
+Inductive FiniteT : Type -> Type :=
   | empty_finite: FiniteT False
   | add_finite: forall T:Type, FiniteT T -> FiniteT (option T)
   | bij_finite: forall (X Y:Type) (f:X->Y), FiniteT X ->
@@ -35,105 +40,133 @@ exists (True_rect None).
                        end).
 Qed.
 
+Lemma finite_dec_sig: forall (X:Type) (P:X->Type),
+  FiniteT X -> (forall x:X, P x + ~ (P x)) ->
+  { x:X & P x } + ( forall x:X, ~ (P x) ).
+Proof.
+  intros.
+  induction X0.
+  - right. intros. destruct x.
+  - destruct (X1 None).
+    { left. exists None. assumption. }
+    specialize (IHX0 (fun t => P (Some t))).
+    simpl in *. destruct IHX0.
+    + intros. apply X1.
+    + left. destruct s. exists (Some x). assumption.
+    + right. intros. destruct x; auto.
+      apply (e0 t). assumption.
+  - specialize (IHX0 (fun x : X => P (f x))).
+    simpl in *. destruct IHX0.
+    + intros. apply X1.
+    + left. destruct s. exists (f x). assumption.
+    + right. intros.
+      destruct i. apply (e (g x)).
+      rewrite e1. assumption.
+Defined.
+
+Lemma finite_dec_sig_not: forall (X:Type) (P:X->Type),
+  FiniteT X -> (forall x:X, P x + ~ inhabited (P x)) ->
+  { x:X & ~ inhabited (P x) } + (forall x:X, P x).
+Proof.
+  intros.
+  induction X0.
+  - right. intros. destruct x.
+  - destruct (X1 None).
+    2: { left. exists None. assumption. }
+    specialize (IHX0 (fun t => P (Some t))).
+    simpl in *. destruct IHX0.
+    + intros. apply X1.
+    + left. destruct s. exists (Some x). assumption.
+    + right. intros. destruct x; auto.
+  - specialize (IHX0 (fun x : X => P (f x))).
+    simpl in *. destruct IHX0.
+    + intros. apply X1.
+    + left. destruct s. exists (f x). assumption.
+    + right. intros.
+      destruct i. specialize (p (g x)).
+      rewrite e0 in p. assumption.
+Defined.
+
+Lemma sumbool_to_sum (P : Prop) :
+  {P}+{~P} ->
+  P + ( ~ inhabited P ).
+Proof.
+  intros.
+  destruct H; [left; assumption|right].
+  intros ?. apply n. destruct H. assumption.
+Defined.
+
 Lemma finite_dec_exists: forall (X:Type) (P:X->Prop),
   FiniteT X -> (forall x:X, P x \/ ~ P x) ->
   (exists x:X, P x) \/ (forall x:X, ~ P x).
 Proof.
-intros.
-revert P H0.
-induction H.
-- right.
-  destruct x.
-- intros.
-  case (IHFiniteT (fun x:T => P (Some x))
-                  (fun x:T => H0 (Some x))).
-  + left.
-    destruct H1 as [x].
-    exists (Some x).
-    assumption.
-  + intro.
-    specialize (H0 None) as [|].
-    * left.
-      exists None.
-      assumption.
-    * right.
-      destruct x.
-      -- apply H1.
-      -- assumption.
-- destruct H0.
   intros.
-  specialize  (IHFiniteT (fun x:X => P (f x))
-                         (fun x:X => H2 (f x))) as [|].
-  * left.
-    destruct H3 as [x].
-    exists (f x).
-    assumption.
-  * right.
-    intro.
-    rewrite <- H1 with x.
-    apply H3.
-Qed.
+  pose proof (finite_dec_sig X P X0).
+  destruct X2.
+  - intros. apply sumbool_to_sum.
+    apply X1.
+  - destruct s. left. exists x. assumption.
+  - right. intros ? ?. specialize (n x).
+    apply n. constructor. assumption.
+Defined.
 
 Lemma finite_dec_forall: forall (X:Type) (P:X->Prop),
   FiniteT X -> (forall x:X, P x \/ ~ P x) ->
   (forall x:X, P x) \/ (exists x:X, ~ P x).
 Proof.
-intros.
-revert P H0.
-induction H.
-- left.
-  destruct x.
-- intros.
-  case (IHFiniteT (fun x:T => P (Some x))
-                  (fun x:T => H0 (Some x))).
-  + intro.
-    case (H0 None).
-    * left. destruct x; auto.
-    * right.
-      exists None.
-      assumption.
-  + right.
-    destruct H1 as [x].
-    exists (Some x).
-    assumption.
-- intros.
-  destruct H0.
-  case (IHFiniteT (fun x:X => P (f x))
-                  (fun x:X => H1 (f x))).
-  + left.
-    intro y.
-    rewrite <- H2.
-    apply H3.
-  + right.
-    destruct H3 as [x].
-    exists (f x).
-    assumption.
-Qed.
+  intros.
+  pose proof (finite_dec_sig_not X P X0).
+  destruct X2.
+  - intros. apply sumbool_to_sum.
+    apply X1.
+  - right. destruct s. exists x. intros ?.
+    apply n. constructor. assumption.
+  - left. assumption.
+Defined.
 
 Lemma finite_eq_dec: forall X:Type, FiniteT X ->
   forall x y:X, x = y \/ x <> y.
 Proof.
 intros.
-induction H.
-{ destruct x. }
-{ destruct x, y.
-  4: left; reflexivity.
-  2, 3: right; congruence.
-  specialize (IHFiniteT t t0) as [|];
-    [left|right]; congruence.
-}
-destruct H0.
-specialize (IHFiniteT (g x) (g y)) as [|].
-- left.
-  rewrite <- H1.
-  rewrite <- H1 with x.
-  rewrite H2.
-  reflexivity.
-- right.
-  contradict H2.
-  rewrite H2.
-  reflexivity.
-Qed.
+induction X0.
+- left. destruct x.
+- decide equality.
+- destruct i.
+  specialize (IHX0 (g x) (g y)).
+  destruct IHX0; [left|right]; congruence.
+Defined.
+
+Lemma finite_dep_choice_sig : forall (A:Type) (B:forall x:A, Type)
+  (R:forall x:A, B x->Type),
+  FiniteT A -> (forall x:A, { y:B x & R x y }) ->
+  { f : (forall x:A, B x) & forall x:A, R x (f x) }.
+Proof.
+  intros.
+  revert B R X0.
+  induction X; intros.
+  - exists (fun x : False => False_rect (B x) x).
+    destruct x.
+  - specialize (IHX (fun x:T => B  (Some x))
+                    (fun x:T => R  (Some x))
+                    (fun x:T => X0 (Some x))).
+    destruct IHX as [f].
+    pose proof (X0 None) as [x0].
+    exists (fun y:option T =>
+              match y return (B y) with
+              | Some y0 => f y0
+              | None => x0
+              end).
+    destruct x; auto.
+  - specialize (IHX (fun x:X => B (f x))
+                    (fun x:X => R (f x))
+                    (fun x:X => X1 (f x))).
+    destruct IHX. destruct i as [g Hgf Hfg].
+    unshelve eexists.
+    + intros. rewrite <- Hfg. apply x.
+    + intros. simpl.
+      rewrite <- (Hfg x0).
+      simpl. apply r.
+Defined.
 
 Lemma finite_dep_choice: forall (A:Type) (B:forall x:A, Type)
   (R:forall x:A, B x->Prop),
@@ -141,35 +174,39 @@ Lemma finite_dep_choice: forall (A:Type) (B:forall x:A, Type)
   exists f:(forall x:A, B x), forall x:A, R x (f x).
 Proof.
 intros.
-revert B R H0.
-induction H.
-- intros.
-  exists (fun x:False => False_rect (B x) x).
+revert B R H.
+induction X; intros.
+- exists (fun x:False => False_rect (B x) x).
   destruct x.
-- intros.
-  pose proof (IHFiniteT (fun x:T => B (Some x))
-                        (fun x:T => R (Some x))
-                        (fun x:T => H0 (Some x))).
-  destruct H1.
-  pose proof (H0 None).
-  destruct H2.
+- specialize (IHX (fun x:T => B (Some x))
+                  (fun x:T => R (Some x))
+                  (fun x:T => H (Some x))).
+  destruct IHX as [f].
+  pose proof (H None) as [x0].
   exists (fun y:option T =>
             match y return (B y) with
-            | Some y0 => x y0
+            | Some y0 => f y0
             | None => x0
             end).
-  destruct x1; auto.
-- intros.
-  destruct H0.
-  pose proof (IHFiniteT (fun x:X => B (f x))
-                        (fun x:X => R (f x))
-                        (fun x:X => H1 (f x))).
-  destruct H3.
+  destruct x; auto.
+- destruct i.
+  specialize (IHX (fun x:X => B (f x))
+                  (fun x:X => R (f x))
+                  (fun x:X => H (f x))).
+  destruct IHX.
   unshelve eexists.
-  + intros. rewrite <- H2. apply x.
-  + intros. simpl. rewrite <- (H2 x0). simpl.
-    apply H3.
-Qed.
+  + intros. rewrite <- e0. auto.
+  + intros. simpl.
+    rewrite <- (e0 x0). simpl.
+    auto.
+Defined.
+
+Lemma finite_choice_sig : forall (A B:Type) (R:A->B->Type),
+  FiniteT A -> (forall x:A, { y:B & R x y}) ->
+  { f:A->B & forall x:A, R x (f x) }.
+Proof.
+intros. apply finite_dep_choice_sig; assumption.
+Defined.
 
 Lemma finite_choice : forall (A B:Type) (R:A->B->Prop),
   FiniteT A -> (forall x:A, exists y:B, R x y) ->
@@ -179,21 +216,22 @@ intros. apply finite_dep_choice; assumption.
 Qed.
 
 Lemma Finite_ens_type: forall {X:Type} (S:Ensemble X),
-  Finite S -> FiniteT { x:X | In S x }.
+  Finite S -> inhabited (FiniteT { x:X | In S x }).
 Proof.
 intros.
 induction H.
-- apply bij_finite with False (False_rect _).
-  + constructor.
-  + assert (g:{x:X | In Empty_set x}->False).
-    { intro.
-      destruct X0.
-      destruct i.
-    }
-    exists g.
-    * destruct x.
-    * destruct y.
-      destruct g.
+- constructor.
+  apply bij_finite with False (False_rect _).
+  { constructor. }
+  assert (g:{x:X | In Empty_set x}->False).
+  { intro.
+    destruct X0.
+    destruct i.
+  }
+  exists g.
+  + destruct x.
+  + destruct y.
+    destruct g.
 - assert (Included A (Add A x)).
   { auto with sets. }
   assert (In (Add A x) x).
@@ -203,6 +241,7 @@ induction H.
     | Some (exist y0 i) => exist (fun x2:X => In (Add A x) x2) y0 (H1 y0 i)
     | None => exist (fun x2:X => In (Add A x) x2) x H2
     end).
+  destruct IHFinite. constructor.
   apply bij_finite with _ g.
   + apply add_finite.
     assumption.
@@ -249,52 +288,116 @@ induction H.
          reflexivity.
 Qed.
 
-Lemma FiniteT_img: forall (X Y:Type) (f:X->Y),
-  FiniteT X -> (forall y1 y2:Y, y1=y2 \/ y1<>y2) ->
+Corollary Finite_Full_set_impl_FiniteT (X : Type) :
+  Finite (@Full_set X) -> inhabited (FiniteT X).
+Proof.
+  intros.
+  apply finite_cardinal in H.
+  destruct H as [n].
+  generalize dependent X.
+  induction n.
+  - intros.
+    apply cardinalT_non_inhabited in H.
+    constructor.
+    unshelve eapply (bij_finite False).
+    3: unshelve eexists.
+    + tauto.
+    + constructor.
+    + intros x. apply H. constructor. assumption.
+    + intros. destruct x.
+    + intros. contradict H. constructor. assumption.
+  - intros.
+    inversion H; subst; clear H.
+    specialize (IHn {y : X | In A y}).
+    destruct IHn.
+    { apply cardinalT_subtype. assumption. }
+    constructor.
+    unshelve eapply (bij_finite (option {y : X | In A y})).
+    { intros. destruct X1 eqn:E.
+      - apply (proj1_sig s).
+      - apply x.
+    }
+    { constructor. assumption. }
+    unshelve eexists.
+    + intros y.
+      destruct (excluded_middle_informative (x = y)).
+      * apply None.
+      * refine (Some (exist _ y _)).
+        pose proof (Full_intro _ y).
+        rewrite <- H0 in H.
+        destruct H; try assumption.
+        destruct H; contradiction.
+    + intros p. simpl. destruct p.
+      * destruct s. simpl.
+        destruct (excluded_middle_informative _).
+        -- subst. contradiction.
+        -- match goal with
+           | |- Some (exist _ _ ?a) = Some (exist _ _ ?b) =>
+             replace a with b; [reflexivity|apply proof_irrelevance]
+           end.
+      * destruct (excluded_middle_informative _); [reflexivity|contradiction].
+    + intros. simpl.
+      destruct (excluded_middle_informative _).
+      { assumption. }
+      simpl. reflexivity.
+Qed.
+
+Corollary has_cardinalT_impl_FiniteT X n :
+  cardinalT X n ->
+  FiniteT X.
+Proof.
+  intros.
+  apply Finite_Full_set_impl_FiniteT.
+  apply cardinal_finite in H.
+  assumption.
+Qed.
+
+Lemma FiniteT_img': forall (X Y:Type) (f:X->Y),
+  FiniteT X -> (forall y1 y2:Y, {y1=y2} + {y1<>y2}) ->
   Finite (Im Full_set f).
 Proof.
-intros.
+intros ? ? ? ? HYdec.
 induction H.
 - replace (Im Full_set f) with (@Empty_set Y).
   { constructor. }
   apply Extensionality_Ensembles; split; red; intros.
   + destruct H.
   + destruct H. destruct x.
-- assert ((exists x:T, f (Some x) = f None) \/
-           (forall x:T, f (Some x) <> f None)).
+- assert ({exists x:T, f (Some x) = f None} +
+           {forall x:T, f (Some x) <> f None}).
   { apply finite_dec_exists.
     { assumption. }
     intro.
-    apply H0.
+    apply HYdec.
   }
-  case H1.
+  case H0.
   + intro.
     pose (g := fun (x:T) => f (Some x)).
     replace (Im Full_set f) with (Im Full_set g).
     { apply IHFiniteT. }
     apply Extensionality_Ensembles; split; red; intros.
-    * destruct H3. subst. exists (Some x).
+    * destruct H1. subst. exists (Some x).
       -- constructor.
       -- reflexivity.
-    * destruct H3. subst. destruct x.
+    * destruct H1. subst. destruct x.
       -- exists t.
          ++ constructor.
          ++ reflexivity.
-      -- destruct H2. exists x.
+      -- destruct e. exists x.
          ++ constructor.
-         ++ destruct H3. subst. symmetry. assumption.
+         ++ destruct H1. subst. symmetry. assumption.
   + intros.
     pose (g := fun x:T => f (Some x)).
     replace (Im Full_set f) with (Add (Im Full_set g) (f None)).
     { constructor.
       - apply IHFiniteT.
-      - red; intro. destruct H3.
-        contradiction (H2 x).
+      - red; intro. destruct H1.
+        contradiction (n x).
         symmetry; assumption.
     }
     apply Extensionality_Ensembles; split; red; intros.
     * red; intros.
-      destruct H3, H3.
+      destruct H1, H1.
       -- exists (Some x).
          ++ constructor.
          ++ assumption.
@@ -302,7 +405,7 @@ induction H.
          ++ constructor.
          ++ reflexivity.
     * red; intros.
-      destruct H3.
+      destruct H1.
       destruct x.
       -- left. exists t.
          ++ constructor.
@@ -312,11 +415,96 @@ induction H.
   replace (Im Full_set f) with (Im Full_set g).
   { apply IHFiniteT. }
   apply Extensionality_Ensembles; split; red; intros.
-  + destruct H2. exists (f0 x).
+  + destruct H1. exists (f0 x).
     * constructor.
     * assumption.
-  + destruct H2, H1. subst.
-    rewrite <- H4 with x.
+  + destruct H0, H1. subst.
+    rewrite <- H2 with x.
+    exists (g0 x).
+    * constructor.
+    * reflexivity.
+Qed.
+
+Lemma FiniteT_img'': forall (X Y:Type) (f:X->Y),
+  FiniteT X -> (forall y1 y2:Y, y1=y2 \/ y1<>y2) ->
+  Finite (Im Full_set f).
+Proof.
+  intros.
+  apply FiniteT_img'; try assumption.
+  intros.
+  apply decidable_dec.
+  apply H0.
+Qed.
+
+Lemma FiniteT_img: forall (X Y:Type) (f:X->Y),
+  FiniteT X -> (forall y1 y2:Y, y1=y2 \/ y1<>y2) ->
+  Finite (Im Full_set f).
+Proof.
+intros ? ? ? ? HYdec.
+induction H.
+- replace (Im Full_set f) with (@Empty_set Y).
+  { constructor. }
+  apply Extensionality_Ensembles; split; red; intros.
+  + destruct H.
+  + destruct H. destruct x.
+- assert ({exists x:T, f (Some x) = f None} +
+           {forall x:T, f (Some x) <> f None}).
+  { apply finite_dec_exists.
+    { assumption. }
+    intro.
+    apply decidable_dec.
+    apply HYdec.
+  }
+  case H0.
+  + intro.
+    pose (g := fun (x:T) => f (Some x)).
+    replace (Im Full_set f) with (Im Full_set g).
+    { apply IHFiniteT. }
+    apply Extensionality_Ensembles; split; red; intros.
+    * destruct H1. subst. exists (Some x).
+      -- constructor.
+      -- reflexivity.
+    * destruct H1. subst. destruct x.
+      -- exists t.
+         ++ constructor.
+         ++ reflexivity.
+      -- destruct e. exists x.
+         ++ constructor.
+         ++ destruct H1. subst. symmetry. assumption.
+  + intros.
+    pose (g := fun x:T => f (Some x)).
+    replace (Im Full_set f) with (Add (Im Full_set g) (f None)).
+    { constructor.
+      - apply IHFiniteT.
+      - red; intro. destruct H1.
+        contradiction (n x).
+        symmetry; assumption.
+    }
+    apply Extensionality_Ensembles; split; red; intros.
+    * red; intros.
+      destruct H1, H1.
+      -- exists (Some x).
+         ++ constructor.
+         ++ assumption.
+      -- exists None.
+         ++ constructor.
+         ++ reflexivity.
+    * red; intros.
+      destruct H1.
+      destruct x.
+      -- left. exists t.
+         ++ constructor.
+         ++ assumption.
+      -- right. auto with sets.
+- pose (g := fun (x:X) => f (f0 x)).
+  replace (Im Full_set f) with (Im Full_set g).
+  { apply IHFiniteT. }
+  apply Extensionality_Ensembles; split; red; intros.
+  + destruct H1. exists (f0 x).
+    * constructor.
+    * assumption.
+  + destruct H0, H1. subst.
+    rewrite <- H2 with x.
     exists (g0 x).
     * constructor.
     * reflexivity.
@@ -606,7 +794,76 @@ subst.
 reflexivity.
 Qed.
 
+Lemma FiniteT_has_finite_ens (X : Type) (A : Ensemble X) :
+  FiniteT X -> Finite A.
+Proof.
+  intros.
+  induction H.
+  - rewrite (False_Ensembles_eq _ Empty_set).
+    apply Empty_is_finite.
+  - assert (forall A : Ensemble (option T), ~ In A None -> Finite A).
+    { clear A.
+      intros.
+      specialize (IHFiniteT (inverse_image Some A)).
+      apply finite_image with (f := Some) in IHFiniteT.
+      replace A with (Im (inverse_image Some A) Some).
+      { assumption. }
+      extensionality_ensembles.
+      - subst. assumption.
+      - destruct x.
+        2: { contradiction. }
+        exists t; auto.
+        constructor. assumption.
+    }
+    destruct (classic (In A None)).
+    + rewrite <- Add_Subtract_Element with (x := None);
+        try assumption.
+      constructor.
+      * apply H0.
+        intros ?. destruct H2. destruct H3. constructor.
+      * intros ?. destruct H2. destruct H3. constructor.
+    + apply H0. assumption.
+  - specialize (IHFiniteT (inverse_image f A)).
+    apply finite_image with (f0 := f) in IHFiniteT.
+    rewrite inverse_image_image_surjective in IHFiniteT.
+    { assumption. }
+    apply invertible_impl_bijective in H0.
+    apply H0.
+Qed.
+
+Lemma FiniteT_has_nat_cardinal' X :
+  FiniteT X ->
+  exists n : nat, cardinalT X n.
+Proof.
+  intros.
+  apply finite_cardinal.
+  apply FiniteT_has_finite_ens.
+  assumption.
+Qed.
+
+Lemma FiniteT_has_nat_cardinal: forall X:Type, FiniteT X ->
+  exists! n:nat, cardinalT X n.
+Proof.
+intros.
+apply -> unique_existence; split.
+- apply FiniteT_has_nat_cardinal'.
+  assumption.
+- red; intros.
+  apply cardinal_unicity with X Full_set; trivial.
+Qed.
+
 Lemma finite_sum: forall X Y:Type, FiniteT X -> FiniteT Y ->
+  FiniteT (X+Y).
+Proof.
+  intros.
+  apply FiniteT_has_nat_cardinal in H, H0.
+  destruct H as [n []], H0 as [m []].
+  apply has_cardinalT_impl_FiniteT with (n := n + m).
+  apply cardinalT_sum; assumption.
+Qed.
+Print Assumptions FiniteT_has_nat_cardinal.
+
+Lemma finite_sum': forall X Y:Type, FiniteT X -> FiniteT Y ->
   FiniteT (X+Y).
 Proof.
 intros.
@@ -872,7 +1129,7 @@ assumption.
 Qed.
 Lemma FiniteT_nat_cardinal_cond: forall (X:Type) (H:FiniteT X)
   (n:nat),
-  cardinal _ (@Full_set X) n ->
+  cardinalT X n ->
   FiniteT_nat_cardinal X H = n.
 Proof.
 intros.
@@ -1051,23 +1308,152 @@ Proof.
     + intros. exact None.
     + intros. destruct x; intuition.
     + intros. destruct y; intuition.
+Defined.
+
+Lemma FiniteT_unit_cardinal :
+  FiniteT_nat_cardinal _ FiniteT_unit = 1.
+Proof.
+  unfold FiniteT_unit.
+  rewrite FiniteT_nat_cardinal_bijection.
+  rewrite FiniteT_nat_cardinal_option.
+  rewrite FiniteT_nat_cardinal_False.
+  reflexivity.
 Qed.
 
 Lemma FiniteT_bool : FiniteT bool.
 Proof.
-  unshelve eapply bij_finite with (X := option (option False)).
-  - intros.
-    refine (match H with
-            | None => true
-            | Some _ => false
-            end).
-  - repeat constructor.
-  - unshelve econstructor.
+  apply (bij_finite (option (option False)) _
+                    (fun x =>
+                       match x with
+                       | None => true
+                       | Some _ => false
+                       end)).
+  { repeat constructor. }
+  exists (fun x : bool => if x then None else Some None).
+  - intros. destruct x.
+    + destruct o; tauto.
+    + reflexivity.
+  - intros. destruct y; reflexivity.
+Qed.
+
+Lemma FiniteT_nat_cardinal_invariant (X : Type) (H0 H1 : FiniteT X) :
+  FiniteT_nat_cardinal _ H0 = FiniteT_nat_cardinal _ H1.
+Proof.
+  pose proof (FiniteT_nat_cardinal_def _ H0).
+  pose proof (FiniteT_nat_cardinal_def _ H1).
+  apply (cardinal_unicity _ _ _ H _ H2).
+Qed.
+
+Lemma FiniteT_Ensembles (X : Type) :
+  FiniteT X -> FiniteT (Ensemble X).
+Proof.
+  unfold Ensemble.
+  intros.
+  induction H.
+  - apply (bij_finite unit _ (fun _ => Empty_set)).
+    { apply FiniteT_unit. }
+    exists (fun _ => tt).
+    + intros. destruct x; reflexivity.
     + intros.
-      apply (match H with
-             | true => None
-             | false => Some None
-             end).
-    + intros. destruct x as [[]|]; intuition.
-    + intros. destruct y as [|]; intuition.
+      apply False_Ensembles_eq.
+  - apply (bij_finite
+             ((T -> Prop) + (T -> Prop)) _
+             (fun x => match x with
+                       | inl x => (fun p => match p with
+                                            | Some q => x q
+                                            | None => False
+                                            end)
+                       | inr x => (fun p => match p with
+                                            | Some q => x q
+                                            | None => True
+                                            end)
+                       end)).
+    { apply finite_sum; assumption. }
+    exists (fun A : (option T -> Prop) =>
+              if (excluded_middle_informative (In A None)) then
+                inr (fun p => A (Some p))
+              else
+                inl (fun p => A (Some p))).
+    + intros.
+      destruct x.
+      * destruct (excluded_middle_informative _).
+        -- destruct i.
+        -- replace (fun p : T => P p) with P.
+           { reflexivity. }
+           apply Extensionality_Ensembles; split; red; intros; assumption.
+      * destruct (excluded_middle_informative _).
+        -- replace (fun p : T => P p) with P.
+           { reflexivity. }
+           apply Extensionality_Ensembles; split; red; intros; assumption.
+        -- unfold In in n. tauto.
+   + intros. destruct (excluded_middle_informative _);
+       apply Extensionality_Ensembles; split; red; intros.
+     * unfold In in H0. destruct x; assumption.
+     * unfold In. destruct x; tauto.
+     * unfold In in H0. destruct x; tauto.
+     * unfold In. destruct x; tauto.
+  - pose proof H0. destruct H1.
+    apply (bij_finite (X -> Prop) (Y -> Prop)
+                      (fun A_x => fun y => A_x (g y))).
+    { assumption. }
+    exists (fun A_y => fun x => A_y (f x));
+      intros; apply Extensionality_Ensembles; split; red; intros.
+    * unfold In in H3. rewrite H1 in H3. assumption.
+    * unfold In. rewrite H1. assumption.
+    * unfold In in H3. rewrite H2 in H3. assumption.
+    * unfold In. rewrite H2. assumption.
+Qed.
+
+Corollary FiniteT_Ensembles' (X : Type) :
+  FiniteT X -> FiniteT (Ensemble X).
+Proof.
+  intros.
+  apply Finite_Full_set_impl_FiniteT.
+  apply (FiniteT_has_finite_ens _ Full_set) in H.
+  apply finite_cardinal in H.
+  destruct H as [n].
+  apply cardinal_Ensembles in H.
+  apply cardinal_finite in H.
+  assumption.
+Qed.
+
+Lemma finite_indexed_union {A T : Type} {F : IndexedFamily A T} :
+  FiniteT A ->
+  (forall a, Finite (F a)) ->
+  Finite (IndexedUnion F).
+Proof.
+intro H.
+induction H;
+  intros.
+- replace (IndexedUnion F) with (@Empty_set T).
+  + constructor.
+  + extensionality_ensembles.
+    destruct a.
+- replace (IndexedUnion F) with (Union (IndexedUnion (fun t => In (F (Some t)))) (F None)).
+  + apply Union_preserves_Finite.
+    * apply IHFiniteT.
+      intro.
+      apply H0.
+    * apply H0.
+  + extensionality_ensembles.
+    * econstructor.
+      eassumption.
+    * econstructor.
+      eassumption.
+    * destruct a.
+      ** left.
+         econstructor.
+         eassumption.
+      ** now right.
+- replace (IndexedUnion F) with (IndexedUnion (fun x => F (f x))).
+  + apply IHFiniteT.
+    intro.
+    apply H1.
+  + extensionality_ensembles.
+    * econstructor.
+      eassumption.
+    * destruct H0.
+      rewrite <- (H3 a) in H2.
+      econstructor.
+      eassumption.
 Qed.

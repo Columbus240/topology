@@ -172,6 +172,106 @@ rewrite H in H0.
 now destruct H0.
 Qed.
 
+Lemma Add_Subtract_Element (X : Type) (A : Ensemble X) (x : X) :
+  In A x ->
+  Add (Subtract A x) x = A.
+Proof.
+  intros.
+  apply Extensionality_Ensembles; split; red; intros.
+  - destruct H0.
+    + destruct H0.
+      assumption.
+    + destruct H0.
+      assumption.
+  - destruct (classic (x = x0)).
+    + subst. right. constructor.
+    + left. split.
+      * assumption.
+      * intros ?.
+        destruct H2.
+        contradiction.
+Qed.
+
+Lemma non_inhabited_Empty_Full (X : Type) :
+  ~ inhabited X <-> @Empty_set X = @Full_set X.
+Proof.
+  split.
+  - intros. apply Extensionality_Ensembles; split; red; intros.
+    + constructor.
+    + contradict H. constructor. assumption.
+  - intros. intros [x].
+    assert (In Full_set x).
+    { constructor. }
+    rewrite <- H in H0.
+    destruct H0.
+Qed.
+
+Lemma Disjoint_Add_l (X : Type) (U V : Ensemble X) (x : X) :
+  Disjoint (Add U x) V ->
+  Disjoint U V.
+Proof.
+  intros. destruct H. constructor. intros.
+  intros ?.
+  apply (H x0).
+  destruct H0.
+  auto with sets.
+Qed.
+
+Local Lemma Union_is_Empty' (X : Type) (U V : Ensemble X) :
+  Union U V = Empty_set ->
+  U = Empty_set.
+Proof.
+  intros.
+  extensionality_ensembles.
+  rewrite <- H. left. assumption.
+Qed.
+
+Lemma Union_is_Empty (X : Type) (U V : Ensemble X) :
+  Union U V = Empty_set ->
+  U = Empty_set /\ V = Empty_set.
+Proof.
+  intros.
+  split.
+  - apply Union_is_Empty' in H. assumption.
+  - rewrite Union_commutative in H.
+    apply Union_is_Empty' in H. assumption.
+Qed.
+
+Lemma Intersection_Add_both (X : Type) (U V : Ensemble X) (x : X) :
+  Intersection (Add U x) (Add V x) = Add (Intersection U V) x.
+Proof.
+  extensionality_ensembles.
+  - left. split; assumption.
+  - right. constructor.
+  - right. constructor.
+  - right. constructor.
+  - split; left; assumption.
+  - split; right; constructor.
+Qed.
+
+Lemma Add_idempotent (X : Type) (U : Ensemble X) (x : X) :
+  Add (Add U x) x = Add U x.
+Proof.
+  extensionality_ensembles.
+  - left; assumption.
+  - right; constructor.
+  - right; constructor.
+  - left; left; assumption.
+  - right; constructor.
+Qed.
+
+Lemma Intersection_Add_remove (X : Type) (U V : Ensemble X) (x : X) :
+  ~ In V x ->
+  Intersection (Add U x) V = Intersection U V.
+Proof.
+  intros. extensionality_ensembles.
+  - split; assumption.
+  - contradiction.
+  - split.
+    + left; assumption.
+    + assumption.
+Qed.
+
 Definition Union_add_r := Union_add.
 
 Corollary Union_add_l {X : Type} (A B : Ensemble X) (x : X) :
