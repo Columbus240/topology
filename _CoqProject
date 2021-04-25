@@ -42,6 +42,7 @@ theories/Topology/Examples/S1.v
 theories/ZornsLemma/Cardinals.v
 theories/ZornsLemma/Classical_Wf.v
 theories/ZornsLemma/CountableTypes.v
+theories/ZornsLemma/CM_Fold.v
 theories/ZornsLemma/CSB.v
 theories/ZornsLemma/DecidableDec.v
 theories/ZornsLemma/DependentTypeChoice.v
