@@ -182,3 +182,86 @@ Proof.
   rewrite (Union_commutative _ B).
   reflexivity.
 Qed.
+
+Instance Disjoint_symmetric {X : Type} : Symmetric (@Disjoint X).
+Proof.
+  red; intros.
+  constructor. destruct H.
+  rewrite Intersection_commutative.
+  assumption.
+Qed.
+
+Lemma Disjoint_Add_l {X : Type} (U V : Ensemble X) (x : X) :
+  Disjoint (Add U x) V ->
+  Disjoint U V.
+Proof.
+  intros. destruct H. constructor. intros ? ?.
+  destruct H0. apply (H x0).
+  auto with sets.
+Qed.
+
+Corollary Disjoint_Add_r {X : Type} (U V : Ensemble X) (x : X) :
+  Disjoint U (Add V x) ->
+  Disjoint U V.
+Proof.
+  intros.
+  symmetry in H.
+  apply Disjoint_Add_l in H.
+  symmetry in H.
+  assumption.
+Qed.
+
+Local Lemma Union_is_Empty' {X : Type} (U V : Ensemble X) :
+  Union U V = Empty_set ->
+  U = Empty_set.
+Proof.
+  intros.
+  extensionality_ensembles.
+  rewrite <- H.
+  left. assumption.
+Qed.
+
+Lemma Union_is_Empty {X : Type} (U V : Ensemble X) :
+  Union U V = Empty_set ->
+  U = Empty_set /\ V = Empty_set.
+Proof.
+  intros.
+  split.
+  - apply Union_is_Empty' in H.
+    assumption.
+  - rewrite Union_commutative in H.
+    apply Union_is_Empty' in H.
+    assumption.
+Qed.
+
+Lemma Intersection_Add_both (X : Type) U V (x : X) :
+  Intersection (Add U x) (Add V x) =
+  Add (Intersection U V) x.
+Proof.
+  extensionality_ensembles;
+    try solve [right; constructor].
+  - left. split; assumption.
+  - split; left; assumption.
+  - split; right; constructor.
+Qed.
+
+Lemma Intersection_Add_remove (X : Type) U V (x : X) :
+  ~ In V x ->
+  Intersection (Add U x) V = Intersection U V.
+Proof.
+  intros. extensionality_ensembles.
+  - split; assumption.
+  - contradiction.
+  - split; [left|]; assumption.
+Qed.
+
+Lemma Add_idempotent (X : Type) U (x : X) :
+  Add (Add U x) x = Add U x.
+Proof.
+  extensionality_ensembles.
+  - left; assumption.
+  - right; constructor.
+  - right; constructor.
+  - left; left; assumption.
+  - right; constructor.
+Qed.
