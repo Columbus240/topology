@@ -155,3 +155,85 @@ apply Extensionality_Ensembles; split; red; intros.
   + now intro.
   + now rewrite H1.
 Qed.
+
+Definition pasting_lemma_fn {X Y : TopologicalSpace} {A B : Ensemble X}
+      (f : SubspaceTopology A -> Y) (g : SubspaceTopology B -> Y) :
+  Union A B = Full_set ->
+  (X -> Y).
+Proof.
+  intros ? x.
+  destruct (DecidableDec.classic_dec (In A x)).
+  - apply (f (exist _ x i)).
+  - refine (g (exist _ x _)).
+    assert (In Full_set x).
+    { constructor. }
+    rewrite <- H in H0.
+    destruct H0; intuition.
+Defined.
+
+(* Corresponds to 18.3 in Munkres. *)
+Lemma pasting_lemma_cts {X Y : TopologicalSpace} (A B : Ensemble X)
+      (f : SubspaceTopology A -> Y) (g : SubspaceTopology B -> Y) (H : Union A B = Full_set) :
+  (forall x : X, In (Intersection A B) x -> forall H0 H1, f (exist _ x H0) = g (exist _ x H1)) ->
+  closed A -> closed B ->
+  continuous f -> continuous g ->
+  continuous (pasting_lemma_fn f g H).
+Proof.
+  intros.
+  apply continuous_closed.
+  intros.
+  replace (inverse_image (pasting_lemma_fn f g H) U) with
+      (Union (Im (inverse_image f U) (subspace_inc _)) (Im (inverse_image g U) (subspace_inc _))).
+  { apply closed_union2.
+    - apply subspace_inc_takes_closed_to_closed.
+      + assumption.
+      + apply continuous_closed; assumption.
+    - apply subspace_inc_takes_closed_to_closed.
+      + assumption.
+      + apply continuous_closed; assumption.
+  }
+  apply Extensionality_Ensembles; split; red; intros.
+  - constructor.
+    destruct H6.
+    + inversion H6; subst; clear H6.
+      inversion H7; subst; clear H7.
+      unfold pasting_lemma_fn.
+      destruct (DecidableDec.classic_dec _).
+      2: {
+        exfalso.
+        destruct x0. simpl in *. contradiction.
+      }
+      replace (exist _ _ _) with x0.
+      { assumption. }
+      apply subset_eq.
+      reflexivity.
+    + inversion H6; subst; clear H6.
+      inversion H7; subst; clear H7.
+      unfold pasting_lemma_fn.
+      destruct (DecidableDec.classic_dec _).
+      * unshelve erewrite H0.
+        { apply (proj2_sig _). }
+        2: {
+          split; [assumption|].
+          apply (proj2_sig _).
+        }
+        replace (exist _ _ _) with x0.
+        { assumption. }
+        apply subset_eq.
+        reflexivity.
+      * replace (exist _ _ _) with x0.
+        { assumption. }
+        apply subset_eq.
+        reflexivity.
+  - inversion H6; subst; clear H6.
+    unfold pasting_lemma_fn in H7.
+    destruct (DecidableDec.classic_dec _).
+    + left.
+      exists (exist _ x i).
+      * constructor. assumption.
+      * reflexivity.
+    + right.
+      eexists (exist _ x _).
+      * constructor. eassumption.
+      * reflexivity.
+Qed.
