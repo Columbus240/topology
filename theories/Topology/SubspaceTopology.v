@@ -1,5 +1,6 @@
 Require Export TopologicalSpaces.
 Require Import WeakTopology.
+From Coq Require Import Program.Subset.
 
 Section Subspace.
 
@@ -27,6 +28,95 @@ split.
 - apply weak_topology1_topology.
 - intros. destruct H as [V []].
   subst. apply subspace_inc_continuous. assumption.
+Qed.
+
+(* Corresponds to Lemma 16.1 in Munkres. *)
+Lemma subspace_basis (B : Family X) :
+  open_basis B ->
+  open_basis (Im B (fun Bx => inverse_image subspace_inc Bx)).
+Proof.
+  intros.
+  constructor.
+  - intros.
+    inversion H0; subst; clear H0.
+    apply subspace_inc_continuous.
+    apply H. assumption.
+  - intros.
+    rewrite subspace_open_char in H0.
+    destruct H0 as [V []]. subst.
+    pose proof (open_basis_cover B H (proj1_sig x) V H0).
+    destruct H2 as [V0 [? []]].
+    { destruct H1. assumption. }
+    exists (inverse_image subspace_inc V0).
+    repeat split.
+    + eexists V0; auto.
+    + apply H3. apply H5.
+    + apply H4.
+Qed.
+
+Lemma subspace_subbasis (B : Family X) :
+  subbasis B ->
+  subbasis (Im B (fun Bx => inverse_image subspace_inc Bx)).
+Proof.
+  intros. constructor.
+  - intros.
+    inversion H0; subst; clear H0.
+    apply subspace_inc_continuous.
+    apply subbasis_elements in H1; assumption.
+  - intros.
+    rewrite subspace_open_char in H1.
+    destruct H1 as [V []].
+    subst.
+    inversion H0; subst; clear H0.
+    apply subbasis_cover with (SB := B) (x := subspace_inc x)
+      in H1 as [I [? [V_Fam [? []]]]].
+    all: try assumption.
+    exists I. split; [assumption|].
+    exists (fun i => inverse_image subspace_inc (V_Fam i)).
+    repeat split.
+    + intros.
+      exists (V_Fam a); auto.
+    + inversion H3; subst; clear H3.
+      apply H5.
+    + apply H4.
+      constructor. intros.
+      inversion H5; subst; clear H5.
+      apply H6.
+Qed.
+
+Lemma subspace_open_subset U :
+  open U ->
+  open A ->
+  open (Im U subspace_inc).
+Proof.
+  intros.
+  rewrite subspace_open_char in H.
+  destruct H as [V []].
+  subst.
+  rewrite (inverse_image_image_proj1_sig_as_Intersection A).
+  apply open_intersection2.
+  all: assumption.
+Qed.
+
+Lemma subspace_func_continuous {Y : TopologicalSpace} (f : Y -> SubspaceTopology) :
+  continuous (fun y => proj1_sig (f y)) <->
+  continuous f.
+Proof.
+  split.
+  - intros.
+    red. intros.
+    rewrite subspace_open_char in H0.
+    destruct H0 as [U []].
+    subst.
+    apply H in H0.
+    rewrite <- inverse_image_composition.
+    assumption.
+  - intros.
+    red. intros.
+    rewrite inverse_image_composition.
+    apply H.
+    apply subspace_inc_continuous.
+    assumption.
 Qed.
 
 End Subspace.

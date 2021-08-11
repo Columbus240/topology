@@ -370,3 +370,32 @@ split; red; intros;
 [ rewrite <- eq | rewrite eq ];
   now constructor.
 Qed.
+
+Lemma inverse_image_proj1_sig_as_Intersection {X : Type} (A U : Ensemble X) :
+  inverse_image (proj1_sig (P := In A)) U =
+  inverse_image (proj1_sig (P := In A)) (Intersection A U).
+Proof.
+  apply Extensionality_Ensembles; split; red; intros.
+  - inversion H; subst; clear H.
+    destruct x; simpl in *.
+    constructor. simpl. split; assumption.
+  - inversion H; subst; clear H.
+    destruct x; simpl in *.
+    constructor. simpl. destruct H0. assumption.
+Qed.
+
+Lemma inverse_image_image_proj1_sig_as_Intersection {X : Type} (A U : Ensemble X) :
+  Im (inverse_image (proj1_sig (P := In A)) U) (proj1_sig (P := In A)) =
+  Intersection A U.
+Proof.
+  apply Extensionality_Ensembles; split; red; intros.
+  - inversion H; subst; clear H.
+    inversion H0; subst; clear H0.
+    destruct x0. simpl in *.
+    split; assumption.
+  - destruct H.
+    exists (exist _ x H).
+    2: reflexivity.
+    constructor.
+    assumption.
+Qed.
