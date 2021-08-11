@@ -1,4 +1,4 @@
-From ZornsLemma Require Import EnsemblesImplicit InverseImage.
+From ZornsLemma Require Import EnsemblesImplicit Families InverseImage.
 
 Definition EnsembleProduct {X Y : Type} (SX : Ensemble X) (SY : Ensemble Y) : Ensemble (X * Y) :=
   fun p => In SX (fst p) /\ In SY (snd p).
@@ -116,3 +116,8 @@ Proof.
   - destruct H. inversion H0; subst; clear H0.
     split; split; assumption.
 Qed.
+
+Inductive Family_Pairwise_Product {X Y : Type} (FX : Family X) (FY : Family Y) : Family (X * Y) :=
+| Family_Pairwise_Product_ctr SX SY :
+    In FX SX -> In FY SY ->
+    In (Family_Pairwise_Product FX FY) (EnsembleProduct SX SY).

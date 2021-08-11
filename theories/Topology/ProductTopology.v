@@ -1,6 +1,7 @@
 Require Export TopologicalSpaces WeakTopology FilterLimits Compactness.
 Require Import FunctionalExtensionality.
-From ZornsLemma Require Import DependentTypeChoice FiniteIntersections.
+From Topology Require Import SubspaceTopology.
+From ZornsLemma Require Import DependentTypeChoice EnsembleProduct FiniteIntersections.
 
 Section product_topology.
 
@@ -276,8 +277,7 @@ Inductive ProductTopology2_basis :
          (V:Ensemble (point_set Y)),
   open U -> open V ->
   In ProductTopology2_basis
-  [ p:point_set ProductTopology2 |
-    let (x,y):=p in (In U x /\ In V y) ].
+     (EnsembleProduct U V).
 
 Lemma ProductTopology2_basis_is_basis:
   open_basis ProductTopology2_basis.
@@ -288,65 +288,69 @@ assert (open_basis (finite_intersections (weak_topology_subbasis prod2_proj))
 apply eq_ind with (1:=H).
 apply Extensionality_Ensembles; split; red; intros U ?.
 - induction H0.
-  + replace (@Full_set (point_set X * point_set Y)) with
-      [ p:point_set ProductTopology2 |
-        let (x,y):=p in (In Full_set x /\ In Full_set y) ].
-    * constructor;
-        apply open_full.
-    * extensionality_ensembles;
-        constructor.
-      destruct x.
-      repeat constructor.
+  + rewrite <- EnsembleProduct_Full.
+    constructor;
+      apply open_full.
   + destruct H0.
     destruct a.
     * replace (inverse_image (prod2_proj twoT_1) V) with
-        [ p:point_set ProductTopology2 |
-          let (x,y):=p in (In V x /\ In Full_set y) ].
+          (@EnsembleProduct X Y V Full_set).
       ** constructor; trivial.
          apply open_full.
       ** extensionality_ensembles;
            destruct x.
-         *** destruct H1.
-             now constructor.
-         *** now constructor; constructor.
+         *** now constructor.
+         *** simpl in H1. split; [assumption|constructor].
     * replace (inverse_image (prod2_proj twoT_2) V) with
-        [ p:point_set ProductTopology2 |
-          let (x,y):=p in (In Full_set x /\ In V y) ].
+          (@EnsembleProduct X Y Full_set V).
       ** constructor; trivial.
          apply open_full.
       ** extensionality_ensembles;
            destruct x.
-         *** destruct H1.
-             now constructor.
-         *** now constructor; constructor.
+         *** now constructor.
+         *** simpl in *. split; [constructor|assumption].
   + destruct IHfinite_intersections as [U1 V1].
     destruct IHfinite_intersections0 as [U2 V2].
-    replace (@Intersection (point_set X * point_set Y)
-      [p:point_set ProductTopology2 | let (x,y):=p in In U1 x /\ In V1 y]
-      [p:point_set ProductTopology2 | let (x,y):=p in In U2 x /\ In V2 y])
-    with
-      [p:point_set ProductTopology2 | let (x,y):=p in
-       (In (Intersection U1 U2) x /\ In (Intersection V1 V2) y)].
-    * constructor;
-        now apply open_intersection2.
-    * apply Extensionality_Ensembles; split; red; intros;
-        destruct H6, x;
-        destruct H6, H7;
-        destruct H6;
-        [ | destruct H7 ];
-        now repeat constructor.
+    rewrite EnsembleProduct_Intersection.
+    constructor;
+      now apply open_intersection2.
 - destruct H0.
-  replace [p:point_set ProductTopology2 | let (x,y):=p in
-           In U x /\ In V y] with
-    (Intersection (inverse_image (prod2_proj twoT_1) U)
-                  (inverse_image (prod2_proj twoT_2) V)).
+  replace (EnsembleProduct U V) with
+      (Intersection (inverse_image (prod2_proj twoT_1) U)
+                    (inverse_image (prod2_proj twoT_2) V)).
   + constructor 3;
       now do 2 constructor.
-  + extensionality_ensembles;
-      destruct x;
-      [ | destruct H2 ];
-    constructor;
-    now constructor.
+  + simpl. symmetry. apply EnsembleProduct_proj.
+Qed.
+
+(* Corresponds to Theorem 15.1 in Munkres. *)
+Lemma ProductTopology2_build_basis BX BY :
+  open_basis BX -> open_basis BY ->
+  @open_basis ProductTopology2 (Family_Pairwise_Product BX BY).
+Proof.
+  intros.
+  constructor.
+  - intros.
+    inversion H1; subst; clear H1.
+    apply open_basis_elements with (B := ProductTopology2_basis).
+    { apply ProductTopology2_basis_is_basis. }
+    constructor.
+    + apply open_basis_elements with (B := BX); assumption.
+    + apply open_basis_elements with (B := BY); assumption.
+  - intros.
+    pose proof (open_basis_cover _ ProductTopology2_basis_is_basis _ _ H1 H2) as
+        [U' [? []]].
+    inversion H3; subst; clear H3.
+    pose proof (open_basis_cover _ H (fst x) _ H6) as
+        [U1 [? []]].
+    { destruct x. destruct H5. assumption. }
+    pose proof (open_basis_cover _ H0 (snd x) _ H7) as
+        [V1 [? []]].
+    { destruct x. destruct H5. assumption. }
+    exists (EnsembleProduct U1 V1).
+    repeat split; try assumption.
+    eapply Inclusion_is_transitive; try eassumption.
+    apply EnsembleProduct_Included; assumption.
 Qed.
 
 End product_topology2.
@@ -420,4 +424,99 @@ Proof.
     assumption.
   - apply continuous_func_continuous_everywhere.
     assumption.
+Qed.
+
+Require Import Homeomorphisms.
+(* Corresponds to Theorem 16.3 of Munkres. But our statement is a little weaker. *)
+Lemma ProductTopology2_EnsembleProduct_Subspace {X Y : TopologicalSpace}
+      (A : Ensemble X) (B : Ensemble Y) :
+  homeomorphic (ProductTopology2 (SubspaceTopology A) (SubspaceTopology B))
+               (@SubspaceTopology (ProductTopology2 X Y) (EnsembleProduct A B)).
+Proof.
+  unshelve econstructor.
+  { (* define [f] *)
+    intros.
+    destruct X0.
+    destruct p as [x], p0 as [y].
+    exists (x, y). split; assumption.
+  }
+  unshelve econstructor.
+  { (* define [g] *)
+    intros.
+    destruct X0.
+    destruct x as [x y].
+    destruct i.
+    exact (exist _ x H, exist _ y H0).
+  }
+  - rewrite <- subspace_func_continuous.
+    simpl.
+    apply continuous_open_basis with (B := ProductTopology2_basis _ _).
+    { apply ProductTopology2_basis_is_basis. }
+    intros.
+    inversion H; subst; clear H.
+    replace (inverse_image _ _) with
+        (EnsembleProduct (inverse_image (fun x => proj1_sig (P := A) x) U)
+                         (inverse_image (fun y => proj1_sig (P := B) y) V0)).
+    + apply open_basis_elements with (B0 := ProductTopology2_basis _ _).
+      { apply ProductTopology2_basis_is_basis. }
+      constructor.
+      * apply subspace_inc_continuous.
+        assumption.
+      * apply subspace_inc_continuous.
+        assumption.
+    + apply Extensionality_Ensembles; split; red; intros.
+      * destruct x; destruct H.
+        inversion H; subst; clear H.
+        inversion H2; subst; clear H2.
+        destruct s, s0; simpl in *.
+        constructor. simpl.
+        split; assumption.
+      * destruct x.
+        inversion H; subst; clear H.
+        destruct s, s0. simpl in *.
+        destruct H2.
+        split; constructor; assumption.
+  - apply continuous_open_basis with (B := ProductTopology2_basis _ _).
+    { apply ProductTopology2_basis_is_basis. }
+    intros.
+    inversion H; subst; clear H.
+    rename V0 into V.
+    rewrite subspace_open_char.
+    rewrite subspace_open_char in H0.
+    rewrite subspace_open_char in H1.
+    destruct H0 as [U0 []].
+    destruct H1 as [V0 []].
+    subst.
+    exists (EnsembleProduct U0 V0).
+    split.
+    + apply open_basis_elements with (B0 := ProductTopology2_basis _ _).
+      { apply ProductTopology2_basis_is_basis. }
+      constructor; assumption.
+    + apply Extensionality_Ensembles; split; red; intros.
+      * inversion H0; subst; clear H0.
+        destruct x. destruct x.
+        destruct i. destruct H2.
+        simpl.
+        constructor.
+        simpl.
+        inversion H0; subst; clear H0.
+        inversion H2; subst; clear H2.
+        simpl in *.
+        constructor; assumption.
+      * inversion H0; subst; clear H0.
+        destruct x. destruct x.
+        inversion H2; subst; clear H2.
+        destruct i.
+        simpl.
+        constructor. simpl.
+        split; constructor; assumption.
+  - intros.
+    simpl.
+    destruct x.
+    destruct p, p0.
+    reflexivity.
+  - intros.
+    simpl.
+    destruct y. destruct x, i.
+    reflexivity.
 Qed.

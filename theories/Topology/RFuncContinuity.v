@@ -1,7 +1,7 @@
 Require Export RTopology ProductTopology Homeomorphisms.
 Require Import ContinuousFactorization.
 From Coq Require Import FunctionalExtensionality Lra ProofIrrelevance.
-From ZornsLemma Require Import EnsemblesTactics.
+From ZornsLemma Require Import EnsemblesTactics EnsembleProduct.
 
 Lemma continuous_at_iff_continuity_pt
   {f : R -> R} {x : R} :
@@ -73,6 +73,13 @@ apply continuous_at_neighborhood_basis with
   repeat split;
     try (rewrite metric_zero; apply R_metric_is_metric + lra).
   + apply ProductTopology2_basis_is_basis.
+    replace [ p : _ | _ ] with
+        (EnsembleProduct (open_ball R R_metric x (r / 2)) (open_ball R R_metric y (r / 2))).
+    2: {
+      extensionality_ensembles.
+      - constructor. destruct x0. simpl in *. split; constructor; assumption.
+      - destruct x0. apply H1.
+    }
     constructor;
     [ destruct (RTop_metrization x) |
       destruct (RTop_metrization y)];
@@ -178,6 +185,13 @@ apply continuous_at_neighborhood_basis with
     In (open_ball _ R_metric 0 1) y' )).
   repeat split.
   + apply ProductTopology2_basis_is_basis.
+    replace [_ : _ | _] with
+        (EnsembleProduct (open_ball R R_metric 0 r) (open_ball R R_metric 0 1)).
+    2: {
+      extensionality_ensembles.
+      - destruct x. constructor. split; constructor; assumption.
+      - destruct x. apply H1.
+    }
     constructor;
       destruct H.
     * apply (open_neighborhood_basis_elements (open_ball _ R_metric 0 r)).
