@@ -1,4 +1,5 @@
-Require Export MetricSpaces.
+From Topology Require Export MetricSpaces.
+From Topology Require Import SubspaceTopology.
 Require Import Psatz.
 From Coq Require Import ProofIrrelevance.
 
@@ -176,3 +177,54 @@ cut (Included (closure F (X:=MetricTopology d d_metric)) F).
 Qed.
 
 End closed_subset_of_complete.
+
+Lemma metrizable_SubspaceTopology
+      (X : TopologicalSpace) (A : Ensemble X) :
+  metrizable X ->
+  metrizable (SubspaceTopology A).
+Proof.
+  intros.
+  destruct H.
+  eexists.
+  { apply d_restriction_metric. apply H. }
+  red. intros.
+  constructor.
+  - intros.
+    induction H1.
+    constructor.
+    + rewrite subspace_open_char.
+      exists (open_ball X d (proj1_sig x) r).
+      split.
+      * apply metric_space_open_ball_open; assumption.
+      * unfold subspace_inc.
+        apply Extensionality_Ensembles; split; red; intros.
+        -- inversion H2; subst; clear H2.
+           constructor. constructor.
+           assumption.
+        -- inversion H2; subst; clear H2.
+           inversion H3; subst; clear H3.
+           constructor. assumption.
+    + constructor.
+      rewrite metric_zero; auto.
+  - intros.
+    destruct H1.
+    rewrite subspace_open_char in H1.
+    destruct H1 as [V []].
+    subst.
+    specialize (H0 (proj1_sig x)).
+    destruct (open_neighborhood_basis_cond _ _ H0 V) as [VV []].
+    { split; try assumption.
+      inversion H2; subst; clear H2.
+      assumption.
+    }
+    inversion H3; subst; clear H3.
+    exists (open_ball _ (fun x0 y0 => d (proj1_sig x0) (proj1_sig y0)) x r).
+    split.
+    { constructor. assumption. }
+    red; intros.
+    inversion H3; subst; clear H3.
+    constructor.
+    apply H4.
+    constructor.
+    assumption.
+Qed.
