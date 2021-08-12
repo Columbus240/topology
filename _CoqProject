@@ -35,6 +35,7 @@ theories/Topology/TietzeExtension.v
 theories/Topology/TopologicalSpaces.v
 theories/Topology/Top_Category.v
 theories/Topology/UniformTopology.v
+theories/Topology/UnitInterval.v
 theories/Topology/UrysohnsLemma.v
 theories/Topology/WeakTopology.v
 theories/ZornsLemma/Cardinals.v
