@@ -1,4 +1,4 @@
-From Topology Require Import Continuity.
+From Topology Require Import Continuity SubspaceTopology.
 From Category Require Export Theory.Category.
 
 From Coq Require Import FunctionalExtensionality.
@@ -7,6 +7,13 @@ From Coq Require Import Program.Subset.
 Definition cts_fn (X Y : TopologicalSpace) := { f : X -> Y | continuous f }.
 Definition cts_fn_fn {X Y : TopologicalSpace} (f : cts_fn X Y) := proj1_sig f.
 Coercion cts_fn_fn : cts_fn >-> Funclass.
+
+Definition pasting_lemma {X Y : TopologicalSpace} {A B : Ensemble X}
+           (f : cts_fn (SubspaceTopology A) Y) (g : cts_fn (SubspaceTopology B) Y) Hunion Hinters HA HB :
+  cts_fn X Y :=
+  exist _
+        (@pasting_lemma_fn X Y A B f g Hunion)
+        (@pasting_lemma_cts X Y A B f g Hunion Hinters HA HB (proj2_sig f) (proj2_sig g)).
 
 Program Instance Top : Category :=
   {| obj := TopologicalSpace;
@@ -46,8 +53,21 @@ Require Import IndefiniteDescription.
 Lemma Top_isomorphism_homeomorphism {X Y : TopologicalSpace} (iso : X ≅ Y) :
   homeomorphism (cts_fn_fn (to iso)).
 Proof.
-  admit.
-Admitted.
+  destruct iso. simpl.
+  inversion iso_to_from; subst; clear iso_to_from.
+  inversion iso_from_to; subst; clear iso_from_to.
+  exists (cts_fn_fn from).
+  - apply (proj2_sig to).
+  - apply (proj2_sig from).
+  - intros.
+    replace x with (Datatypes.id x) at 2 by reflexivity.
+    rewrite <- H1.
+    reflexivity.
+  - intros.
+    replace y with (Datatypes.id y) at 2 by reflexivity.
+    rewrite <- H0.
+    reflexivity.
+Qed.
 
 Lemma homeomorphic_isomorphic {X Y : TopologicalSpace} :
   homeomorphic X Y ↔ X ≅ Y.
@@ -73,7 +93,7 @@ Proof.
   - intros.
     exists (cts_fn_fn (to X0)).
     apply Top_isomorphism_homeomorphism.
-Admitted.
+Qed.
 
 Lemma topological_property_invariant P :
   topological_property P ↔ Invariant P.
@@ -125,5 +145,11 @@ Require Import Category.Construction.Subcategory.
 Definition Haus_sub_of_Top := Build_FullSubcategory Hausdorff.
 
 Require Import Compactness.
+
+Corollary compact_Invariant : Invariant compact.
+Proof.
+  apply topological_property_invariant.
+  apply topological_property_compact.
+Qed.
 
 Definition CHaus_sub_of_Top := Build_FullSubcategory (fun X => Hausdorff X /\ compact X).
