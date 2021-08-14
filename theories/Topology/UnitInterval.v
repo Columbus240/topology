@@ -44,6 +44,10 @@ Ltac continuity_composition_tac :=
     apply (@continuous_composition _ _ _
                                    (cts_fn_fn f));
       [apply (proj2_sig f)|]
+  | |- continuous (fun _ => (proj1_sig ?f) _) =>
+    apply (@continuous_composition _ _ _
+                                   (cts_fn_fn f));
+      [apply (proj2_sig f)|]
   | |- continuous (@proj1_sig _ _) =>
     apply subspace_inc_continuous
   | |- continuous (fun _ => exist _ _ _) =>

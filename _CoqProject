@@ -12,6 +12,7 @@ theories/Topology/ContinuousFactorization.v
 theories/Topology/CountabilityAxioms.v
 theories/Topology/FilterLimits.v
 theories/Topology/FiltersAndNets.v
+theories/Topology/FunctionSpaces.v
 theories/Topology/Homeomorphisms.v
 theories/Topology/InteriorsClosures.v
 theories/Topology/MetricSpaces.v
@@ -20,6 +21,7 @@ theories/Topology/Neighborhoods.v
 theories/Topology/Nets.v
 theories/Topology/OpenBases.v
 theories/Topology/OrderTopology.v
+theories/Topology/Paths.v
 theories/Topology/ProductTopology.v
 theories/Topology/QuotientTopology.v
 theories/Topology/RationalsInReals.v
