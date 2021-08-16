@@ -40,17 +40,6 @@ Proof.
     intros. destruct x. reflexivity.
 Qed.
 
-Lemma Im_monotonous {X Y : Type} (f : X -> Y) (U V : Ensemble X) :
-  Included U V ->
-  Included (Im U f) (Im V f).
-Proof.
-  intros.
-  red. intros.
-  inversion H0; subst; clear H0.
-  apply H in H1.
-  exists x0; auto.
-Qed.
-
 Lemma continuous_at_subbasis_neighborhood
       (X Y : TopologicalSpace) (f : X -> Y)
       (SB : Family Y) (HSB : subbasis SB)
