@@ -62,27 +62,6 @@ Proof.
   auto with real.
 Qed.
 
-(* Lemma: A function out of a subspace is continuous, if there exists a continuous extension of this function. *)
-Lemma subspace_continuous_extension (X : TopologicalSpace) (S : Ensemble X)
-      (f : SubspaceTopology S -> SubspaceTopology S) (F : X -> X) :
-  (forall x : SubspaceTopology S, (subspace_inc S (f x)) = F (subspace_inc S x)) ->
-  continuous F -> continuous f.
-Proof.
-  intros.
-  red; intros.
-  apply subspace_open_char in H1.
-  destruct H1 as [V' [? ?]].
-  subst.
-  pose proof (H0 _ H1).
-  rewrite <- inverse_image_composition .
-  replace (fun x => subspace_inc S (f x)) with (fun x => F (subspace_inc S x)).
-  - rewrite inverse_image_composition.
-    apply subspace_inc_continuous.
-    assumption.
-  - apply functional_extensionality.
-    intros. symmetry. apply H.
-Qed.
-
 (* Does currying work for continuous functions? Not always. See discussion of "exponentiable". *)
 
 Lemma relative_homotopic_eq_on_K {X Y : TopologicalSpace} (K : Ensemble X) (f g : cts_fn X Y) :

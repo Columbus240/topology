@@ -3,6 +3,8 @@ From Topology Require Import Paths ProductTopology RTopology SubspaceTopology To
 From ZornsLemma Require Import EnsembleProduct.
 From Coq Require Import Lra Program.Subset.
 
+(* Main goal of this file: define the fundamental groupoid of a space. *)
+
 Definition path_homotopy {X} (f g : path X) (H : _) :=
   relative_homotopy unit_interval_boundary f g H.
 
@@ -238,3 +240,35 @@ Proof.
   exists (X ∘ F).
   assumption.
 Qed.
+
+Program Definition Fundamental_Groupoid (X : TopologicalSpace) : Category :=
+  {|
+  obj := X;
+  hom x0 x1 :=
+    { f : cts_fn unit_interval X |
+      f unit_interval_0 = x0 /\
+      f unit_interval_1 = x1
+    };
+  homset x0 x1 :=
+    {| Setoid.equiv f g :=
+         path_homotopic (proj1_sig f) (proj1_sig g);
+    |};
+  compose x0 x1 x2 f g :=
+    exist _ (path_concatenate_fn g f _) _;
+  id x := (exist _ (constant_path x) _);
+  |}.
+Next Obligation.
+  split.
+  - red; intros. reflexivity.
+  - red; intros. symmetry. assumption.
+  - red; intros. transitivity (proj1_sig y); assumption.
+Qed.
+Next Obligation.
+  split.
+  - unshelve erewrite (path_concatenate_fn_zero g f _).
+    + assumption.
+    + reflexivity.
+  - unshelve erewrite (path_concatenate_fn_one g f _).
+    + assumption.
+    + reflexivity.
+Admitted.
