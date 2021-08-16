@@ -237,3 +237,26 @@ Proof.
       * constructor. eassumption.
       * reflexivity.
 Qed.
+
+(* Lemma: A function out of a subspace is continuous, if there exists a continuous extension of this function. *)
+Lemma subspace_continuous_extension (X Y : TopologicalSpace) (S : Ensemble X)
+      (f : SubspaceTopology S -> Y) (F : X -> Y) :
+  (forall x : SubspaceTopology S, f x = F (subspace_inc S x)) ->
+  continuous F -> continuous f.
+Proof.
+  intros.
+  red; intros.
+  replace (inverse_image f V) with
+      (inverse_image (subspace_inc S) (inverse_image F V)).
+  2: {
+    apply Extensionality_Ensembles; split; red; intros.
+    - constructor.
+      destruct H2. destruct H2.
+      rewrite <- H in H2. assumption.
+    - constructor. constructor.
+      rewrite <- H. destruct H2. assumption.
+  }
+  apply subspace_inc_continuous.
+  apply H0.
+  assumption.
+Qed.
