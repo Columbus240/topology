@@ -7,6 +7,11 @@ Definition path (X : TopologicalSpace) :=
 Definition path_fn {X : TopologicalSpace} (f : path X) := proj1_sig f.
 Coercion path_fn : path >-> Funclass.
 
+Definition path_connected (X : TopologicalSpace) :=
+  forall x y : X, exists f : path X,
+      f unit_interval_0 = x /\
+      f unit_interval_1 = y.
+
 Ltac continuity_composition_tac :=
   match goal with
   | |- continuous (fun _ => Ropp _) =>
