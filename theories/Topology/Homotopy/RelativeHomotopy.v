@@ -83,7 +83,7 @@ Next Obligation.
     all: apply continuous_constant.
 Qed.
 Next Obligation.
-  rewrite EnsembleProduct_Union_dist.
+  rewrite EnsembleProduct_Union_dist_l.
   replace (Union _ _) with (@Full_set unit_interval).
   { apply EnsembleProduct_Full. }
   symmetry.

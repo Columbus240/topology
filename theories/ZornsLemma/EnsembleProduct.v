@@ -90,7 +90,7 @@ Proof.
     + destruct x, H. cbv. intuition.
 Qed.
 
-Lemma EnsembleProduct_Union_dist {X Y : Type} (U : Ensemble X) (V0 V1 : Ensemble Y) :
+Lemma EnsembleProduct_Union_dist_l {X Y : Type} (U : Ensemble X) (V0 V1 : Ensemble Y) :
   Union (EnsembleProduct U V0) (EnsembleProduct U V1) =
   EnsembleProduct U (Union V0 V1).
 Proof.
@@ -102,6 +102,22 @@ Proof.
       right. assumption.
   - destruct H.
     inversion H0; subst; clear H0.
+    + left. split; assumption.
+    + right. split; assumption.
+Qed.
+
+Lemma EnsembleProduct_Union_dist_r {X Y : Type} (U0 U1 : Ensemble X) (V : Ensemble Y) :
+  Union (EnsembleProduct U0 V) (EnsembleProduct U1 V) =
+  EnsembleProduct (Union U0 U1) V.
+Proof.
+  apply Extensionality_Ensembles; split; red; intros.
+  - destruct H.
+    + destruct H. split; try assumption.
+      left. assumption.
+    + destruct H. split; try assumption.
+      right. assumption.
+  - destruct H.
+    inversion H; subst; clear H.
     + left. split; assumption.
     + right. split; assumption.
 Qed.

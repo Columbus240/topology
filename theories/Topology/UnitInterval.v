@@ -196,7 +196,7 @@ Corollary homotopy_halves_union {X : TopologicalSpace} :
         (EnsembleProduct Full_set unit_interval_right_half)
         = @Full_set (X * unit_interval).
 Proof.
-  rewrite EnsembleProduct_Union_dist.
+  rewrite EnsembleProduct_Union_dist_l.
   rewrite unit_interval_halves_union.
   apply EnsembleProduct_Full.
 Qed.
@@ -399,4 +399,3 @@ Proof.
     rewrite H4.
     apply inverse_image_empty.
 Qed.
-
