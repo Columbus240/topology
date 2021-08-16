@@ -15,6 +15,36 @@ Definition pasting_lemma {X Y : TopologicalSpace} {A B : Ensemble X}
         (@pasting_lemma_fn X Y A B f g Hunion)
         (@pasting_lemma_cts X Y A B f g Hunion Hinters HA HB (proj2_sig f) (proj2_sig g)).
 
+Lemma pasting_lemma_left
+      {X Y : TopologicalSpace} {A B : Ensemble X}
+      {f : cts_fn _ Y} {g : cts_fn (_ B) Y}
+      {Hunion Hinters HA HB} (x : X) (Hx : In A x) :
+  pasting_lemma f g Hunion Hinters HA HB x = f (exist _ x Hx).
+Proof.
+  simpl.
+  unfold pasting_lemma_fn.
+  destruct (DecidableDec.classic_dec _).
+  - pose proof (proof_irrelevance _ Hx i).
+    subst. reflexivity.
+  - contradiction.
+Qed.
+
+Lemma pasting_lemma_right
+      {X Y : TopologicalSpace} {A B : Ensemble X}
+      {f : cts_fn (_ A) Y} {g : cts_fn (_ B) Y}
+      {Hunion Hinters HA HB} (x : X) (Hx : In B x) :
+  pasting_lemma f g Hunion Hinters HA HB x = g (exist _ x Hx).
+Proof.
+  simpl.
+  unfold pasting_lemma_fn.
+  destruct (DecidableDec.classic_dec _).
+  - specialize (Hinters x (Intersection_intro _ _ _ _ i Hx) i Hx).
+    assumption.
+  - apply f_equal.
+    apply subset_eq.
+    reflexivity.
+Qed.
+
 Program Instance Top : Category :=
   {| obj := TopologicalSpace;
      hom X Y := cts_fn X Y;
