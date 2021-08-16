@@ -1,5 +1,6 @@
 From Topology Require Import Compactness Continuity ProductTopology Top_Category UnitInterval.
 From Coq Require Import FunctionalExtensionality Program.Subset.
+From Category Require Import Theory.Isomorphism.
 
 (* the subbasis of the compact-open topology *)
 Definition compact_open_subbasis_element
@@ -814,8 +815,6 @@ Next Obligation.
 Qed.
 Next Obligation.
 Admitted.
-
-Require Import Isomorphism.
 
 Lemma prod_curry_homeomorphism X Y Z :
   lcompact X -> Hausdorff X ->
