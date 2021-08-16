@@ -98,39 +98,6 @@ Lemma tube_lemma_
 
 Require Import EnsembleProduct.
 
-Lemma Im_FamilyUnion (X Y : Type) (F : Family X) (f : X -> Y) :
-  Im (FamilyUnion F) f = FamilyUnion (fun U => exists V, U = Im V f /\ In F V).
-Proof.
-  apply Extensionality_Ensembles; split; red; intros.
-  - inversion H; subst; clear H.
-    inversion H0; subst; clear H0.
-    exists (Im S f).
-    { exists S. auto. }
-    exists x0; auto.
-  - inversion H; subst; clear H.
-    inversion H0; subst; clear H0.
-    destruct H; subst.
-    inversion H1; subst; clear H1.
-    exists x1.
-    2: { reflexivity. }
-    exists x0; assumption.
-Qed.
-
-Lemma Im_IndexedUnion (X Y I : Type) (F : IndexedFamily I X) (f : X -> Y) :
-  Im (IndexedUnion F) f = IndexedUnion (fun i => Im (F i) f).
-Proof.
-  apply Extensionality_Ensembles; split; red; intros.
-  - inversion H; subst; clear H.
-    inversion H0; subst; clear H0.
-    exists a.
-    exists x0.
-    all: auto.
-  - inversion H; subst; clear H.
-    inversion H0; subst; clear H0.
-    exists x0; [|reflexivity].
-    exists a. assumption.
-Qed.
-
 Lemma Im_EnsembleProduct_fst {X Y : Type}
       (U : Ensemble X) (V : Ensemble Y) :
   Inhabited V ->
