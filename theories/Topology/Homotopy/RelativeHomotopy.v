@@ -215,3 +215,24 @@ Proof.
     exists (relative_homotopy_transitive_fn HHfg HHgh).
     apply relative_homotopy_transitive.
 Qed.
+
+Lemma relative_homotopy_transport {X Y Z : TopologicalSpace} (f g : cts_fn Z X) (h : cts_fn X Y) K F :
+  relative_homotopy K f g F ->
+  relative_homotopy K (h ∘ f) (h ∘ g) (h ∘ F).
+Proof.
+  intros [H0 [H1 [H2 H3]]].
+  repeat split; simpl; intros.
+  - rewrite H0. reflexivity.
+  - rewrite H1. reflexivity.
+  - rewrite H2; [reflexivity|assumption].
+  - rewrite H3; [reflexivity|assumption].
+Qed.
+
+Lemma relative_homotopic_transport {X Y Z : TopologicalSpace} (f g : cts_fn Z X) (h : cts_fn X Y) K :
+  relative_homotopic K f g ->
+  relative_homotopic K (h ∘ f) (h ∘ g).
+Proof.
+  intros [F].
+  apply relative_homotopy_transport with (h0 := h) in H.
+  eexists. eassumption.
+Qed.

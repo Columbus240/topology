@@ -1,5 +1,5 @@
 From Topology Require Import Continuity RTopology RFuncContinuity SubspaceTopology Top_Category UnitInterval.
-From Coq Require Import Lra Program.Subset.
+From Coq Require Import FunctionalExtensionality Lra Program.Subset.
 
 Definition path (X : TopologicalSpace) :=
   cts_fn unit_interval X.
@@ -164,4 +164,20 @@ Program Definition path_reverse {X : TopologicalSpace} (f : path X) :
 Next Obligation.
   simpl. continuity_composition_tac.
   apply (proj2_sig unit_interval_reverse).
+Qed.
+
+Lemma path_concatenate_comp {X Y : TopologicalSpace} (f g : cts_fn unit_interval X) (h : cts_fn X Y) H0 H1 :
+  h ∘ (path_concatenate_fn f g H0) = path_concatenate_fn (h ∘ f) (h ∘ g) H1.
+Proof.
+  apply subset_eq_compat.
+  apply functional_extensionality.
+  intros [x []].
+  simpl. unfold pasting_lemma_fn.
+  destruct (DecidableDec.classic_dec _);
+    simpl.
+  all: match goal with
+       | |- _ (_ ?a) = _ (_ ?b) =>
+         replace a with b; [reflexivity|];
+           apply subset_eq_compat; simpl; reflexivity
+       end.
 Qed.
