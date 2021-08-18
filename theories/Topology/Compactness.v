@@ -653,3 +653,25 @@ Proof.
     + rewrite <- (inverse_image_family_union _ Hfg Hgf), H3.
       apply inverse_image_full.
 Qed.
+
+Definition isolated_point {X : TopologicalSpace} (x : X) :=
+  open (Singleton x).
+
+Require Import CountableTypes.
+(* Corresponds to Theorem 27.7 in Munkres. *)
+Theorem compact_Hausdorff_uncountable (X : TopologicalSpace) :
+  inhabited X ->
+  compact X -> Hausdorff X ->
+  (forall x : X, ~ isolated_point x) ->
+  ~ CountableT X.
+Proof.
+  intros.
+  assert (forall U : Ensemble X, Inhabited U -> open U -> forall x : X,
+                   exists V, Inhabited V /\ open V /\ ~ In (closure V) x).
+  { admit. }
+  assert (forall f : nat -> X, ~ surjective f).
+  { intros.
+    admit.
+  }
+  admit.
+Admitted.
