@@ -6,6 +6,7 @@
 From Coq.Sets Require Export Powerset_facts.
 From ZornsLemma Require Export EnsemblesImplicit EnsemblesTactics.
 From Coq Require Import Classical_Prop.
+From ZornsLemma Require Import FunctionProperties.
 
 Lemma Intersection_Full_set
   {X : Type}
@@ -110,4 +111,14 @@ Proof.
   apply Extensionality_Ensembles; split; red; intros.
   { constructor. }
   destruct (classic (In U x)); [right|left]; assumption.
+Qed.
+
+Lemma Complement_injective (X : Type) :
+  injective (@Complement X).
+Proof.
+  red; intros.
+  rewrite <- (Complement_Complement _ x).
+  rewrite <- (Complement_Complement _ y).
+  rewrite H.
+  reflexivity.
 Qed.
