@@ -154,3 +154,12 @@ Proof.
 now extensionality_ensembles;
   try econstructor.
 Qed.
+
+Lemma family_union_singleton
+  {X : Type}
+  (S : Ensemble X) :
+  FamilyUnion (Singleton S) = S.
+Proof.
+now extensionality_ensembles;
+  try econstructor.
+Qed.
