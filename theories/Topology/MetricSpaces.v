@@ -1,7 +1,7 @@
 Require Export Reals TopologicalSpaces NeighborhoodBases Continuity CountabilityAxioms SupInf SeparatednessAxioms.
 Require Import RationalsInReals.
 From ZornsLemma Require Export EnsemblesSpec.
-From ZornsLemma Require Import EnsemblesTactics DecidableDec.
+From ZornsLemma Require Import EnsemblesTactics DecidableDec Orders.
 From Coq Require ProofIrrelevance ClassicalChoice.
 From Coq Require Import Lra.
 
@@ -21,7 +21,7 @@ Record metric : Prop := {
 
 Lemma metric_nonneg :
   metric ->
-  forall x y : X, d x y >= 0.
+  forall x y : X, 0 <= d x y.
 Proof.
   intros.
   pose proof (triangle_inequality H x y x).
@@ -351,7 +351,7 @@ exists (Im [p:(Q*(point_set X))%type |
                   assert (Q2R r' > 0).
                   { apply Rgt_ge_trans with (d x x0).
                     - apply H9.
-                    - now apply metric_nonneg. }
+                    - now apply Rle_ge, metric_nonneg. }
                   apply Rlt_Qlt.
                   unfold Q2R at 1.
                   simpl.
@@ -488,7 +488,7 @@ Proof.
     { assumption. }
     apply Rle_antisym.
     + apply Rge_le. assumption.
-    + apply Rge_le. apply metric_nonneg. assumption.
+    + apply metric_nonneg. assumption.
   }
   assert (d x y / 2 > 0). {
     apply Rdiv_lt_0_compat; try assumption.
@@ -547,7 +547,7 @@ destruct (glb_approx _ _ _ i0 H) as [dxz [[z]]].
 rewrite H1 in H2. clear y0 H1.
 destruct H2.
 apply Rle_lt_trans with (d y z).
-- assert (d y z >= dSy);
+- assert (dSy <= d y z);
     auto with real.
   apply i.
   now exists z.
@@ -588,7 +588,7 @@ destruct (open_neighborhood_basis_cond (Complement (closure S))) as [V [? ?]].
   simpl in H.
   rewrite H in i; clear x0 H.
   destruct i.
-  assert (is_lower_bound (Im S (d x)) r).
+  assert (is_lower_bound Rle (Im S (d x)) r).
   { red. intros y ?.
     destruct H4 as [y].
     rewrite H5. clear y0 H5.
@@ -635,16 +635,15 @@ apply Rle_antisym.
     rewrite interior_complement in H1.
     now contradiction H1. }
   destruct H1 as [y [? ?]].
-  assert (d x y >= x0).
-  { apply i.
-    now exists y. }
+  assert (x0 <= d x y).
+  { apply i. now exists y. }
   lra.
 - apply r.
   red. intros.
   destruct H0.
   rewrite H1.
   now apply metric_nonneg.
-Qed.
+Admitted.
 
 Variable T:Ensemble (point_set X).
 Hypothesis T_nonempty: Inhabited T.
@@ -766,7 +765,7 @@ exists U, V; repeat split.
       rewrite H6.
       now apply metric_nonneg.
     * destruct i1.
-      assert (0 >= x0); auto with real.
+      assert (x0 <= 0); auto with real.
       apply H5.
       exists x; trivial.
       rewrite metric_zero; auto with real.

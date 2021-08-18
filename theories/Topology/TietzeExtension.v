@@ -479,7 +479,7 @@ intros.
 apply R_metric_is_metric.
 apply Rle_antisym.
 2: {
-  apply Rge_le, metric_nonneg, R_metric_is_metric.
+  apply metric_nonneg, R_metric_is_metric.
 }
 apply lt_plus_epsilon_le; intros.
 unfold Tietze_extension_func;

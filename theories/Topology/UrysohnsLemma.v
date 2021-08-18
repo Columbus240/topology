@@ -417,7 +417,7 @@ split.
     auto with zarith.
   + destruct H.
     auto with real.
-- cut (1 >= y); auto with real.
+- cut (y <= 1); auto with real.
   apply i.
   right.
   constructor.
@@ -432,7 +432,7 @@ apply Rle_antisym;
 unfold Urysohns_Lemma_function.
 destruct inf as [y].
 simpl.
-cut (0 >= y); auto with real.
+cut (y <= 0); auto with real.
 apply i.
 left.
 exists (m_over_2_to_n 0 0).
@@ -495,9 +495,7 @@ assert ((nat_of_P (pos_power2 n) < m \/
   now apply le_lt_or_eq.
 rewrite H1.
 replace 1 with (Q2R (dr2Q (m_over_2_to_n 1 0))).
-- match goal with |- ?a >= ?b =>
-    cut (b <= a); auto with real end.
-  apply Qle_Rle.
+- apply Qle_Rle.
   unfold dr2Q.
   unfold Qle.
   simpl.
@@ -569,7 +567,7 @@ destruct H.
            auto with real.
          apply Rle_lt_trans with (2:=r).
          unfold Urysohns_Lemma_function. destruct inf. simpl.
-         cut (Q2R (dr2Q alpha) >= x1); auto with real.
+         cut (x1 <= Q2R (dr2Q alpha)); auto with real.
          apply i.
          left.
          now exists alpha.
@@ -640,9 +638,9 @@ destruct H.
          { auto with real. }
          assert (~ In (U_dyadic alpha) x0).
          { intro.
-           absurd (Q2R (dr2Q alpha) >= y).
+           absurd (y <= Q2R (dr2Q alpha)).
            - destruct H5.
-             now apply Rlt_not_ge.
+             now apply Rlt_not_le.
            - apply i.
              left.
              now exists alpha. }

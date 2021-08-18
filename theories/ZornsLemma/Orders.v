@@ -15,27 +15,33 @@ Class DenseRelation {X : Type} (R : relation X) :=
   { dense : forall x y, x <> y /\ R x y ->
                    exists z, x <> z /\ R x z /\ z <> y /\ R z y; }.
 
-Definition upper_bound {X : Type} (R : relation X) (A : Ensemble X) (x : X) :=
+Definition is_upper_bound {X : Type} (R : relation X) (A : Ensemble X) (x : X) :=
   forall y : X, In A y -> R y x.
 
-Definition least_upper_bound {X : Type}
-           (R : relation X) (A : Ensemble X) (x : X) :=
-  upper_bound R A x /\
-  forall y, upper_bound R A y -> R x y.
+Definition has_upper_bound {X : Type} (R : relation X) (A : Ensemble X) :=
+  exists x : X, is_upper_bound R A x.
 
-Definition lower_bound {X : Type} (R : relation X) (A : Ensemble X) (x : X) :=
+Definition is_lub {X : Type}
+           (R : relation X) (A : Ensemble X) (x : X) :=
+  is_upper_bound R A x /\
+  forall y, is_upper_bound R A y -> R x y.
+
+Definition is_lower_bound {X : Type} (R : relation X) (A : Ensemble X) (x : X) :=
   forall y : X, In A y -> R x y.
 
-Definition greatest_lower_bound {X : Type}
+Definition has_lower_bound {X : Type} (R : relation X) (A : Ensemble X) :=
+  exists x : X, is_lower_bound R A x.
+
+Definition is_glb {X : Type}
            (R : relation X) (A : Ensemble X) (x : X) :=
-  lower_bound R A x /\
-  forall y, lower_bound R A y -> R y x.
+  is_lower_bound R A x /\
+  forall y, is_lower_bound R A y -> R y x.
 
 Class LUB_Property {X : Type} (R : relation X) :=
   { lub_property :
-      forall x A,
-        Inhabited A -> upper_bound R A x ->
-        exists lub, least_upper_bound R A lub; }.
+      forall A,
+        Inhabited A -> has_upper_bound R A ->
+        exists lub, is_lub R A lub; }.
 
 Class LinearContinuum {X : Type} (R : relation X) `{DenseRelation X R} `{LUB_Property X R} `{LinearOrder X R}.
 
@@ -185,14 +191,14 @@ Qed.
 
 Class Lattice {X : Type} (R : relation X) `{PartialOrder X eq R} :=
   { meet : X -> X -> X;
-    meet_glb : forall x y, greatest_lower_bound R (Couple x y) (meet x y);
+    meet_glb : forall x y, is_glb R (Couple x y) (meet x y);
     join : X -> X -> X;
-    join_lub : forall x y, least_upper_bound R (Couple x y) (join x y);
+    join_lub : forall x y, is_lub R (Couple x y) (join x y);
   }.
 
 Lemma glb_unique X R A (x0 x1 : X) `{Antisymmetric X eq R} :
-  greatest_lower_bound R A x0 ->
-  greatest_lower_bound R A x1 ->
+  is_glb R A x0 ->
+  is_glb R A x1 ->
   x0 = x1.
 Proof.
   intros.
@@ -203,8 +209,8 @@ Proof.
 Qed.
 
 Lemma lub_unique X R A (x0 x1 : X) `{Antisymmetric X eq R} :
-  least_upper_bound R A x0 ->
-  least_upper_bound R A x1 ->
+  is_lub R A x0 ->
+  is_lub R A x1 ->
   x0 = x1.
 Proof.
   intros.
@@ -338,19 +344,19 @@ Proof.
 Qed.
 
 Instance LinearOrder_Lattice X R `{LinearOrder X R} : Lattice R.
-assert (forall x y, R x y -> lower_bound R (Couple x y) x) as ?HH.
+assert (forall x y, R x y -> is_lower_bound R (Couple x y) x) as ?HH.
 { intros ? ? ? ? ?.
   induction H3.
   - reflexivity.
   - assumption.
 }
-assert (forall x y, R x y -> greatest_lower_bound R (Couple x y) x) as ?HH.
+assert (forall x y, R x y -> is_glb R (Couple x y) x) as ?HH.
 { intros.
   constructor.
   { apply HH. assumption. }
   intros. apply H3. constructor.
 }
-assert (forall x y : X, exists! m, greatest_lower_bound R (Couple x y) m) as ?HH.
+assert (forall x y : X, exists! m, is_glb R (Couple x y) m) as ?HH.
 { intros.
   destruct (connex x y); [exists x| exists y]; repeat split.
   - apply HH; assumption.
@@ -367,19 +373,19 @@ assert (forall x y : X, exists! m, greatest_lower_bound R (Couple x y) m) as ?HH
     apply HH0. assumption.
 }
 clear HH HH0.
-assert (forall x y, R x y -> upper_bound R (Couple x y) y) as ?HH.
+assert (forall x y, R x y -> is_upper_bound R (Couple x y) y) as ?HH.
 { intros ? ? ? ? ?.
   induction H3.
   - assumption.
   - reflexivity.
 }
-assert (forall x y, R x y -> least_upper_bound R (Couple x y) y) as ?HH.
+assert (forall x y, R x y -> is_lub R (Couple x y) y) as ?HH.
 { intros.
   constructor.
   { apply HH. assumption. }
   intros. apply H3. constructor.
 }
-assert (forall x y : X, exists! m, least_upper_bound R (Couple x y) m) as ?HH.
+assert (forall x y : X, exists! m, is_lub R (Couple x y) m) as ?HH.
 { intros.
   destruct (connex x y); [exists y| exists x]; repeat split.
   - apply HH; assumption.

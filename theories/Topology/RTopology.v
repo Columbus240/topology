@@ -150,7 +150,7 @@ Proof.
 (* idea: the liminf is a cluster point *)
 intros.
 destruct (classic (inhabited (DS_set I))) as [Hinh|Hempty].
-- assert (forall i:DS_set I, { y:R | is_glb
+- assert (forall i:DS_set I, { y:R | is_glb Rle
                              (Im [ j:DS_set I | DS_ord i j ] x) y }).
   { intro.
     apply inf.
@@ -162,7 +162,7 @@ destruct (classic (inhabited (DS_set I))) as [Hinh|Hempty].
     - exists (x i), i; trivial.
       constructor.
       apply preord_refl, DS_ord_cond. }
-  assert ({ x0:R | is_lub (Im Full_set (fun i => proj1_sig (X i))) x0 }).
+  assert ({ x0:R | is_lub Rle (Im Full_set (fun i => proj1_sig (X i))) x0 }).
   { apply sup.
     - exists b.
       red. intros.
@@ -171,13 +171,13 @@ destruct (classic (inhabited (DS_set I))) as [Hinh|Hempty].
       simpl in H1.
       rewrite H1.
       destruct i0.
-      cut (b >= x0); auto with real.
-      apply Rge_trans with (x i).
-      + destruct (H i). lra.
+      cut (x0 <= b); auto with real.
+      apply Rle_trans with (x i).
       + apply H2.
         exists i; trivial.
         constructor.
         apply preord_refl, DS_ord_cond.
+      + destruct (H i). lra.
     - destruct Hinh as [i0].
       exists (proj1_sig (X i0)).
       exists i0; trivial.
@@ -527,7 +527,7 @@ destruct (le_or_lt N n).
 Qed.
 
 Lemma R_cauchy_sequence_lower_bound: forall x:nat->R,
-  cauchy R_metric x -> SupInf.lower_bound (Im Full_set x).
+  cauchy R_metric x -> has_lower_bound Rle (Im Full_set x).
 Proof.
 intros.
 assert (cauchy R_metric (fun n:nat => - x n)).
@@ -543,7 +543,7 @@ assert (cauchy R_metric (fun n:nat => - x n)).
 destruct (R_cauchy_sequence_bounded _ H0) as [m].
 exists (-m).
 red. intros.
-cut (-x0 <= m).
+cut (-y <= m).
 - intros. lra.
 - apply H1.
   destruct H2 as [n].
@@ -559,7 +559,7 @@ destruct (R_cauchy_sequence_lower_bound _ H) as [a].
 destruct (bounded_real_net_has_cluster_point nat_DS x a b) as [x0].
 - intros;
     split;
-    [ cut (x i >= a); auto with real; apply H1 | apply H0 ];
+    [ cut (a <= x i); auto with real; apply H1 | apply H0 ];
     exists i;
     trivial;
     constructor.

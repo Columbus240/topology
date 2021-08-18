@@ -103,7 +103,7 @@ constructor; intros.
   apply Rle_antisym.
   + apply i; exists x; trivial.
     constructor.
-  + cut (d (f0 x) (g0 x) >= 0); auto with real.
+  + cut (0 <= d (f0 x) (g0 x)); auto with real.
     apply metric_nonneg.
     assumption.
 Qed.
