@@ -160,6 +160,7 @@ Lemma family_union_singleton
   (S : Ensemble X) :
   FamilyUnion (Singleton S) = S.
 Proof.
-now extensionality_ensembles;
-  try econstructor.
+extensionality_ensembles_inv.
+- subst. assumption.
+- exists S; try assumption. constructor.
 Qed.

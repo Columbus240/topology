@@ -797,7 +797,7 @@ split.
          *** symmetry.
              apply closure_impl_dist_to_set_zero; trivial.
              now apply closure_inflationary.
-      ** extensionality_ensembles;
+      ** extensionality_ensembles_inv;
            lra.
     * exists Full_set, Empty_set.
       repeat split; auto with sets topology.

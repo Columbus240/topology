@@ -536,7 +536,7 @@ destruct H.
       IndexedUnion (fun alpha:{alpha:dyadic_rational |
                                Q2R (dr2Q alpha) < x} =>
                     U_dyadic (proj1_sig alpha))) end.
-    * extensionality_ensembles.
+    * extensionality_ensembles_inv.
       ** destruct H1.
          assert (Urysohns_Lemma_function x0 < x).
          { destruct H1.
@@ -562,7 +562,7 @@ destruct H.
          *** destruct H1.
              lra.
       ** destruct a as [alpha].
-         simpl in H1.
+         simpl in H2.
          constructor.
          constructor.
          cut (Urysohns_Lemma_function x0 < x);
@@ -594,7 +594,7 @@ destruct H.
     destruct (classic (x>=1)).
     * match goal with |- open ?U => assert (U = Empty_set) end.
       2 : { rewrite H1. apply open_empty. }
-      extensionality_ensembles.
+      extensionality_ensembles_inv.
       destruct H1.
       assert (x < Urysohns_Lemma_function x0).
       { destruct (total_order_T x (Urysohns_Lemma_function x0)) as

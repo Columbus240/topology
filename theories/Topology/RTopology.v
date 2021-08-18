@@ -51,7 +51,8 @@ Lemma R_lower_beam_open : forall p,
 Proof.
 intro.
 replace [r : R | r < p] with
-        [y : R | y <= p /\ y <> p] by (extensionality_ensembles; constructor; lra).
+    [y : R | y <= p /\ y <> p]
+  by (extensionality_ensembles_inv; constructor; lra).
 rewrite <- family_union_singleton.
 repeat (constructor + destruct H).
 Qed.
@@ -61,7 +62,8 @@ Lemma R_upper_beam_open : forall p,
 Proof.
 intro.
 replace [r : R | r > p] with
-        [y : R | p <= y /\ y <> p] by (extensionality_ensembles; constructor; lra).
+    [y : R | p <= y /\ y <> p]
+  by (extensionality_ensembles_inv; constructor; lra).
 rewrite <- family_union_singleton.
 repeat (constructor + destruct H).
 Qed.
@@ -71,7 +73,8 @@ Lemma R_interval_open : forall p q,
 Proof.
 intros p q.
 replace [r : R | p < r < q] with
-        (Intersection [y : R | y < q] [y : R | y > p]) by (extensionality_ensembles; repeat constructor; lra).
+    (Intersection [y : R | y < q] [y : R | y > p])
+  by (extensionality_ensembles_inv; repeat constructor; lra).
 eapply (@open_intersection2 RTop).
 - apply R_lower_beam_open.
 - apply R_upper_beam_open.
@@ -148,12 +151,13 @@ constructor;
     * apply (@open_intersection2 RTop);
         apply Hsubbasis; constructor.
     * repeat constructor; lra.
-  + extensionality_ensembles;
+  + unfold R_metric.
+    extensionality_ensembles_inv;
       repeat constructor;
-      try apply Rabs_def2 in H0;
-      destruct H0;
-      try lra.
-    destruct H1.
+      try match goal with
+      | H : Rabs _ < _ |- _ =>
+        apply Rabs_def2 in H; lra
+      end.
     apply Rabs_def1; lra.
 - intros.
   apply open_neighborhood_is_neighborhood, RTop_neighborhood_is_neighbourhood in H.
@@ -292,7 +296,7 @@ destruct (bounded_real_net_has_cluster_point _ y a b).
           (Intersection
             [ x:point_set RTop | a <= x ]
             [ x:point_set RTop | x <= b ]) by
-      (extensionality_ensembles;
+      (extensionality_ensembles_inv;
         do 2 constructor; lra).
     apply closed_intersection2.
     - apply upper_closed_interval_closed.
@@ -420,7 +424,9 @@ cut (forall S:Ensemble (point_set RTop),
       split; trivial.
       red. now rewrite Complement_Complement. }
     rewrite <- (Complement_Complement _ S), H2.
-    now extensionality_ensembles.
+    extensionality_ensembles_inv.
+    rewrite Complement_Full_set in H3.
+    assumption.
 - cut (forall S:Ensemble (point_set RTop),
     clopen S -> Ensembles.In S 0 -> forall x:R, x > 0 ->
                                     Ensembles.In S x).
@@ -612,7 +618,7 @@ replace (Union U V) with (IndexedUnion (fun b : bool => if b then U else V)).
   + apply (intro_nat_injection _ (fun b : bool => if b then 1 else 0)%nat).
     now intros [|] [|] eq.
   + now intros [|].
-- extensionality_ensembles.
+- extensionality_ensembles_inv.
   + destruct a;
       now (left + right).
   + now apply indexed_union_intro with true.

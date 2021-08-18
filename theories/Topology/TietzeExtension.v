@@ -62,7 +62,7 @@ refine (
     * intros.
       destruct (total_order_T x y) as [[|]|];
         auto with real.
-  + extensionality_ensembles.
+  + extensionality_ensembles_inv.
     * now constructor.
     * constructor.
       now constructor.
@@ -77,11 +77,11 @@ refine (
     * intros.
       destruct (total_order_T x y) as [[|]|];
         auto with real.
-  + extensionality_ensembles.
+  + extensionality_ensembles_inv.
     * constructor. lra.
     * constructor. constructor. lra.
-- extensionality_ensembles.
-  destruct x, x0.
+- extensionality_ensembles_inv.
+  destruct x0, x1.
   simpl in *.
   subst.
   destruct (proof_irrelevance _ i i0).
@@ -661,9 +661,9 @@ destruct (UrysohnsLemma _ H G F) as [phi [? [? []]]]; trivial.
     * destruct H7;
         [left | right ];
         now rewrite H6.
-- extensionality_ensembles.
+- extensionality_ensembles_inv.
   assert (-1 < g0 x < 1).
-  { change x with (subspace_inc F (exist _ x H7)).
+  { change x with (subspace_inc F (exist _ x H8)).
     now rewrite H4. }
   lra.
 - exists (fun x => phi x * g0 x).

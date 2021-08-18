@@ -12,7 +12,7 @@ Lemma Intersection_Full_set
   {U : Ensemble X} :
   Intersection Full_set U = U.
 Proof.
-now extensionality_ensembles.
+now extensionality_ensembles_inv.
 Qed.
 
 Lemma Intersection_associative
@@ -20,72 +20,66 @@ Lemma Intersection_associative
   (U V W: Ensemble X) :
   Intersection (Intersection U V) W = Intersection U (Intersection V W).
 Proof.
-now extensionality_ensembles.
+now extensionality_ensembles_inv.
 Qed.
 
 Lemma Complement_Union {X : Type} (U V : Ensemble X) :
   Complement (Union U V) = Intersection (Complement U) (Complement V).
 Proof.
 unfold Complement.
-apply Extensionality_Ensembles; split; red; intros.
+extensionality_ensembles_inv.
 - constructor; auto with sets.
-- subst. red; red; intro. destruct H. destruct H0; auto.
+- intro. inversion_ensembles_in; auto.
 Qed.
 
 Lemma Complement_Intersection {X : Type} (U V : Ensemble X) :
   Complement (Intersection U V) = Union (Complement U) (Complement V).
 Proof.
-apply Extensionality_Ensembles; split; red; intros.
+extensionality_ensembles_inv.
 - apply NNPP. red; intro.
-  unfold Complement, In in H.
+  do 2 red in H.
   contradict H.
   constructor.
   + apply NNPP. red; intro.
     auto with sets.
   + apply NNPP. red; intro.
     auto with sets.
-- red; intro.
-  destruct H0.
-  destruct H; contradiction.
+- intro. destruct H. auto.
+- intro. destruct H. auto.
 Qed.
 
 Lemma Complement_Full_set {X : Type} :
   Complement (@Full_set X) = Empty_set.
 Proof.
-apply Extensionality_Ensembles; split; red; intros.
-- exfalso. apply H. constructor.
-- destruct H.
+extensionality_ensembles_inv.
+exfalso. apply H. constructor.
 Qed.
 
 Lemma Complement_Empty_set {X : Type} :
   Complement (@Empty_set X) = Full_set.
 Proof.
-apply Extensionality_Ensembles; split; red; intros.
+extensionality_ensembles_inv.
 - constructor.
-- intro. destruct H0.
+- intro. destruct H.
 Qed.
 
 Lemma False_Ensembles_eq (U V : Ensemble False) : U = V.
 Proof.
-apply Extensionality_Ensembles; split; red;
-  intros; contradiction.
+extensionality_ensembles_inv; contradiction.
 Qed.
 
 Lemma not_inhabited_empty {X : Type} (U : Ensemble X) :
   ~ Inhabited U -> U = Empty_set.
 Proof.
 intros.
-apply Extensionality_Ensembles; split; red; intros.
-- contradict H. exists x. assumption.
-- destruct H0.
+extensionality_ensembles_inv.
+contradict H. exists x. assumption.
 Qed.
 
 Lemma Setminus_Intersection {X : Type} (U V : Ensemble X) :
   Setminus U V = Intersection U (Complement V).
 Proof.
-apply Extensionality_Ensembles; split; red; intros.
-- destruct H. split; assumption.
-- destruct H. split; assumption.
+extensionality_ensembles_inv; split; assumption.
 Qed.
 
 Lemma Disjoint_Complement_r {X} (U : Ensemble X) :

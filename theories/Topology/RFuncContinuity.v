@@ -13,9 +13,9 @@ split.
   { apply RTop_neighborhood_is_neighbourhood, H, open_neighborhood_is_neighborhood.
     split.
     - replace [r : R | Rabs (r - f x) < eps] with [r : R | f x - eps < r < f x + eps]
-        by (extensionality_ensembles;
+        by (extensionality_ensembles_inv;
             constructor;
-            apply Rabs_def1 + apply Rabs_def2 in H1;
+            apply Rabs_def1 + apply Rabs_def2 in H2;
             lra).
       apply R_interval_open.
     - constructor.
@@ -76,9 +76,9 @@ apply continuous_at_neighborhood_basis with
     replace [ p : _ | _ ] with
         (EnsembleProduct (open_ball R R_metric x (r / 2)) (open_ball R R_metric y (r / 2))).
     2: {
-      extensionality_ensembles.
+      extensionality_ensembles_inv.
       - constructor. destruct x0. simpl in *. split; constructor; assumption.
-      - destruct x0. apply H1.
+      - destruct x0. apply H2.
     }
     constructor;
     [ destruct (RTop_metrization x) |
@@ -188,9 +188,9 @@ apply continuous_at_neighborhood_basis with
     replace [_ : _ | _] with
         (EnsembleProduct (open_ball R R_metric 0 r) (open_ball R R_metric 0 1)).
     2: {
-      extensionality_ensembles.
+      extensionality_ensembles_inv.
       - destruct x. constructor. split; constructor; assumption.
-      - destruct x. apply H1.
+      - destruct x. apply H2.
     }
     constructor;
       destruct H.

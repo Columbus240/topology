@@ -23,14 +23,14 @@ destruct (H (inverse_image f S)).
     rewrite <- inverse_image_complement.
     apply H0, H2.
 - left.
-  extensionality_ensembles.
+  extensionality_ensembles_inv.
   destruct (H1 x).
   eapply False_ind, Noone_in_empty.
   rewrite <- H3.
   constructor.
   now rewrite H5.
 - right.
-  extensionality_ensembles.
+  extensionality_ensembles_inv.
   + constructor.
   + destruct (H1 x).
     rewrite <- H4.
@@ -68,7 +68,7 @@ destruct (classic (In S0 x)).
     now constructor. }
     now destruct H6.
   - assumption. }
-  extensionality_ensembles.
+  extensionality_ensembles_inv.
   + constructor.
   + assert (In (IndexedUnion S) x0).
   { rewrite H1. constructor. }
@@ -90,7 +90,7 @@ destruct (classic (In S0 x)).
     rewrite <- H5 in H6.
     destruct H6.
     contradiction H4. }
-  extensionality_ensembles.
+  extensionality_ensembles_inv.
   assert (In (IndexedUnion S) x0).
 { rewrite H1. constructor. }
   destruct H7.
@@ -107,7 +107,7 @@ Proof.
 intros X Y f [g Hcont_f Hcont_g Hgf Hfg] Hconn S [Hopen Hclose].
 destruct (Hconn (inverse_image f S));
 [ | left | right ];
-  try extensionality_ensembles.
+  try extensionality_ensembles_inv.
 - split; red.
   + now apply Hcont_f.
   + rewrite <- inverse_image_complement.

@@ -60,8 +60,8 @@ destruct (classic (a1 = a2)).
   + extensionality_ensembles_inv;
       repeat econstructor.
     intro.
-    inversion H0.
-    injection H3 as H3.
+    repeat inversion_ensembles_in.
+    injection H2 as H2.
     now subst.
 Qed.
 

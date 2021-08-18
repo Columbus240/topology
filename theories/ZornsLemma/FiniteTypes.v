@@ -257,9 +257,8 @@ intros.
 induction H.
 - replace (Im Full_set f) with (@Empty_set Y).
   { constructor. }
-  apply Extensionality_Ensembles; split; red; intros.
-  + destruct H.
-  + destruct H. destruct x.
+  extensionality_ensembles_inv.
+  contradiction.
 - assert ((exists x:T, f (Some x) = f None) \/
            (forall x:T, f (Some x) <> f None)).
   { apply finite_dec_exists.
@@ -272,17 +271,16 @@ induction H.
     pose (g := fun (x:T) => f (Some x)).
     replace (Im Full_set f) with (Im Full_set g).
     { apply IHFiniteT. }
-    apply Extensionality_Ensembles; split; red; intros.
-    * destruct H3. subst. exists (Some x).
-      -- constructor.
-      -- reflexivity.
-    * destruct H3. subst. destruct x.
+    extensionality_ensembles_inv;
+      subst; unfold g in *; clear g.
+    * apply Im_def. constructor.
+    * destruct H2. destruct x0.
       -- exists t.
          ++ constructor.
          ++ reflexivity.
-      -- destruct H2. exists x.
+      -- exists x.
          ++ constructor.
-         ++ destruct H3. subst. symmetry. assumption.
+         ++ symmetry. assumption.
   + intros.
     pose (g := fun x:T => f (Some x)).
     replace (Im Full_set f) with (Add (Im Full_set g) (f None)).
@@ -292,34 +290,25 @@ induction H.
         contradiction (H2 x).
         symmetry; assumption.
     }
-    apply Extensionality_Ensembles; split; red; intros.
-    * red; intros.
-      destruct H3, H3.
-      -- exists (Some x).
-         ++ constructor.
-         ++ assumption.
-      -- exists None.
-         ++ constructor.
-         ++ reflexivity.
-    * red; intros.
-      destruct H3.
-      destruct x.
+    extensionality_ensembles_inv; subst;
+      unfold g in *; clear g.
+    * apply Im_def. constructor.
+    * apply Im_def. constructor.
+    * destruct x0.
       -- left. exists t.
          ++ constructor.
-         ++ assumption.
-      -- right. auto with sets.
+         ++ reflexivity.
+      -- right. constructor.
 - pose (g := fun (x:X) => f (f0 x)).
   replace (Im Full_set f) with (Im Full_set g).
   { apply IHFiniteT. }
-  apply Extensionality_Ensembles; split; red; intros.
-  + destruct H2. exists (f0 x).
-    * constructor.
-    * assumption.
-  + destruct H2, H1. subst.
-    rewrite <- H4 with x.
-    exists (g0 x).
-    * constructor.
-    * reflexivity.
+  extensionality_ensembles_inv;
+    subst; unfold g in *; clear g.
+  + apply Im_def. constructor.
+  + destruct H1 as [g0].
+    rewrite <- (H2 x0).
+    apply (Im_def Full_set (fun x => f (f0 x)) (g0 x0)).
+    constructor.
 Qed.
 
 Lemma surj_finite: forall (X Y:Type) (f:X->Y),

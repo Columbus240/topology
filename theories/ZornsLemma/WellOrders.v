@@ -2,7 +2,7 @@ From Coq Require Export Relation_Definitions.
 From Coq Require Import Classical Description
      FunctionalExtensionality ProofIrrelevance.
 From ZornsLemma Require Import Classical_Wf EnsemblesSpec
-     Relation_Definitions_Implicit ZornsLemma.
+     EnsemblesTactics Relation_Definitions_Implicit ZornsLemma.
 
 Section WellOrder.
 
@@ -605,11 +605,11 @@ Lemma premaximal_partial_WO_is_full: forall WO:partial_WO,
   premaximal partial_WO_ord WO -> pwo_S WO = Full_set.
 Proof.
 intros.
-apply Extensionality_Ensembles; split; red; intros.
+extensionality_ensembles_inv.
 { constructor. }
 apply NNPP.
 unfold not; intro.
-pose (WO' := extend_strictly_partial_WO WO x H1).
+pose (WO' := extend_strictly_partial_WO WO x H0).
 assert (partial_WO_ord WO' WO).
 { apply H.
   apply extend_strictly_partial_WO_correct.
@@ -619,8 +619,8 @@ assert (In (pwo_S WO') x).
   constructor 2.
   auto with sets.
 }
+apply H0.
 apply H1.
-apply H2.
 assumption.
 Qed.
 

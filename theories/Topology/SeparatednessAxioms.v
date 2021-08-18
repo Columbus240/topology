@@ -189,7 +189,9 @@ intros.
 pose proof (H0 (Singleton x) F).
 match type of H3 with | ?A -> ?B -> ?C -> ?D => assert D end.
 - apply H3; trivial.
-  now extensionality_ensembles.
+  extensionality_ensembles_inv.
+  subst.
+  contradiction.
 - destruct H4 as [U [V [? [? [? [? ?]]]]]].
   exists U, V.
   auto with sets.
@@ -258,9 +260,9 @@ apply not_all_ex_not in H3.
 destruct H3 as [[U]].
 exists U, V.
 repeat split; trivial.
-extensionality_ensembles.
+extensionality_ensembles_inv.
 contradiction H3.
-exists (intro_neighborhood_net_DS X x U x0 o i H4).
+exists (intro_neighborhood_net_DS X x U x0 o i H5).
 split; trivial.
 simpl.
 auto with sets.

@@ -70,15 +70,15 @@ apply H in eqF.
     * now subst.
     * apply quotient_projection_surjective'.
   + extensionality_ensembles_inv.
-    * constructor.
-    * destruct (quotient_projection_surjective' _ x).
-      assert (In (FamilyUnion F') x1) as H6
-        by now rewrite H3.
-      destruct H6, (H2 _ H5).
-      subst.
-      destruct H6.
-      repeat econstructor;
-        eassumption.
+    { constructor. }
+    destruct (quotient_projection_surjective' _ x).
+    assert (In (FamilyUnion F') x0) as H6
+      by now rewrite H3.
+    destruct H6, (H2 _ H4).
+    subst.
+    destruct H5.
+    repeat econstructor;
+      eassumption.
 - intros U [? ? ? ?].
   subst.
   now apply quotient_projection_open_iff, HF.

@@ -2,6 +2,14 @@ Require Export Subbases SeparatednessAxioms.
 From ZornsLemma Require Export Relation_Definitions_Implicit.
 From ZornsLemma Require Import EnsemblesTactics.
 
+Ltac apply_ord_antisym :=
+  match goal with
+  | Hord : order ?R,
+    H0 : ?R ?a ?b,
+    H1 : ?R ?b ?a |- _ =>
+    pose proof (ord_antisym Hord _ _ H0 H1)
+  end.
+
 Section OrderTopology.
 
 Variable X:Type.
@@ -46,8 +54,8 @@ exists [z:X | R x z /\ z <> x];
   destruct H1.
   intro.
   destruct H3.
-  contradiction H2.
-  now apply (ord_antisym R_ord).
+  apply_ord_antisym.
+  congruence.
 - intro.
   contradiction H.
   constructor.
@@ -79,8 +87,8 @@ exists ([z:X | R z x /\ z <> x]);
   destruct H1.
   intro.
   destruct H3.
-  contradiction H2.
-  now apply (ord_antisym R_ord).
+  apply_ord_antisym.
+  congruence.
 - intro.
   contradiction H.
   constructor.
@@ -101,7 +109,7 @@ match goal with |- forall x y:point_set OrderTopology, ?P =>
   exists U, V.
   repeat split; trivial.
   transitivity (Intersection V U); trivial.
-  now extensionality_ensembles.
+  now extensionality_ensembles_inv.
 - pose proof (Build_TopologicalSpace_from_subbasis_subbasis
     _ order_topology_subbasis).
   destruct (classic (exists z:X, R x z /\ R z y /\ z <> x /\ z <> y)).
@@ -113,10 +121,10 @@ match goal with |- forall x y:point_set OrderTopology, ?P =>
       constructor.
     * apply H1.
       constructor.
-    * extensionality_ensembles.
-      destruct H6, H7.
-      contradiction H8.
-      now apply (ord_antisym R_ord).
+    * extensionality_ensembles_inv.
+      destruct H6, H8.
+      apply_ord_antisym.
+      congruence.
   + exists ([w:X | R w y /\ w <> y]),
            ([w:X | R x w /\ w <> x]).
     repeat split; auto.
@@ -124,8 +132,8 @@ match goal with |- forall x y:point_set OrderTopology, ?P =>
       constructor.
     * apply H1.
       constructor.
-    * extensionality_ensembles.
-      destruct H3, H4.
+    * extensionality_ensembles_inv.
+      destruct H3, H5.
       contradiction H2.
       exists x0.
       now repeat split.

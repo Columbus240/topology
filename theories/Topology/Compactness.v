@@ -41,7 +41,7 @@ destruct (H cover) as [subcover].
     * apply FiniteT_img.
       ** now apply Finite_ens_type.
       ** intros; apply classic.
-    * extensionality_ensembles.
+    * extensionality_ensembles_inv.
       ** constructor.
       ** assert (In Full_set x) by constructor.
          rewrite <- H4 in H6.
@@ -69,19 +69,19 @@ unshelve refine (let H3:=(H C _ _) in _).
   destruct H3.
   apply H0 in H3.
   now apply closed_complement_open.
-- extensionality_ensembles.
+- extensionality_ensembles_inv.
+  { constructor. }
+  apply NNPP; red; intro.
+  contradiction H2.
+  exists x.
+  constructor.
+  intros.
+  apply NNPP; red; intro.
+  contradiction H3.
+  exists (Complement S).
   + constructor.
-  + apply NNPP; red; intro.
-    contradiction H2.
-    exists x.
-    constructor.
-    intros.
-    apply NNPP; red; intro.
-    contradiction H3.
-    exists (Complement S).
-    * constructor.
-      now rewrite Complement_Complement.
-    * assumption.
+    now rewrite Complement_Complement.
+  + assumption.
 - destruct H3 as [C' [? [? ?]]].
   pose (F' := [G : Ensemble (point_set X) | In C' (Complement G)]).
   unshelve refine (let H6 := (H1 F' _ _) in _).
@@ -135,20 +135,20 @@ unshelve refine (let H3 := (H F _ _) in _).
   repeat split.
   + assert ([U:Ensemble (point_set X) | In F' (Complement U)] =
       Im F' Complement).
-    * extensionality_ensembles.
+    * extensionality_ensembles_inv.
       ** econstructor.
          *** eassumption.
          *** now rewrite Complement_Complement.
       ** constructor.
-         now rewrite H7, Complement_Complement.
-    *  rewrite H6.
-       now apply finite_image.
+         now rewrite H8, Complement_Complement.
+    * rewrite H6.
+      now apply finite_image.
   + red; intros.
     destruct H6.
     apply H4 in H6.
     destruct H6.
     now rewrite Complement_Complement in H6.
-  + extensionality_ensembles.
+  + extensionality_ensembles_inv.
     * constructor.
     * apply NNPP; red; intro.
       contradiction H5.
@@ -204,18 +204,18 @@ pose proof (compact_finite_nonempty_closed_intersection
       { right. constructor. }
         apply H1 in H3.
         now destruct H3, H3.
-    + extensionality_ensembles.
+    + extensionality_ensembles_inv.
       * constructor.
         intros.
-        destruct H5.
+        destruct H4.
         ** now apply H3.
-        ** now destruct H5.
-      * repeat constructor; intros; apply H3; auto with sets. }
+        ** now destruct H4.
+      * repeat constructor; intros; apply H4; auto with sets. }
 
   apply NNPP; intro.
   contradiction (filter_empty _ F).
   replace (@Empty_set (point_set X)) with (FamilyIntersection F'); trivial.
-  extensionality_ensembles.
+  extensionality_ensembles_inv.
   contradiction H4.
   exists x.
   now constructor.
@@ -311,7 +311,7 @@ destruct (H _ (filter_to_net _ F)) as [x0].
     contradiction (filter_empty _ F).
     replace (@Empty_set (point_set X)) with (@Full_set (point_set X)).
     * apply filter_full.
-    * extensionality_ensembles.
+    * extensionality_ensembles_inv.
       contradiction H0.
       now constructor.
 - exists x0.
@@ -408,7 +408,7 @@ pose (B := fun U:{U:Ensemble (point_set Y) | In C U} =>
 destruct (compactness_on_indexed_covers _ _ B H) as [subcover].
 - destruct a as [U].
   now apply H0, H2.
-- extensionality_ensembles.
+- extensionality_ensembles_inv.
   + constructor.
   + assert (In (FamilyUnion C) (f x)).
   { rewrite H3; constructor. }
@@ -617,10 +617,10 @@ destruct (choice (fun (xF:{p:point_set X * Ensemble (point_set X) |
              destruct x' as [x'].
              assert (Included G (choice_fun_V x' G H4 (H7 x' i0))) by apply H3.
              auto.
-         *** extensionality_ensembles.
-             specialize H11 with a.
+         *** extensionality_ensembles_inv.
+             specialize H10 with a.
              destruct a as [[x']].
-             simpl in H11, H10.
+             simpl in H10, H9.
              replace (@Empty_set (point_set X)) with (Intersection
                (choice_fun_U x' G H4 (H7 x' i))
                (choice_fun_V x' G H4 (H7 x' i))) by apply H3.

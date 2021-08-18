@@ -256,31 +256,29 @@ Lemma closure_interior_idempotent:
   idempotent (fun S => closure (@interior X S)).
 Proof.
 intro.
-extensionality_ensembles;
-apply H;
-constructor;
-split;
+extensionality_ensembles_inv;
+apply H0; constructor; split;
 try apply closure_closed.
-- apply interior_deflationary.
-- red.
-  intros.
-  constructor.
-  intros.
-  destruct H1.
-  destruct H1.
-  apply H2.
-  econstructor; [ | eassumption].
-  constructor.
-  split.
-  + apply interior_open.
-  + apply closure_inflationary.
+{ apply interior_deflationary. }
+red.
+intros.
+constructor.
+intros.
+destruct H1.
+destruct H1.
+apply H2.
+econstructor; [ | eassumption].
+constructor.
+split.
+- apply interior_open.
+- apply closure_inflationary.
 Qed.
 
 Lemma interior_closure_idempotent:
   idempotent (fun S => interior (@closure X S)).
 Proof.
 intro.
-extensionality_ensembles;
+extensionality_ensembles_inv;
   destruct H.
 - eapply interior_maximal; try eassumption.
   eapply Inclusion_is_transitive; [ eassumption | ].
@@ -397,7 +395,7 @@ intros.
 replace S2 with (Union S1 S2).
 - rewrite cl_respects_union.
   auto with sets.
-- extensionality_ensembles;
+- extensionality_ensembles_inv;
     auto with sets.
 Qed.
 
@@ -408,7 +406,7 @@ refine (Build_TopologicalSpace_from_closed_sets
 - intros.
   rewrite cl_respects_union; congruence.
 - intros.
-  extensionality_ensembles.
+  extensionality_ensembles_inv.
   + constructor. intros.
     rewrite <- (H S H1).
     apply cl_increasing with (FamilyIntersection F); trivial.
@@ -460,14 +458,14 @@ intros.
 replace S1 with (Intersection S1 S2).
 - rewrite int_respects_intersection.
   auto with sets.
-- extensionality_ensembles; auto with sets.
+- extensionality_ensembles_inv; auto with sets.
 Qed.
 
 Lemma intersection_family_union : forall (S:Ensemble X) (F:Ensemble (Ensemble X)),
   In F S -> Intersection S (FamilyUnion F) = S.
 Proof.
 intros.
-extensionality_ensembles; trivial.
+extensionality_ensembles_inv; trivial.
 constructor; trivial.
 econstructor; eassumption.
 Qed.
@@ -487,7 +485,7 @@ Qed.
 Definition Build_TopologicalSpace_from_interior_operator : TopologicalSpace.
 apply Build_TopologicalSpace with (point_set:=X) (open:=fun F => int F = F);
   intros.
-- extensionality_ensembles.
+- extensionality_ensembles_inv.
   + now apply int_deflationary.
   + eapply int_family_union; [ eassumption | ].
     now rewrite H.

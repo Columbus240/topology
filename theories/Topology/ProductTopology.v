@@ -297,15 +297,15 @@ apply Extensionality_Ensembles; split; red; intros U ?.
           (@EnsembleProduct X Y V Full_set).
       ** constructor; trivial.
          apply open_full.
-      ** extensionality_ensembles;
+      ** extensionality_ensembles_inv;
            destruct x.
          *** now constructor.
-         *** simpl in H1. split; [assumption|constructor].
+         *** simpl in H2. split; [assumption|constructor].
     * replace (inverse_image (prod2_proj twoT_2) V) with
           (@EnsembleProduct X Y Full_set V).
       ** constructor; trivial.
          apply open_full.
-      ** extensionality_ensembles;
+      ** extensionality_ensembles_inv;
            destruct x.
          *** now constructor.
          *** simpl in *. split; [constructor|assumption].

@@ -30,7 +30,7 @@ intros.
 destruct H as [g].
 red; intros.
 assert (Im U f = inverse_image g U).
-{ extensionality_ensembles.
+{ extensionality_ensembles_inv.
   - subst.
     constructor.
     now rewrite H1.
@@ -49,10 +49,10 @@ exists g; trivial.
 red.
 intros.
 assert (inverse_image g V = Im V f).
-{ extensionality_ensembles.
+{ extensionality_ensembles_inv.
   - exists (g x); auto.
-  - constructor.
-    now rewrite H5, H. }
+  - constructor. subst.
+    rewrite H. assumption. }
 rewrite H4.
 auto.
 Qed.

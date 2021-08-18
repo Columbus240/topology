@@ -26,7 +26,7 @@ simpl.
 replace (inverse_image (fun x:point_set X => f x) V')
         with (inverse_image f V').
 - now apply f_cont.
-- extensionality_ensembles; now constructor.
+- extensionality_ensembles_inv; now constructor.
 Qed.
 
 End continuous_factorization.

@@ -53,10 +53,9 @@ Lemma empty_indexed_intersection: forall {T:Type}
   IndexedIntersection F = Full_set.
 Proof.
 intros.
-apply Extensionality_Ensembles; red; split; red; intros;
-  auto with sets.
+extensionality_ensembles_inv; auto with sets.
 constructor.
-destruct a.
+contradiction.
 Qed.
 
 Lemma empty_indexed_union: forall {T:Type}
@@ -64,10 +63,8 @@ Lemma empty_indexed_union: forall {T:Type}
   IndexedUnion F = Empty_set.
 Proof.
 intros.
-apply Extensionality_Ensembles; red; split; red; intros.
-- destruct H.
-  destruct a.
-- destruct H.
+extensionality_ensembles_inv.
+contradiction.
 Qed.
 
 Lemma finite_indexed_union {A T : Type} {F : IndexedFamily A T} :
@@ -80,7 +77,7 @@ induction H;
   intros.
 - replace (IndexedUnion F) with (@Empty_set T).
   + constructor.
-  + extensionality_ensembles.
+  + extensionality_ensembles_inv.
     destruct a.
 - replace (IndexedUnion F) with (Union (IndexedUnion (fun t => In (F (Some t)))) (F None)).
   + apply Union_preserves_Finite.
@@ -88,7 +85,7 @@ induction H;
       intro.
       apply H0.
     * apply H0.
-  + extensionality_ensembles.
+  + extensionality_ensembles_inv.
     * econstructor.
       eassumption.
     * econstructor.
@@ -102,11 +99,11 @@ induction H;
   + apply IHFiniteT.
     intro.
     apply H1.
-  + extensionality_ensembles.
+  + extensionality_ensembles_inv.
     * econstructor.
       eassumption.
     * destruct H0.
-      rewrite <- (H3 a) in H2.
+      rewrite <- (H2 a) in H3.
       econstructor.
       eassumption.
 Qed.
@@ -115,22 +112,21 @@ Lemma Complement_IndexedUnion {A T : Type} {F : IndexedFamily A T} :
   Ensembles.Complement (IndexedUnion F) =
   IndexedIntersection (fun a:A => Ensembles.Complement (F a)).
 Proof.
-apply Extensionality_Ensembles; split; red; intros.
+extensionality_ensembles_inv.
 - constructor. intros.
   red; red; intro.
   contradiction H.
   exists a. assumption.
-- destruct H.
-  red; red; intro.
-  destruct H0.
-  contradiction (H a).
+- red; red; intro.
+  destruct H.
+  contradiction (H0 a).
 Qed.
 
 Lemma Complement_IndexedIntersection {A T : Type} {F : IndexedFamily A T} :
   Ensembles.Complement (IndexedIntersection F) =
   IndexedUnion (fun a:A => Ensembles.Complement (F a)).
 Proof.
-apply Extensionality_Ensembles; split; red; intros.
+extensionality_ensembles_inv.
 - red in H; red in H.
   apply NNPP. intro.
   contradict H.
@@ -139,11 +135,10 @@ apply Extensionality_Ensembles; split; red; intros.
   contradict H0.
   exists a.
   assumption.
-- destruct H.
-  red; red; intro.
-  apply H.
-  destruct H0.
+- intro.
   apply H0.
+  destruct H.
+  auto.
 Qed.
 
 Lemma IndexedIntersection_option_Intersection
@@ -151,13 +146,9 @@ Lemma IndexedIntersection_option_Intersection
   IndexedIntersection V =
   Intersection (IndexedIntersection (fun a => V (Some a))) (V None).
 Proof.
-apply Extensionality_Ensembles; split; red; intros.
-- destruct H.
-  constructor.
-  + constructor. intros. apply H.
-  + apply H.
-- destruct H. destruct H.
-  constructor. intros.
+extensionality_ensembles_inv.
+- repeat constructor; auto.
+- repeat constructor.
   destruct a; auto.
 Qed.
 
@@ -167,23 +158,20 @@ Lemma IndexedIntersection_surj_fn
   IndexedIntersection V = IndexedIntersection (fun x => V (f x)).
 Proof.
 intros.
-apply Extensionality_Ensembles; split; red; intros.
-- destruct H0. constructor. intros. apply H0.
-- destruct H0. constructor. intros. destruct (H a).
-  subst. apply H0.
+extensionality_ensembles_inv.
+- constructor. auto.
+- constructor. intros. destruct (H a).
+  subst. auto.
 Qed.
 
 Lemma image_indexed_union (X Y I : Type) (F : IndexedFamily I X) (f : X -> Y) :
   Im (IndexedUnion F) f = IndexedUnion (fun i => Im (F i) f).
 Proof.
-apply Extensionality_Ensembles; split; red; intros.
-- inversion H; subst; clear H.
-  inversion H0; subst; clear H0.
-  exists a.
-  exists x0.
+extensionality_ensembles_inv.
+- subst.
+  exists a, x0.
   all: auto.
-- inversion H; subst; clear H.
-  inversion H0; subst; clear H0.
+- subst.
   exists x0; [|reflexivity].
   exists a. assumption.
 Qed.
@@ -200,40 +188,26 @@ Definition ImageFamily : Family T :=
 
 Lemma indexed_to_family_union: IndexedUnion F = FamilyUnion ImageFamily.
 Proof.
-apply Extensionality_Ensembles.
-unfold Same_set.
-unfold Included.
-intuition.
-- destruct H.
-  apply family_union_intro with (F a).
-  + apply Im_intro with a; auto with sets.
-  + assumption.
-- destruct H.
-  destruct H.
-  apply indexed_union_intro with x0.
-  rewrite <- H1.
-  assumption.
+extensionality_ensembles_inv.
+- exists (F a); auto.
+  apply Im_def. constructor.
+- subst.
+  exists x0. assumption.
 Qed.
 
 Lemma indexed_to_family_intersection:
   IndexedIntersection F = FamilyIntersection ImageFamily.
 Proof.
-apply Extensionality_Ensembles.
-unfold Same_set.
-unfold Included.
-intuition.
+extensionality_ensembles_inv.
 - constructor.
   intros.
   destruct H.
-  destruct H0.
-  rewrite H1.
-  apply H.
+  subst.
+  auto.
 - constructor.
   intro.
-  destruct H.
-  apply H.
-  apply Im_intro with a;
-    auto with sets.
+  apply H0.
+  exists a; auto with sets.
 Qed.
 
 End IndexedFamilyToFamily.
