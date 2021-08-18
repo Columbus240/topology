@@ -277,40 +277,6 @@ Lemma compact_subspace_indexed_cover (X : TopologicalSpace) (A : Ensemble X) :
 Proof.
 Admitted.
 
-Lemma family_intersection_add (X : Type) (Fam : Family X) (U : Ensemble X) :
-  FamilyIntersection (Add Fam U) =
-  Intersection U (FamilyIntersection Fam).
-Proof.
-  extensionality_ensembles_inv.
-  - split.
-    + apply H0. right. constructor.
-    + constructor. intros.
-      apply H0. left. assumption.
-  - constructor; intros.
-    destruct H1.
-    + apply H. assumption.
-    + inversion H1; subst; clear H1.
-      assumption.
-Qed.
-
-Lemma open_finite_family_intersection (X : TopologicalSpace)
-      (Fam : Family X) :
-  Finite Fam ->
-  (forall U, In Fam U -> open U) ->
-  open (FamilyIntersection Fam).
-Proof.
-  intros.
-  induction H.
-  { rewrite empty_family_intersection.
-    apply open_full.
-  }
-  rewrite family_intersection_add.
-  apply open_intersection2.
-  - apply H0. right. constructor.
-  - apply IHFinite. intros.
-    apply H0. left. assumption.
-Qed.
-
 Lemma EnsembleProduct_inj_inhabited {X Y : Type}
       (U0 U1 : Ensemble X) (V0 V1 : Ensemble Y) :
   Inhabited (EnsembleProduct U0 V0) ->
