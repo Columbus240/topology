@@ -3,6 +3,7 @@ From Coq Require Import Lra.
 From ZornsLemma Require Import EnsemblesTactics FiniteIntersections.
 Require Import RationalsInReals.
 Require Export Compactness Connectedness.
+From ZornsLemma Require Import Orders.
 
 Definition RTop := OrderTopology Rle.
 Definition R_metric (x y:R) : R := Rabs (y-x).
@@ -44,40 +45,6 @@ cut (y - z <= R_metric y z).
 - lra.
 - rewrite (metric_sym _ _ R_metric_is_metric).
   apply Rle_abs.
-Qed.
-
-Lemma R_lower_beam_open : forall p,
-  @open RTop [r : R | r < p].
-Proof.
-intro.
-replace [r : R | r < p] with
-    [y : R | y <= p /\ y <> p]
-  by (extensionality_ensembles_inv; constructor; lra).
-rewrite <- family_union_singleton.
-repeat (constructor + destruct H).
-Qed.
-
-Lemma R_upper_beam_open : forall p,
-  @open RTop [r : R | r > p].
-Proof.
-intro.
-replace [r : R | r > p] with
-    [y : R | p <= y /\ y <> p]
-  by (extensionality_ensembles_inv; constructor; lra).
-rewrite <- family_union_singleton.
-repeat (constructor + destruct H).
-Qed.
-
-Lemma R_interval_open : forall p q,
-  @open RTop [r : R | p < r < q].
-Proof.
-intros p q.
-replace [r : R | p < r < q] with
-    (Intersection [y : R | y < q] [y : R | y > p])
-  by (extensionality_ensembles_inv; repeat constructor; lra).
-eapply (@open_intersection2 RTop).
-- apply R_lower_beam_open.
-- apply R_upper_beam_open.
 Qed.
 
 Lemma RTop_neighborhood_is_neighbourhood
@@ -127,9 +94,9 @@ split.
       eapply Rlt_trans;
       try exact H8); lra.
 - intros [[p Hp] H].
-  exists [x : R | r - p < x < r + p].
+  exists (open_interval Rle (r - p) (r + p)).
   repeat split; try lra.
-  + apply R_interval_open.
+  + apply open_interval_open.
   + intros y [[H1 H2]].
     apply H, Rabs_def1; simpl; lra.
 Qed.
@@ -279,8 +246,26 @@ destruct (classic (inhabited (DS_set I))) as [Hinh|Hempty].
   now exists.
 Qed.
 
+Instance Rle_PreOrder : PreOrder Rle.
+Proof.
+  split; red; intros; lra.
+Qed.
+
+Instance Rle_PartialOrder : PartialOrder eq Rle.
+Proof.
+  split; intros.
+  - subst. split; reflexivity.
+  - destruct H. red in H0.
+    lra.
+Qed.
+
+Instance Rle_Connex : Connex Rle.
+Proof.
+  constructor. intros. lra.
+Qed.
+
 Lemma R_closed_interval_compact: forall a b:R, a <= b ->
-  compact (SubspaceTopology ([x:point_set RTop | a <= x <= b])).
+  compact (@SubspaceTopology RTop (closed_interval Rle a b)).
 Proof.
 intros a b Hbound.
 apply net_cluster_point_impl_compact.
@@ -291,26 +276,8 @@ destruct (bounded_real_net_has_cluster_point _ y a b).
   unfold y.
   destruct (x i).
   now destruct i0.
-- assert (closed [x:point_set RTop | a <= x <= b]).
-  { replace [x:point_set RTop | a <= x <= b] with
-          (Intersection
-            [ x:point_set RTop | a <= x ]
-            [ x:point_set RTop | x <= b ]) by
-      (extensionality_ensembles_inv;
-        do 2 constructor; lra).
-    apply closed_intersection2.
-    - apply upper_closed_interval_closed.
-      + constructor; red; intros; auto with real.
-        apply Rle_trans with y0; trivial.
-      + intros.
-        destruct (total_order_T x1 y0) as [[|]|]; auto with real.
-    - apply lower_closed_interval_closed.
-      + constructor; red; intros; auto with real.
-        apply Rle_trans with y0; trivial.
-      + intros.
-        destruct (total_order_T x1 y0) as [[|]|]; auto with real. }
-  assert (Ensembles.In [x:point_set RTop | a <= x <= b] x0).
-  { rewrite <- (closure_fixes_closed _ H1).
+- assert (Ensembles.In (closed_interval Rle a b) x0).
+  { erewrite <- (closure_fixes_closed _ (closed_interval_closed _ _ _ _)).
     apply net_cluster_point_in_closure with y; trivial.
     destruct H as [i0].
     exists i0.
@@ -319,16 +286,16 @@ destruct (bounded_real_net_has_cluster_point _ y a b).
     unfold y.
     destruct (x j).
     now destruct i. }
-  exists (exist _ x0 H2).
+  exists (exist _ x0 H1).
   red. intros.
-  rewrite subspace_open_char in H3.
-  destruct H3 as [V []].
+  rewrite subspace_open_char in H2.
+  destruct H2 as [V []].
   subst U.
-  destruct H4.
+  destruct H3.
   red. intros.
   assert (Ensembles.In V x0).
   { assumption. }
-  destruct (H0 V H3 H4 i) as [j []].
+  destruct (H0 V H2 H4 i) as [j []].
   exists j.
   split; trivial.
   now constructor.
@@ -338,11 +305,12 @@ Lemma R_compact_subset_bounded: forall A:Ensemble (point_set RTop),
   compact (SubspaceTopology A) -> bound A.
 Proof.
 intros.
-destruct (H (Im Full_set (fun y => inverse_image (subspace_inc _)
-                   [ x:point_set RTop | y - 1 < x < y + 1 ]))).
+destruct (H (Im Full_set (fun y => @inverse_image _ RTop
+                                  (subspace_inc _)
+                                  (open_interval Rle (y - 1) (y + 1))))).
 - intros U [H0].
   subst.
-  apply subspace_inc_continuous, R_interval_open.
+  apply subspace_inc_continuous, open_interval_open.
 - extensionality_ensembles;
     econstructor.
   + now exists (proj1_sig x).
@@ -374,11 +342,12 @@ destruct (H (Im Full_set (fun y => inverse_image (subspace_inc _)
           ** unfold Rmax.
              destruct Rle_dec; auto with real.
         * destruct H6.
-          rewrite H5 in H7.
+          subst.
           destruct H7.
-          destruct H6.
+          destruct H5 as [[? [? []]]].
           apply Rlt_le_trans with (x+1).
-          ** apply H6.
+          ** unfold subspace_inc in *.
+             lra.
           ** unfold Rmax.
              destruct Rle_dec; auto with real. }
   destruct H3 as [a].
@@ -424,9 +393,7 @@ cut (forall S:Ensemble (point_set RTop),
       split; trivial.
       red. now rewrite Complement_Complement. }
     rewrite <- (Complement_Complement _ S), H2.
-    extensionality_ensembles_inv.
-    rewrite Complement_Full_set in H3.
-    assumption.
+    apply Complement_Full_set.
 - cut (forall S:Ensemble (point_set RTop),
     clopen S -> Ensembles.In S 0 -> forall x:R, x > 0 ->
                                     Ensembles.In S x).
@@ -560,7 +527,7 @@ destruct (le_or_lt N n).
 Qed.
 
 Lemma R_cauchy_sequence_lower_bound: forall x:nat->R,
-  cauchy R_metric x -> lower_bound (Im Full_set x).
+  cauchy R_metric x -> SupInf.lower_bound (Im Full_set x).
 Proof.
 intros.
 assert (cauchy R_metric (fun n:nat => - x n)).
@@ -609,24 +576,24 @@ Lemma RTop_second_countable : second_countable RTop.
 Proof.
 apply intro_ctbl_basis with
   (finite_intersections (Union
-    (ImageFamily (fun q => [r : R | r < Q2R q]))
-    (ImageFamily (fun q => [r : R | r > Q2R q])))).
+    (ImageFamily (fun q => open_lower_ray Rle (Q2R q)))
+    (ImageFamily (fun q => open_upper_ray Rle (Q2R q))))).
 - constructor.
   + intros S H.
     induction H.
     * apply open_full.
     * destruct H as [S [[q Hq] H]| S [[q Hq] H]];
         subst.
-      -- apply R_lower_beam_open.
-      -- apply R_upper_beam_open.
+      -- apply open_lower_ray_open.
+      -- apply open_upper_ray_open.
     * now apply (@open_intersection2 RTop).
   + intros r U H1 H2.
     assert (neighborhood U r) as H by now exists U.
     apply RTop_neighborhood_is_neighbourhood in H.
     destruct H as [[d ?] H],
             (rationals_dense_in_reals (r - d) r) as [p ?],
-            (rationals_dense_in_reals r (r + d)) as [q ?];
-    exists (Intersection [x : R | x > Q2R p] [x : R | x < Q2R q]) + lra.
+            (rationals_dense_in_reals r (r + d)) as [q ?]; try lra.
+    exists (Intersection (open_upper_ray Rle (Q2R p)) (open_lower_ray Rle (Q2R q))).
     repeat split;
       simpl; try lra.
     * do 2 constructor;

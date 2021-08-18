@@ -12,12 +12,12 @@ split.
   assert (neighbourhood (inverse_image f [r : R | Rabs (r - f x) < eps]) x) as H1.
   { apply RTop_neighborhood_is_neighbourhood, H, open_neighborhood_is_neighborhood.
     split.
-    - replace [r : R | Rabs (r - f x) < eps] with [r : R | f x - eps < r < f x + eps]
+    - replace [r : R | Rabs (r - f x) < eps] with (Orders.open_interval Rle (f x - eps) (f x + eps))
         by (extensionality_ensembles_inv;
             constructor;
             apply Rabs_def1 + apply Rabs_def2 in H2;
             lra).
-      apply R_interval_open.
+      apply open_interval_open.
     - constructor.
       apply Rabs_def1; lra.
   }

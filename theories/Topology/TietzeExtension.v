@@ -57,11 +57,7 @@ refine (
   + red.
     rewrite <- inverse_image_complement.
     apply f0_cont.
-    apply lower_closed_interval_closed.
-    * apply Rle_order.
-    * intros.
-      destruct (total_order_T x y) as [[|]|];
-        auto with real.
+    eapply closed_lower_ray_closed; typeclasses eauto.
   + extensionality_ensembles_inv.
     * now constructor.
     * constructor.
@@ -72,11 +68,7 @@ refine (
   + red.
     rewrite <- inverse_image_complement.
     apply f0_cont.
-    apply upper_closed_interval_closed.
-    * apply Rle_order.
-    * intros.
-      destruct (total_order_T x y) as [[|]|];
-        auto with real.
+    eapply closed_upper_ray_closed; typeclasses eauto.
   + extensionality_ensembles_inv.
     * constructor. lra.
     * constructor. constructor. lra.
