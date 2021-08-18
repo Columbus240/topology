@@ -62,6 +62,24 @@ destruct H0.
 rewrite H1; apply H.
 Qed.
 
+Lemma open_finite_family_intersection (X : TopologicalSpace)
+      (Fam : Family X) :
+  Finite Fam ->
+  (forall U, In Fam U -> open U) ->
+  open (FamilyIntersection Fam).
+Proof.
+  intros.
+  induction H.
+  { rewrite empty_family_intersection.
+    apply open_full.
+  }
+  rewrite family_intersection_add.
+  apply open_intersection2.
+  - apply H0. right. constructor.
+  - apply IHFinite. intros.
+    apply H0. left. assumption.
+Qed.
+
 Lemma open_finite_indexed_intersection:
   forall {X:TopologicalSpace} {A:Type}
     (F:IndexedFamily A X),
@@ -72,23 +90,20 @@ intros.
 induction H.
 - rewrite empty_indexed_intersection.
   apply open_full.
-- assert (IndexedIntersection F = Intersection
-    (IndexedIntersection (fun x:T => F (Some x)))
-    (F None)).
-  { apply Extensionality_Ensembles; split; red; intros.
-    - destruct H1.
-      constructor.
-      + constructor.
-        intros; apply H1.
-      + apply H1.
-    - destruct H1.
-      destruct H1.
-      constructor.
+- replace (IndexedIntersection F) with
+      (Intersection (IndexedIntersection (fun x:T => F (Some x)))
+                    (F None)).
+  2: {
+    extensionality_ensembles_inv.
+    - constructor.
       destruct a.
       + apply H1.
+      + apply H3.
+    - constructor.
+      + constructor.
+        intros; apply H2.
       + apply H2.
   }
-  rewrite H1.
   apply open_intersection2.
   + apply IHFiniteT.
     intros; apply H0.

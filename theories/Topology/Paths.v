@@ -331,16 +331,6 @@ Proof.
   apply H.
 Qed.
 
-Lemma continuous_clopen {X Y : TopologicalSpace} (f : X -> Y) (A : Ensemble Y) :
-  continuous f -> clopen A ->
-  clopen (inverse_image f A).
-Proof.
-  intros Hf [HAo HAc].
-  split.
-  - auto.
-  - apply continuous_closed; assumption.
-Qed.
-
 Lemma connected_subspace_in_clopen (X : TopologicalSpace) (A : Ensemble X) :
   connected (SubspaceTopology A) ->
   forall S, clopen S -> Included A S \/ Included A (Complement S).

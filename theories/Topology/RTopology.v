@@ -101,6 +101,20 @@ split.
     apply H, Rabs_def1; simpl; lra.
 Qed.
 
+Lemma RTop_open_ball_as_open_interval x r :
+  open_ball (point_set RTop) R_metric x r =
+  open_interval Rle (x-r) (x+r).
+Proof.
+  unfold R_metric.
+  extensionality_ensembles_inv;
+    repeat constructor;
+    try match goal with
+    | H : Rabs _ < _ |- _ =>
+      apply Rabs_def2 in H; lra
+    end.
+  apply Rabs_def1; lra.
+Qed.
+
 Lemma RTop_metrization: metrizes RTop R_metric.
 Proof.
 refine (let Hsubbasis := Build_TopologicalSpace_from_subbasis_subbasis
@@ -110,22 +124,10 @@ red. intros.
 constructor;
   intros.
 - destruct H.
-  replace (open_ball (point_set RTop) R_metric x r) with
-          (Intersection
-            [ y:R | x-r <= y /\ y <> x-r ]
-            [ y:R | y <= x+r /\ y <> x+r ]).
-  + constructor.
-    * apply (@open_intersection2 RTop);
-        apply Hsubbasis; constructor.
-    * repeat constructor; lra.
-  + unfold R_metric.
-    extensionality_ensembles_inv;
-      repeat constructor;
-      try match goal with
-      | H : Rabs _ < _ |- _ =>
-        apply Rabs_def2 in H; lra
-      end.
-    apply Rabs_def1; lra.
+  rewrite RTop_open_ball_as_open_interval.
+  constructor.
+  + apply open_interval_open.
+  + repeat constructor; lra.
 - intros.
   apply open_neighborhood_is_neighborhood, RTop_neighborhood_is_neighbourhood in H.
   destruct H.
@@ -610,3 +612,203 @@ Lemma RTop_separable: separable RTop.
 Proof.
   apply second_countable_impl_separable, RTop_second_countable.
 Qed.
+
+Lemma open_interval_included_closed {X : Type} (R : relation X) (x y : X) :
+  Included (open_interval R x y) (closed_interval R x y).
+Proof.
+  red; intros.
+  destruct H.
+  constructor.
+  tauto.
+Qed.
+
+Lemma closed_interval_union_boundary (X : Type) (R : relation X) `{RelationClasses.Reflexive _ R} (x y : X) :
+  R x y ->
+  closed_interval R x y =
+  Union (open_interval R x y) (Couple x y).
+Proof.
+  intros.
+  extensionality_ensembles.
+  - repeat inversion_ensembles_in.
+    destruct H2.
+    destruct (classic (x0=x)).
+    { subst. right. constructor. }
+    destruct (classic (x0=y)).
+    { subst. right. constructor. }
+    left. repeat split; assumption.
+  - inversion H1; subst; clear H1.
+    + apply open_interval_included_closed.
+      assumption.
+    + inversion H2; subst; clear H2.
+      * repeat split; try tauto.
+        reflexivity.
+      * repeat split; try tauto.
+        reflexivity.
+Qed.
+
+Lemma open_interval_empty (X : Type) (R : relation X) `{RelationClasses.Transitive X R} `{RelationClasses.Antisymmetric X eq R} (x y : X) :
+  R y x ->
+  open_interval R x y = Empty_set.
+Proof.
+  intros.
+  extensionality_ensembles_inv.
+  destruct H3 as [? [? []]].
+  pose proof (H _ _ _ H2 H4).
+  pose proof (H0 _ _ H1 H6).
+  subst.
+  pose proof (H0 _ _ H2 H4).
+  congruence.
+Qed.
+
+Lemma open_interval_inhabited {X : Type} (R : relation X) `{DenseRelation X R} (x y : X) :
+  R x y -> x <> y ->
+  Inhabited (open_interval R x y).
+Proof.
+  intros.
+  pose proof (dense _ _ H1 H0) as [z []].
+  exists z. repeat split; try tauto.
+  congruence.
+Qed.
+
+Instance Rle_dense : DenseRelation Rle.
+Proof.
+  constructor.
+  intros.
+  exists ((x+y)/2).
+  lra.
+Qed.
+
+Lemma RTop_closure_open_interval (x y : RTop) :
+  x < y ->
+  @closure RTop (open_interval Rle x y) =
+  closed_interval Rle x y.
+Proof.
+  intros.
+  extensionality_ensembles_inv.
+  - apply H1. clear H1.
+    constructor. split.
+    + eapply closed_interval_closed; typeclasses eauto.
+    + apply open_interval_included_closed.
+  - apply meets_every_open_neighborhood_impl_closure.
+    intros.
+    destruct H1.
+    destruct H1.
+    2: {
+      subst.
+      destruct H3; try lra.
+      pose proof (@open_neighborhood_basis_cond
+                    RTop (metric_topology_neighborhood_basis R_metric x0)
+                    x0 (RTop_metrization _) U) as [V []].
+      { constructor; assumption. }
+      inversion H3; subst; clear H3.
+      exists (x0 + (Rmin r (y-x0))/2).
+      constructor.
+      - repeat split;
+          destruct (connex r (y - x0)).
+        all: try solve [rewrite Rmin_left; try assumption; lra].
+        all: try solve [rewrite Rmin_right; try assumption; lra].
+      - apply H4.
+        repeat split. unfold R_metric.
+        rewrite Rplus_comm.
+        unfold Rminus. rewrite Rplus_assoc.
+        rewrite Rplus_opp_r.
+        rewrite Rplus_0_r.
+        apply Rabs_def1.
+        { apply (Rle_lt_trans _ (r/2)).
+          2: lra.
+          unfold Rdiv.
+          apply Rmult_le_compat_r.
+          { lra. }
+          apply Rmin_l.
+        }
+        apply (Rle_lt_trans _ 0).
+        { lra. }
+        unfold Rdiv.
+        apply Rmult_lt_0_compat; try lra.
+        apply Rmin_glb_lt; lra.
+    }
+    destruct H3.
+    { exists x0; split; try assumption.
+      repeat split; lra.
+    }
+    subst.
+    pose proof (@open_neighborhood_basis_cond
+                  RTop (metric_topology_neighborhood_basis R_metric y)
+                  y (RTop_metrization _) U) as [V []].
+    { constructor; assumption. }
+    inversion H3; subst; clear H3.
+    exists (y - (Rmin r (y-x))/2).
+    constructor.
+    + repeat split;
+        destruct (connex r (y - x)).
+      all: try solve [rewrite Rmin_left; try assumption; lra].
+      all: try solve [rewrite Rmin_right; try assumption; lra].
+    + apply H4.
+      repeat split. unfold R_metric.
+      unfold Rminus.
+      rewrite Rplus_comm.
+      rewrite <- Rplus_assoc.
+      rewrite Rplus_opp_l.
+      rewrite Rplus_0_l.
+      apply Rabs_def1.
+      2: {
+        apply Ropp_lt_contravar.
+        unfold Rdiv.
+        apply (Rle_lt_trans _ (r * / 2)).
+        2: { lra. }
+        apply Rmult_le_compat_r.
+        { lra. }
+        apply Rmin_l.
+      }
+      apply (Rle_lt_trans _ 0).
+      2: { lra. }
+      unfold Rdiv.
+      apply Ropp_le_cancel.
+      rewrite Ropp_0.
+      rewrite Ropp_involutive.
+      apply Rmult_le_pos.
+      2: { lra. }
+      apply Rmin_glb; lra.
+Qed.
+
+Lemma RTop_connected_convex (A : Ensemble RTop) :
+  connected (SubspaceTopology A) <-> order_convex Rle A.
+Proof.
+  split.
+  - intros.
+    red; intros.
+    red; intros.
+    red in H.
+    apply NNPP.
+    intros ?.
+    destruct (H (inverse_image (subspace_inc A) (open_lower_ray Rle x0))).
+    2: {
+      assert (In (inverse_image (subspace_inc A) (open_lower_ray Rle x0)) (exist _ x H0)).
+      2: {
+        rewrite H4 in H5.
+        destruct H5.
+      }
+      constructor. simpl.
+      constructor. destruct H2. lra.
+    }
+    2: {
+      assert (In (inverse_image (subspace_inc A) (open_lower_ray Rle x0)) (exist _ y H1)).
+      2: {
+        destruct H5. simpl in *.
+        destruct H5. destruct H2. lra.
+      }
+      rewrite H4. constructor.
+    }
+    split.
+    + apply subspace_inc_continuous. apply open_lower_ray_open.
+    + red. rewrite <- inverse_image_complement.
+      erewrite open_lower_ray_Complement; try typeclasses eauto.
+      replace (inverse_image _ _) with
+          (inverse_image (subspace_inc A) (open_upper_ray Rle x0)).
+      { apply subspace_inc_continuous. apply open_upper_ray_open. }
+      extensionality_ensembles_inv.
+      * constructor. constructor. tauto.
+      * constructor. constructor. simpl in *.
+        split; try lra. intros ?. subst.
+        apply H3. apply (proj2_sig x1).
+  - intros.

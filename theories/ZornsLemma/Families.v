@@ -164,3 +164,19 @@ extensionality_ensembles_inv.
 - subst. assumption.
 - exists S; try assumption. constructor.
 Qed.
+
+Lemma family_intersection_add (X : Type) (Fam : Family X) (U : Ensemble X) :
+  FamilyIntersection (Add Fam U) =
+  Intersection U (FamilyIntersection Fam).
+Proof.
+  extensionality_ensembles_inv.
+  - split.
+    + apply H0. right. constructor.
+    + constructor. intros.
+      apply H0. left. assumption.
+  - constructor; intros.
+    destruct H1.
+    + apply H. assumption.
+    + inversion H1; subst; clear H1.
+      assumption.
+Qed.

@@ -5,6 +5,16 @@ Definition clopen {X:TopologicalSpace} (S:Ensemble (point_set X))
   : Prop :=
   open S /\ closed S.
 
+Lemma continuous_clopen {X Y : TopologicalSpace} (f : X -> Y) (A : Ensemble Y) :
+  continuous f -> clopen A ->
+  clopen (inverse_image f A).
+Proof.
+  intros Hf [HAo HAc].
+  split.
+  - auto.
+  - apply continuous_closed; assumption.
+Qed.
+
 Definition connected (X:TopologicalSpace) : Prop :=
   forall S:Ensemble (point_set X), clopen S ->
         S = Empty_set \/ S = Full_set.

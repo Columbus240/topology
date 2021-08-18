@@ -968,3 +968,44 @@ Proof.
     + intros. destruct x as [[]|]; intuition.
     + intros. destruct y as [|]; intuition.
 Qed.
+
+Lemma FiniteT_ens_finite (X : Type) :
+  FiniteT X <-> forall U : Ensemble X, Finite U.
+Proof.
+  split.
+  - intros.
+    induction H.
+    + rewrite (False_Ensembles_eq _ Empty_set).
+      constructor.
+    + rewrite <- (@Intersection_Full_set _ U).
+      rewrite Intersection_commutative.
+      apply Intersection_preserves_finite.
+      replace Full_set with (Union (Im (@Full_set T) Some) (Singleton None)).
+      * apply Union_preserves_Finite.
+        { apply finite_image.
+          apply IHFiniteT.
+        }
+        apply Singleton_is_finite.
+      * extensionality_ensembles_inv; try solve [constructor].
+        destruct x; [left|right].
+        -- apply Im_def. constructor.
+        -- constructor.
+    + destruct H0 as [g].
+      replace U with (Im (Im U g) f).
+      { apply finite_image. apply IHFiniteT. }
+      extensionality_ensembles_inv.
+      * subst. rewrite H1. assumption.
+      * rewrite <- (H1 x).
+        apply Im_def. apply Im_def.
+        assumption.
+  - intros.
+    pose proof (Finite_ens_type Full_set (H _)).
+    unshelve eapply (bij_finite _ _ _ H0).
+    { apply proj1_sig. }
+    unshelve eexists.
+    { apply (fun x => exist _ x (Full_intro _ x)). }
+    + intros. simpl. destruct x.
+      apply subset_eq_compat.
+      reflexivity.
+    + intros. simpl. reflexivity.
+Qed.

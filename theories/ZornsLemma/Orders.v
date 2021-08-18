@@ -12,7 +12,7 @@ Class Connex {X : Type} (R : relation X) :=
 Class LinearOrder {X : Type} (R : relation X) `{PartialOrder _ eq R} `{Connex X R}.
 
 Class DenseRelation {X : Type} (R : relation X) :=
-  { dense : forall x y, x <> y /\ R x y ->
+  { dense : forall x y, x <> y -> R x y ->
                    exists z, x <> z /\ R x z /\ z <> y /\ R z y; }.
 
 Definition is_upper_bound {X : Type} (R : relation X) (A : Ensemble X) (x : X) :=
