@@ -307,3 +307,23 @@ destruct (choice_on_dependent_type (fun (a:A)
     destruct x1, x2.
     apply subset_eq_compat.
 Qed.
+
+Lemma countable_union2
+  {X : Type}
+  {U V : Ensemble X} :
+  Countable U ->
+  Countable V ->
+  Countable (Union U V).
+Proof.
+intros Hf Hg.
+replace (Union U V) with (IndexedUnion (fun b : bool => if b then U else V)).
+- apply countable_union.
+  + apply (intro_nat_injection _ (fun b : bool => if b then 1 else 0)%nat).
+    now intros [|] [|] eq.
+  + now intros [|].
+- extensionality_ensembles_inv.
+  + destruct a;
+      now (left + right).
+  + now apply indexed_union_intro with true.
+  + now apply indexed_union_intro with false.
+Qed.
