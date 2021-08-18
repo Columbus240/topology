@@ -66,6 +66,7 @@ theories/ZornsLemma/IndexedFamilies.v
 theories/ZornsLemma/InfiniteTypes.v
 theories/ZornsLemma/InverseImage.v
 theories/ZornsLemma/Ordinals.v
+theories/ZornsLemma/Partitions.v
 theories/ZornsLemma/Powerset_facts.v
 theories/ZornsLemma/Proj1SigInjective.v
 theories/ZornsLemma/Quotients.v
