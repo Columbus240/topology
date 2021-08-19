@@ -5,6 +5,7 @@
 
 From Coq.Sets Require Export Powerset_facts.
 From ZornsLemma Require Export EnsemblesImplicit EnsemblesTactics.
+From ZornsLemma Require Import FunctionProperties.
 From Coq Require Import Classical_Prop RelationClasses.
 
 Global Instance Included_PreOrder {X : Type} :
@@ -145,4 +146,14 @@ Proof.
   { constructor. }
   destruct (classic (In V x));
     [left|right]; auto.
+Qed.
+
+Lemma Complement_injective (X : Type) :
+  injective (@Complement X).
+Proof.
+  red; intros.
+  rewrite <- (Complement_Complement _ x).
+  rewrite <- (Complement_Complement _ y).
+  rewrite H.
+  reflexivity.
 Qed.
