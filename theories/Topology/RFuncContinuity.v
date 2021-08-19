@@ -1,7 +1,7 @@
 Require Export RTopology ProductTopology Homeomorphisms.
 Require Import ContinuousFactorization.
 From Coq Require Import FunctionalExtensionality Lra ProofIrrelevance.
-From ZornsLemma Require Import EnsemblesTactics.
+From ZornsLemma Require Import EnsemblesTactics Orders.
 
 Lemma continuous_at_iff_continuity_pt
   {f : R -> R} {x : R} :
@@ -12,12 +12,12 @@ split.
   assert (neighbourhood (inverse_image f [r : R | Rabs (r - f x) < eps]) x) as H1.
   { apply RTop_neighborhood_is_neighbourhood, H, open_neighborhood_is_neighborhood.
     split.
-    - replace [r : R | Rabs (r - f x) < eps] with [r : R | f x - eps < r < f x + eps]
+    - replace [r : R | Rabs (r - f x) < eps] with (open_interval Rle (f x - eps) (f x + eps))
         by (extensionality_ensembles;
             constructor;
             apply Rabs_def1 + apply Rabs_def2 in H1;
             lra).
-      apply R_interval_open.
+      apply open_interval_open.
     - constructor.
       apply Rabs_def1; lra.
   }

@@ -1,7 +1,7 @@
 Require Export RTopology SeparatednessAxioms.
 Require Import RFuncContinuity UniformTopology ContinuousFactorization.
 From Coq Require Import Description Max Psatz ClassicalChoice.
-From ZornsLemma Require Import Proj1SigInjective.
+From ZornsLemma Require Import Proj1SigInjective Orders.
 Require Import UrysohnsLemma.
 
 (* This proof of the Tietze extension theorem is heavily based on
@@ -53,30 +53,22 @@ refine (
   fun x:point_set X => -1/3 + 2/3 * g x).
 - apply subspace_inc_takes_closed_to_closed; [assumption|].
   replace ([ x:point_set (SubspaceTopology F) | f0 x <= -1/3 ]) with
-    (inverse_image f0 [ y:point_set RTop | y <= -1/3 ]).
+    (inverse_image f0 (closed_lower_ray Rle (-1/3))).
   + red.
     rewrite <- inverse_image_complement.
     apply f0_cont.
-    apply lower_closed_interval_closed.
-    * apply Rle_order.
-    * intros.
-      destruct (total_order_T x y) as [[|]|];
-        auto with real.
+    eapply closed_lower_ray_closed; typeclasses eauto.
   + extensionality_ensembles.
     * now constructor.
     * constructor.
       now constructor.
 - apply subspace_inc_takes_closed_to_closed; [assumption|].
   replace ([ x:point_set (SubspaceTopology F) | f0 x >= 1/3 ]) with
-    (inverse_image f0 [ y:point_set RTop | 1/3 <= y ]).
+    (inverse_image f0 (closed_upper_ray Rle (1/3))).
   + red.
     rewrite <- inverse_image_complement.
     apply f0_cont.
-    apply upper_closed_interval_closed.
-    * apply Rle_order.
-    * intros.
-      destruct (total_order_T x y) as [[|]|];
-        auto with real.
+    eapply closed_upper_ray_closed; typeclasses eauto.
   + extensionality_ensembles.
     * constructor. lra.
     * constructor. constructor. lra.
