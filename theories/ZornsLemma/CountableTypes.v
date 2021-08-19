@@ -13,8 +13,55 @@ Local Close Scope Q_scope.
 
 Set Asymmetric Patterns.
 
+(* Given a type [X : Type], [CountableT X] and a predicate [P : X ->
+Prop] such that [HPdec : forall x : X, P x \/ ~ P x]. Then there is an
+algorithm that semi-decides the formula [exists x : X, P x] and
+another that semi-decides the formula [exists x : X, ~ P x]. Is there
+a way in which we could formalise semi-decidability inside Coq’s type
+system? Problem is, that all functions must terminate, so either we
+need functions with "fuel" or something with which we can do one
+computation step after another. *)
+
+Definition SemiDecidable {X : Type} (P : X -> Prop) :=
+  exists f : nat -> bool,
+    (exists n : nat, f n = true) <-> (exists x : X, P x).
+
 Inductive CountableT (X : Type) : Prop :=
   | intro_nat_injection (f : X -> nat) : injective f -> CountableT X.
+
+Lemma CountableT_semi_dec_exists {X : Type} (P : X -> Prop) (f : nat -> X) :
+  surjective f ->
+  (forall x, {P x} + {~ P x}) ->
+  SemiDecidable P.
+Proof.
+  intros.
+  unshelve econstructor.
+  - intros n.
+    specialize (X0 (f n)) as [|]; [refine true|refine false].
+  - split.
+    + intros Hq; destruct Hq as [n].
+      simpl in *.
+      destruct (X0 (f n)); try discriminate.
+      exists (f n). assumption.
+    + intros Hq; destruct Hq as [x].
+      specialize (H x) as [n].
+      exists n. subst. simpl.
+      destruct (X0 (f n)); try contradiction.
+      reflexivity.
+Qed.
+
+Lemma CountableT_eq_dec {X : Type} :
+  CountableT X ->
+  forall x y : X, x = y \/ x <> y.
+Proof.
+  intros.
+  destruct H as [f].
+  destruct (Nat.eq_dec (f x) (f y)).
+  - apply H in e.
+    left. assumption.
+  - right. intros ?. apply n.
+    subst. reflexivity.
+Qed.
 
 Lemma CountableT_is_FiniteT_or_countably_infinite (X : Type) :
   CountableT X -> {FiniteT X} + {exists f : X -> nat, bijective f}.
@@ -40,6 +87,21 @@ apply intro_nat_injection with (fun n => n).
 now intros [|m] [|n].
 Qed.
 
+Lemma div2_add_even k n :
+  Nat.div2 (k + k + n) = k + Nat.div2 n.
+Proof.
+  induction k.
+  { simpl. reflexivity. }
+  simpl.
+  rewrite (Nat.add_comm _ (S _)).
+  simpl.
+  rewrite IHk.
+  reflexivity.
+Qed.
+
+(* Note that the function given here is computationally inefficient.
+   [sum_1_to_n n = Nat.div2 ((S n) * n)]
+ *)
 Lemma countable_nat_product: CountableT (nat * nat).
 Proof.
 pose (sum_1_to_n := fix sum_1_to_n n:nat := match n with
