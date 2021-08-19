@@ -5,6 +5,7 @@
 
 From Coq.Sets Require Export Powerset_facts.
 From ZornsLemma Require Export EnsemblesImplicit EnsemblesTactics.
+From ZornsLemma Require Import FunctionProperties.
 From Coq Require Import Classical_Prop.
 
 Lemma Intersection_Full_set
@@ -122,4 +123,11 @@ Lemma Couple_swap X (x y : X) :
   Couple x y = Couple y x.
 Proof.
   extensionality_ensembles_inv; constructor.
+Qed.
+
+Lemma Complement_injective (X : Type) :
+  injective (@Complement X).
+Proof.
+  apply involutive_impl_bijective.
+  red; intros. apply Complement_Complement.
 Qed.
