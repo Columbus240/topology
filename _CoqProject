@@ -4,6 +4,7 @@
 -arg -w -arg -deprecated-hint-rewrite-without-locality
 -arg -w -arg -deprecated-instance-without-locality
 
+theories/Topology/Compactification.v
 theories/Topology/Compactness.v
 theories/Topology/Completeness.v
 theories/Topology/Completion.v
