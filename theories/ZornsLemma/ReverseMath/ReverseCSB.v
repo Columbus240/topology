@@ -562,3 +562,9 @@ Section CSB_Reverse.
       auto.
   Qed.
 End CSB_Reverse.
+Check CSB_impl_LEM.
+Print Assumptions CSB_impl_LEM.
+
+(* Maybe we can strengthen [CSB] so that the bijection we get behaves "extensionally" (x == y -> f x = f y).
+   For this, we might need to side-step [CSB] and strengthen it to a variant that works on setoids and setoid-maps.
+*)
