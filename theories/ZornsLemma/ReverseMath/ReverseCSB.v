@@ -6,7 +6,7 @@
 From ZornsLemma Require Import FiniteTypes FunctionProperties.
 From Coq Require Import FunctionalExtensionality ProofIrrelevanceFacts.
 From Coq Require Import PeanoNat ProofIrrelevance.
-From Coq Require Import RelationClasses.
+From Coq Require Import RelationClasses SetoidClass.
 
 (* Definition 6 of the above paper *)
 Definition OmniscientT (O : Type) : Prop :=
@@ -156,8 +156,11 @@ Proof.
   reflexivity.
 Qed.
 
+Program Instance N_infty_Setoid : Setoid N_infty :=
+  {| equiv := N_equiv; |}.
+
 (* Lemma 9 second part. *)
-Lemma S_infty_nonzero : forall p : N_infty, S_infty p <> (nat_inj 0).
+Lemma S_infty_nonzero : forall p : N_infty, S_infty p =/= (nat_inj 0).
 Proof.
   intros.
   intro H.
@@ -511,7 +514,232 @@ Proof.
   intros. apply N_infty_extensionality in H. subst. reflexivity.
 Qed.
 
+Instance S_infty_Proper : Proper (equiv ==> equiv) S_infty.
+Proof.
+  red; red; intros.
+  simpl in *.
+  red; intros.
+  simpl.
+  destruct n; auto.
+Qed.
+
+Require Quotients.
+
+Definition CSB_Statement :=
+  (forall (X Y : Type) (f : X -> Y) (g : Y -> X),
+    injective f -> injective g -> exists h : X -> Y, bijective h).
+
+Definition CSB'_Statement :=
+  (forall (X Y : Type) `(Setoid X) `(Setoid Y)
+                         (f : X -> Y) (g : Y -> X),
+    Proper (equiv ==> equiv) f ->
+    Proper (equiv ==> equiv) g ->
+    (* [f] is injective *)
+    (forall x0 x1, f x0 == f x1 -> x0 == x1) ->
+    (* [g] is injective *)
+    (forall y0 y1, g y0 == g y1 -> y0 == y1) ->
+    exists h : X -> Y,
+      Proper (equiv ==> equiv) h /\
+      (* [h] is bijective... *)
+      (forall x0 x1, h x0 == h x1 -> x0 == x1) /\
+      (forall y, exists x, h x == y)).
+
+Program Definition eq_Setoid {A : Type} : Setoid A :=
+  {| equiv := eq |}.
+
+(* This holds, by instantiating CSB' with the usual equality. *)
+Lemma CSB'_impl_CSB :
+  CSB'_Statement -> CSB_Statement.
+Proof.
+  unfold CSB_Statement, CSB'_Statement.
+  intros.
+  specialize (H X Y eq_Setoid eq_Setoid f g).
+  destruct H as [h]; intuition.
+  exists h; split; intuition.
+Qed.
+
+(* A version of CSB' specialized for N_infty suffices as well. *)
+
+Definition A_ (P : Prop) := { x : bool | x = false /\ P }.
+
+Instance Asum_Setoid (P : Prop) : Setoid ((A_ P) + N_infty).
+  refine (@Build_Setoid _ (fun x y =>
+       match x, y with
+       | inl (exist _ b0 _), inl (exist _ b1 _) => b0 = b1
+       | inr p, inr q => (@equiv _ N_infty_Setoid p q)
+       | _, _ => False
+       end) _).
+  split; red; intros.
+  - destruct x as [[]|]; reflexivity.
+  - destruct x as [[]|], y as [[]|]; intuition.
+  - destruct x as [[]|], y as [[]|], z as [[]|]; intuition.
+    + subst. reflexivity.
+    + transitivity n0; assumption.
+Defined.
+
+Definition f_ (P : Prop) := fun x : N_infty => @inr (A_ P) _ x.
+
+Lemma f_injective (P : Prop) : injective (f_ P).
+Proof.
+  red; intros.
+  unfold f_ in *.
+  inversion H; auto.
+Qed.
+
+Definition g_ (P : Prop) := fun x : (A_ P) + N_infty =>
+                              match x with
+                              | inl _ => nat_inj 0
+                              | inr x => S_infty x
+                              end.
+
+(* We can't prove that [g_] is injective, because it collapses
+proofs. So CSB_Statement can't be applied... And there's no way to
+recover it directly... *)
+
+Lemma g_injectivity (P : Prop) :
+  injective (g_ P) -> forall p q : P, p = q.
+Proof.
+  intros.
+  unshelve evar (A_ P).
+  { exists false. split; try reflexivity.
+    exact p.
+  }
+  unshelve evar (A_ P).
+  { exists false. split; try reflexivity.
+    exact q.
+  }
+  specialize (H (inl a) (inl a0)).
+  intuition.
+  Set Keep Proof Equalities.
+  inversion H0.
+  reflexivity.
+Qed.
+
+Lemma A_sum_injectivity (P : Prop) (g : (A_ P) + N_infty -> N_infty) :
+  Proper (equiv ==> equiv) g ->
+  (forall x0 x1, g x0 == g x1 -> x0 = x1) ->
+  forall p q : P, p = q.
+Proof.
+  intros.
+  unshelve evar (A_ P).
+  { exists false. split; try reflexivity. exact p. }
+  unshelve evar (A_ P).
+  { exists false. split; try reflexivity. exact q. }
+  assert (inl a == inl a0).
+  { simpl. reflexivity. }
+  apply H in H1.
+  apply H0 in H1.
+  inversion H1.
+  reflexivity.
+Qed.
+
+(* States that there exists a "bijection relative to the equivalence relations". *)
+Definition CSB''_Statement (P : Prop) :=
+  exists h : N_infty -> (A_ P) + N_infty,
+    Proper (equiv ==> equiv) h /\
+    (forall x0 x1, h x0 == h x1 -> x0 == x1) /\
+    (forall y, exists x, h x == y).
+Require Import CSB.
+Print Assumptions CSB.
+
+Definition CSB3_Statement (P : Prop) :=
+  exists h : N_infty -> (A_ P) + N_infty,
+    bijective h.
+
+Lemma CSB''_impl_LEM : forall P, CSB''_Statement P -> P \/ ~P.
+Proof.
+  intros.
+  destruct H as [h [? [? ?]]].
+  pose (Q := fun x => match h x with inl _ => false | inr _ => true end).
+  destruct (N_infty_omniscient' Q).
+  - intros.
+    unfold Q.
+    apply H in H2.
+    destruct (h p), (h q); auto.
+    + simpl in *. destruct a. contradiction.
+    + simpl in *. destruct a. contradiction.
+  - left.
+    unfold Q in *. destruct H2 as [o].
+    destruct (h o).
+    + destruct a. destruct a. assumption.
+    + discriminate.
+  - right. intros ?a.
+    unshelve evar (b : A_ P).
+    { exists false. auto. }
+    specialize (H1 (inl b)) as [o].
+    specialize (H2 o).
+    unfold Q in *.
+    destruct (h o); try discriminate.
+    simpl in H1. assumption.
+Qed.
+
+Lemma CSB'_impl_CSB'' : CSB'_Statement -> forall P : Prop, CSB''_Statement P.
+Proof.
+  intros.
+  red in H.
+  specialize (H _ _ _ _ (f_ P) (g_ P)).
+  destruct H as [h].
+  { (* Proper _ f *)
+     red; red. intros.
+     simpl. assumption.
+  }
+  { (* Proper _ g *)
+    red; red. intros.
+    simpl in *.
+    destruct x, y.
+    - simpl. constructor.
+    - destruct a. contradiction.
+    - contradiction.
+    - simpl. apply S_infty_Proper. assumption.
+  }
+  { (* injective f *)
+    intros. simpl in *. assumption.
+  }
+  { (* injective g *)
+    intros.
+    destruct y0, y1.
+    - destruct a, a0.
+      destruct a, a0.
+      rewrite e, e0.
+      reflexivity.
+    - unfold g_ in H.
+      symmetry in H.
+      exfalso.
+      contradict H.
+      apply S_infty_nonzero.
+    - simpl in *.
+      contradict H.
+      apply S_infty_nonzero.
+    - simpl in *.
+      apply S_infty_inj' in H.
+      assumption.
+  }
+  exists h. assumption.
+Qed.
+
+Theorem CSB'_impl_LEM : CSB'_Statement -> forall P : Prop, P \/ ~P.
+Proof.
+  intros.
+  apply CSB''_impl_LEM.
+  apply CSB'_impl_CSB''.
+  assumption.
+Qed.
+
 Section CSB_Reverse.
+  Variable CSB' : forall {X Y : Type} `{Setoid X} `{Setoid Y}
+                         (f : X -> Y) (g : Y -> X),
+    Proper (equiv ==> equiv) f ->
+    Proper (equiv ==> equiv) g ->
+    (* [f] is injective *)
+    (forall x0 x1, f x0 == f x1 -> x0 == x1) ->
+    (* [g] is injective *)
+    (forall y0 y1, g y0 == g y1 -> y0 == y1) ->
+    exists h : X -> Y,
+      Proper (equiv ==> equiv) h /\
+      (* [h] is bijective... *)
+      (forall x0 x1, h x0 == h x1 -> x0 == x1) /\
+      (forall y, exists x, h x == y).
+
   Variable CSB : forall (X Y : Type) (f : X -> Y) (g : Y -> X),
     injective f -> injective g -> exists h : X -> Y, bijective h.
 
@@ -543,6 +771,8 @@ Section CSB_Reverse.
       - simpl in *.
         symmetry in H.
         contradict H.
+  Admitted.
+        (*
         apply S_infty_nonzero.
       - simpl in *.
         contradict H.
@@ -561,4 +791,8 @@ Section CSB_Reverse.
       exists false.
       auto.
   Qed.
+*)
 End CSB_Reverse.
+
+Print Assumptions CSB_impl_LEM.
+Print Assumptions CSB'_impl_LEM.
