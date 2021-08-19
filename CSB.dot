@@ -1,0 +1,48 @@
+# Draw the interrelations between some propositions. LEM/CSB.
+digraph G {
+	graph [layout=dot rankdir=LR]
+
+	"LEM";
+	"Indef. Descr.";
+	"Def. Descr.";
+	"CSB";
+	"Setoid-CSB";
+	"Omniscience";
+	"Setoid-Omniscience" [style=filled,fillcolor=grey];
+	"Extensionality";
+	"FunExt";
+	"ProofIrrelevance";
+
+	"marr01" [shape=diamond,style=filled,label="",height=.1,width=.1];
+	"LEM" -> "marr01";
+	"Indef. Descr." -> "marr01";
+	"marr01" -> "Setoid-CSB";
+
+	"marr02" [shape=diamond,fillcolor=lime,style=filled,label="",height=.1,width=.1];
+	"LEM" -> "marr02";
+	"Def. Descr." -> "marr02";
+	"marr02" -> "CSB";
+
+	"marr03" [shape=diamond,style=filled,label="",height=.1,width=.1];
+	"CSB" -> "marr03";
+	"Omniscience" -> "marr03";
+	"marr03" -> "LEM";
+
+	"Setoid-CSB" -> "CSB";
+	"Indef. Descr." -> "Def. Descr.";
+
+	"marr04" [shape=diamond,style=filled,label="",height=.1,width=.1];
+	"Setoid-CSB" -> "marr04";
+	"Setoid-Omniscience" -> "marr04";
+	"marr04" -> "LEM";
+
+	"marr05" [shape=diamond,fillcolor=lime,style=filled,label="",height=.1,width=.1];
+	"Extensionality" -> "marr05";
+	"Setoid-Omniscience" -> "marr05";
+	"marr05" -> "Omniscience";
+
+	"marr06" [shape=diamond,fillcolor=lime,style=filled,label="",height=.1,width=.1];
+	"FunExt" -> "marr06";
+	"ProofIrrelevance" -> "marr06";
+	"marr06" -> "Extensionality";
+}
