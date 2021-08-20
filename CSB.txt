@@ -1,0 +1,47 @@
+Investigating the equivalence between the Cantor-Schröder-Bernstein and the law
+of excluded middle,
+or
+Notes on “Cantor-Bernstein implies Excluded Middle”.
+
+The statement of the Cantor-Schröder-Bernstein theorem (CSB) in set-theory is:
+let A, B be sets and f: A→B, g:B→A be injective functions. Then there exists a
+bijection h:A→B.
+
+The statement of the law of excluded middle (LEM) is:
+let P be a proposition then P∨¬P holds.
+
+I formalised in Coq that these statements (formulated in terms of the CoC and
+the Coq std. library) are equivalent given some axioms.
+
+A proof in Coq that
+(1) LEM ∧ ConstructiveDefiniteDescription ⇒ CSB
+was already given in the ZornsLemma library. [!reference!]
+
+By following the proof in [!reference,paper!], I formalised
+(2) CSB ∧ FunctionExtensionality ∧ ProofIrrelevance ⇒ LEM.
+
+I conjecture that
+(3) Univalence ⇒ (CSB ⇐⇒ LEM)
+in the setting of the HoTT library.
+
+Let Setoid_CSB be the statement CSB for setoids, i.e.:
+“Let A, B be types, each with some equivalence relation. let f:A→B, g:B→A be
+functions that respect these equivalence relations and are injective relative
+to the equiv. relations. Then there exists a function h:A→B that respects the
+equiv. relations and is bijective relative to the equiv. relations.”
+
+Then we can adapt the proof of (2) to obtain
+(4) Setoid_CSB ⇒ LEM
+in Coq without assuming any further axioms.
+
+By adapting the proof of (1) we can obtain
+(5) LEM ∧ ConstructiveIndefiniteDescription ⇒ Setoid_CSB.
+
+I’d like to use a weaker axiom than CID for (5), but I don’t think it’s
+possible. But on the other hand, I believe that Setoid_CSB is not much stronger
+than LEM in terms of choice axioms. (I believe Setoid_CSB is strictly weaker
+than any choice-axiom that is stronger than LEM)
+
+Bibliography:
+- https://arxiv.org/abs/1904.09193 (Cantor-Bernstein implies Excluded Middle)
+- https://github.com/coq-community/topology
