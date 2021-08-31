@@ -9,6 +9,9 @@ Definition surjective {X Y:Type} (f:X->Y) :=
 Definition bijective {X Y:Type} (f:X->Y) :=
   injective f /\ surjective f.
 
+Definition involutive {X:Type} (f:X->X) :=
+  forall x, f (f x) = x.
+
 Inductive invertible {X Y:Type} (f:X->Y) : Prop :=
   | intro_invertible: forall g:Y->X,
   (forall x:X, g (f x) = x) -> (forall y:Y, f (g y) = y) ->
@@ -79,6 +82,13 @@ split.
 - red; intro.
   exists (g y).
   apply H0.
+Qed.
+
+Lemma involutive_impl_invertible: forall {X:Type} (f:X->X),
+  involutive f -> invertible f.
+Proof.
+  intros.
+  exists f; apply H.
 Qed.
 
 Lemma id_bijective: forall {X:Type},
