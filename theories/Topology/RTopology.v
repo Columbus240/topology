@@ -339,57 +339,63 @@ Proof.
 intros.
 destruct (H (Im Full_set (fun y => inverse_image (subspace_inc _)
                    [ x:point_set RTop | y - 1 < x < y + 1 ]))).
-- intros U [H0].
+{ intros U [H0].
   subst.
   apply subspace_inc_continuous, R_interval_open.
-- extensionality_ensembles;
+}
+{ extensionality_ensembles;
     econstructor.
   + now exists (proj1_sig x).
   + do 2 constructor.
     destruct x.
     simpl.
     lra.
-- destruct H0, H1.
-  assert (exists a:R, forall S:Ensemble (point_set (SubspaceTopology A)),
-    forall b:point_set (SubspaceTopology A),
-    Ensembles.In x S -> Ensembles.In S b -> proj1_sig b < a).
-  { clear H2.
-    induction H0.
-    - exists 0.
-      intros.
-      destruct H0.
-    - destruct IHFinite.
-      + cut (Included A0 (Add A0 x)); auto with sets.
-      + assert (Ensembles.In (Add A0 x) x).
-        { right.
-          constructor. }
-        apply H1 in H4.
-        destruct H4.
-        exists (Rmax x0 (x+1)).
-        intros.
-        destruct H6.
-        * apply Rlt_le_trans with x0.
-          ** apply H3 with x1; trivial.
-          ** unfold Rmax.
-             destruct Rle_dec; auto with real.
-        * destruct H6.
-          rewrite H5 in H7.
-          destruct H7.
-          destruct H6.
-          apply Rlt_le_trans with (x+1).
-          ** apply H6.
-          ** unfold Rmax.
-             destruct Rle_dec; auto with real. }
-  destruct H3 as [a].
-  exists a.
-  red. intros.
-  assert (Ensembles.In (FamilyUnion x)
-    (exist (fun x:R => Ensembles.In A x) x0 H4)).
-  { rewrite H2. constructor. }
-  inversion H5.
-  pose proof (H3 _ _ H6 H7).
-  simpl in H9.
-  auto with real.
+}
+destruct H0, H1.
+assert (exists a:R, forall S:Ensemble (point_set (SubspaceTopology A)),
+  forall b:point_set (SubspaceTopology A),
+  Ensembles.In x S -> Ensembles.In S b -> proj1_sig b < a).
+{ clear H2.
+  induction H0.
+  - exists 0.
+    intros.
+    destruct H0.
+  - destruct IHFinite.
+    { cut (Included A0 (Add A0 x));
+        auto with sets.
+    }
+    assert (Ensembles.In (Add A0 x) x).
+    { right.
+      constructor.
+    }
+    apply H1 in H4.
+    destruct H4.
+    exists (Rmax x0 (x+1)).
+    intros.
+    destruct H6.
+    + apply Rlt_le_trans with x0.
+      * apply H3 with x1; trivial.
+      * unfold Rmax.
+        destruct Rle_dec; auto with real.
+    + destruct H6.
+      rewrite H5 in H7.
+      destruct H7.
+      destruct H6.
+      apply Rlt_le_trans with (x+1).
+      * apply H6.
+      * unfold Rmax.
+        destruct Rle_dec; auto with real.
+}
+destruct H3 as [a].
+exists a.
+red. intros.
+assert (Ensembles.In (FamilyUnion x)
+  (exist (fun x:R => Ensembles.In A x) x0 H4)).
+{ rewrite H2. constructor. }
+inversion H5.
+pose proof (H3 _ _ H6 H7).
+simpl in H9.
+auto with real.
 Qed.
 
 Lemma Ropp_continuous: continuous Ropp (X:=RTop) (Y:=RTop).
@@ -577,6 +583,54 @@ cut (-x0 <= m).
   destruct H2 as [n].
   exists n; trivial.
   now f_equal.
+Qed.
+
+Lemma metrizes_MetricSpace_open (X:TopologicalSpace) d d_metric :
+  metrizes X d ->
+    @open X = @open (@MetricTopology X d d_metric).
+Proof.
+intros. apply Extensionality_Ensembles; split; red; intros.
+- red in H.
+  red.
+  replace x with (FamilyUnion (fun U => Included U x /\ exists p, snd p > 0 /\ U = open_ball X d (fst p) (snd p))).
+  + constructor. red; intros.
+    inversion H1; subst; clear H1.
+    destruct H3 as [? []]. subst.
+    exists (fst x1).
+    constructor. assumption.
+  + extensionality_ensembles_inv.
+    * subst. destruct H5 as [? []].
+      subst. apply H1. assumption.
+    * destruct (@open_neighborhood_basis_cond _ _ _ (H x0) x).
+      { now split. }
+      destruct H2. destruct H2.
+      exists (open_ball X d x0 r).
+      -- repeat split; try assumption.
+         exists (x0, r). repeat split.
+         assumption.
+      -- constructor. rewrite metric_zero; auto.
+- destruct H0.
+  apply open_family_union.
+  intros.
+  apply H0 in H1. clear H0.
+  destruct H1. destruct H0.
+  apply metric_space_open_ball_open; assumption.
+Qed.
+
+Lemma metrizes_identical_cluster_points (X:TopologicalSpace) d d_metric :
+  metrizes X d ->
+  forall DS x y,
+    @net_cluster_point DS X x y <->
+    @net_cluster_point DS (@MetricTopology X d d_metric) x y.
+Proof.
+  intros. split; intros.
+  - eapply metric_space_net_cluster_point;
+      try apply MetricTopology_metrizable.
+    intros.
+    apply metric_space_net_cluster_point_converse with X; trivial.
+  - red; intros.
+    apply H0; trivial.
+    rewrite <- metrizes_MetricSpace_open; assumption.
 Qed.
 
 Lemma R_metric_complete: complete R_metric R_metric_is_metric.
