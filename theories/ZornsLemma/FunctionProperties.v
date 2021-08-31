@@ -92,7 +92,7 @@ Proof.
 Qed.
 
 Lemma id_bijective: forall {X:Type},
-    bijective (@id X).
+  bijective (@id X).
 Proof.
 intros.
 red; split; red; intros.
