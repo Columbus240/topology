@@ -1,5 +1,6 @@
-Require Export TopologicalSpaces.
-Require Import WeakTopology.
+From Coq Require Import Program.Subset.
+From Topology Require Export TopologicalSpaces.
+From Topology Require Import Homeomorphisms WeakTopology.
 
 Section Subspace.
 
@@ -67,6 +68,20 @@ End Subspace.
 
 Arguments SubspaceTopology {X}.
 Arguments subspace_inc {X}.
+
+Lemma subspace_full_homeomorphic (X : TopologicalSpace) :
+  homeomorphic (SubspaceTopology (@Full_set X)) X.
+Proof.
+  exists (subspace_inc Full_set).
+  exists (fun x => exist _ x (Full_intro _ x)).
+  - apply subspace_inc_continuous.
+  - apply subspace_continuous_char.
+    unfold compose. simpl.
+    apply continuous_identity.
+  - intros []. apply subset_eq.
+    simpl. reflexivity.
+  - intros. simpl. reflexivity.
+Qed.
 
 (* Every set is dense in its closure. *)
 Lemma dense_in_closure {X:TopologicalSpace} (A : Ensemble X) :

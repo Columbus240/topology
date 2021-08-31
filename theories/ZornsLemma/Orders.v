@@ -90,6 +90,18 @@ Definition order_convex {X : Type} (R : relation X) (A : Ensemble X) :=
   forall x y, In A x -> In A y ->
          Included (open_interval R x y) A.
 
+Lemma order_convex_empty {X} (R : relation X) :
+  order_convex R Empty_set.
+Proof.
+  red. intros. contradiction.
+Qed.
+
+Lemma order_convex_full {X} (R : relation X) :
+  order_convex R Full_set.
+Proof.
+  red. intros. red. intros. constructor.
+Qed.
+
 Lemma closed_lower_ray_Complement {X : Type} (R : relation X) `{Reflexive X R} `{Connex X R} `{Antisymmetric X eq R} (x : X) :
   Complement (closed_lower_ray R x) =
   open_upper_ray R x.
