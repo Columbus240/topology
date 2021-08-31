@@ -111,7 +111,7 @@ reflexivity.
 Qed.
 
 Lemma id_bijective: forall {X:Type},
-    bijective (@id X).
+  bijective (@id X).
 Proof.
 intros.
 apply involutive_impl_bijective.
