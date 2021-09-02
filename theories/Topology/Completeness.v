@@ -176,3 +176,18 @@ cut (Included (closure F (X:=MetricTopology d d_metric)) F).
 Qed.
 
 End closed_subset_of_complete.
+
+Lemma isometry_presv_cauchy {X Y : Type} dx dy (f : X -> Y) :
+  isometry dx dy f ->
+  forall x,
+    cauchy dx x ->
+    cauchy dy (compose f x).
+Proof.
+  intros. repeat intro.
+  unfold compose.
+  specialize (H0 eps H1) as [N].
+  exists N.
+  intros.
+  rewrite <- H.
+  auto.
+Qed.
