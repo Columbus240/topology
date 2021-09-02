@@ -926,3 +926,25 @@ exists U, V; repeat split.
 - extensionality_ensembles;
     lra.
 Qed.
+
+Definition isometry {X Y : Type} (dx : X -> X -> R) (dy : Y -> Y -> R) (f : X -> Y) :=
+  forall x0 x1,
+    dx x0 x1 = dy (f x0) (f x1).
+
+Lemma isometry_continuous {X Y : TopologicalSpace} dx dy (f : X -> Y) :
+  isometry dx dy f ->
+  metrizes X dx ->
+  metrizes Y dy ->
+  @continuous X Y f.
+Proof.
+  intros.
+  apply pointwise_continuity.
+  intros.
+  unshelve eapply metric_space_fun_continuity; try assumption.
+  intros.
+  exists eps.
+  split; try assumption.
+  intros.
+  rewrite <- H.
+  assumption.
+Qed.
