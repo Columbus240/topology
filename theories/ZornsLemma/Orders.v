@@ -3,8 +3,8 @@ From Coq Require Import Relation_Definitions.
 From ZornsLemma Require Import Relation_Definitions_Implicit.
 From ZornsLemma Require Import EnsemblesImplicit.
 From ZornsLemma Require Import EnsemblesSpec.
-From ZornsLemma Require Import EnsemblesTactics Powerset_facts.
-From Coq Require Import Classical_sets RelationClasses.
+From ZornsLemma Require Import EnsemblesTactics FiniteTypes Powerset_facts.
+From Coq Require Import Classical Classical_sets Description RelationClasses.
 
 Class Connex {X : Type} (R : relation X) :=
   { connex : forall x y, R x y \/ R y x; }.
@@ -302,7 +302,6 @@ Lemma meet_eq X R `{L : Lattice X R} x y :
 Proof.
   pose proof (meet_glb1 _ _ x y).
   pose proof (meet_glb2 _ _ x y).
-  Require Import Classical.
   destruct (classic (R x y)).
   { left.
     Ltac apply_antisym :=
@@ -414,7 +413,6 @@ assert (forall x y : X, exists! m, is_lub R (Couple x y) m) as ?HH.
     rewrite Couple_swap.
     apply HH0. assumption.
 }
-Require Import Description.
 refine (Build_Lattice
           _ _ _ _ _
           (fun x y => proj1_sig (constructive_definite_description
@@ -426,4 +424,88 @@ refine (Build_Lattice
        ).
 - intros. apply proj2_sig.
 - intros. apply proj2_sig.
+Qed.
+
+Lemma is_upper_bound_Included {X : Type} (R : relation X) (A B : Ensemble X) (x : X) :
+  Included A B ->
+  is_upper_bound R B x ->
+  is_upper_bound R A x.
+Proof.
+intros.
+intros ? ?.
+apply H in H1.
+apply H0.
+assumption.
+Qed.
+
+Lemma is_lub_Singleton {X : Type} (R : relation X) `{RelationClasses.Reflexive X R} (x : X) :
+  is_lub R (Singleton x) x.
+Proof.
+split.
+- intros ? ?.
+  inversion H0; subst; clear H0.
+  reflexivity.
+- intros.
+  apply H0.
+  constructor.
+Qed.
+
+Lemma Lattice_finite_join {X : Type} (R : relation X) `{Lattice X R}
+      (A : Ensemble X) :
+  Inhabited A ->
+  Finite A ->
+  exists x, is_lub R A x.
+Proof.
+intros.
+induction H2.
+{ destruct H1. contradiction. }
+destruct H1 as [y].
+destruct (classic (Inhabited A)).
+- specialize (IHFinite H4) as [lub].
+  exists (join lub x).
+  clear H4.
+  split.
+  + intros ? ?.
+    destruct H4.
+    * destruct H5.
+      specialize (H5 x0 H4).
+      transitivity lub; try assumption.
+      apply join_lub.
+      constructor.
+    * inversion H4; subst; clear H4.
+      apply join_lub.
+      constructor.
+  + intros.
+    apply join_lub.
+    red. intros.
+    inversion H6; subst; clear H6.
+    * apply H5.
+      apply is_upper_bound_Included with (B := Add A x).
+      -- intros ? ?. left. assumption.
+      -- assumption.
+    * apply H4. right. constructor.
+- apply not_inhabited_empty in H4.
+  subst.
+  exists x.
+  rewrite Empty_set_zero'.
+  apply is_lub_Singleton.
+  typeclasses eauto.
+Qed.
+
+Lemma Lattice_finite_upper_bounds {X : Type} (R : relation X) `{Lattice X R}
+      (A : Ensemble X) :
+  inhabited X ->
+  Finite A -> has_upper_bound R A.
+Proof.
+intros HXinh HAfin.
+destruct (classic (Inhabited A)).
+2: {
+  destruct HXinh as [x].
+  exists x.
+  firstorder.
+}
+pose proof (Lattice_finite_join R A H1 HAfin).
+destruct H2 as [x].
+exists x.
+apply H2.
 Qed.

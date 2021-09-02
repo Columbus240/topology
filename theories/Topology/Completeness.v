@@ -191,3 +191,41 @@ Proof.
   rewrite <- H.
   auto.
 Qed.
+
+Lemma cauchy_impl_bounded {X : Type} (d : X -> X -> R) (x : nat -> X) :
+  cauchy d x -> bounded d (Im Full_set x).
+Proof.
+intros.
+destruct (H 1) as [N].
+{ lra. }
+destruct (Lattice_finite_upper_bounds
+            Rle
+            (Im [n : nat | n < N]%nat (fun n => d (x N) (x n)))).
+{ constructor. apply 0. }
+{ apply finite_image.
+  apply finite_nat_initial_segment_ens.
+}
+exists (x N), ((Rmax x0 0) + 1).
+intros ? ?.
+inversion H2; subst; clear H2.
+rename x2 into n.
+constructor.
+destruct (le_or_lt N n).
+- apply Rlt_le_trans with 1.
+  2: {
+    unfold Rmax.
+    destruct (Rle_dec _ _); lra.
+  }
+  apply H0; auto.
+- specialize (H1 (d (x N) (x n))).
+  apply Rle_lt_trans with (x0).
+  2: {
+    unfold Rmax.
+    destruct (Rle_dec _ _); lra.
+  }
+  apply H1.
+  exists n.
+  constructor.
+  assumption.
+  reflexivity.
+Qed.

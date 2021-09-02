@@ -63,6 +63,31 @@ cut (y - z <= R_metric y z).
   apply Rle_abs.
 Qed.
 
+Lemma R_metric_open_ball_is_interval x r :
+  open_ball R R_metric x r = open_interval Rle (x - r) (x + r).
+Proof.
+unfold open_ball, R_metric, Rabs.
+apply Extensionality_Ensembles; split; red; intros.
+- constructor.
+  destruct H.
+  destruct (Rcase_abs _); lra.
+- constructor.
+  destruct H.
+  destruct (Rcase_abs _); lra.
+Qed.
+
+Lemma R_metric_open_interval_is_ball a b :
+  open_interval Rle a b =
+  open_ball R R_metric ((a + b)/2) ((b - a)/2).
+Proof.
+rewrite R_metric_open_ball_is_interval.
+replace ((a+b)/2-(b-a)/2) with a.
+2: { lra. }
+replace ((a+b)/2+(b-a)/2) with b.
+2: { lra. }
+reflexivity.
+Qed.
+
 Lemma RTop_neighborhood_is_neighbourhood
   (U : Ensemble R)
   (r : R) :
@@ -125,23 +150,13 @@ red. intros.
 constructor;
   intros.
 - destruct H.
-  replace (open_ball (point_set RTop) R_metric x r) with
-          (Intersection
-            [ y:R | x-r <= y /\ y <> x-r ]
-            [ y:R | y <= x+r /\ y <> x+r ]).
+  split.
+  + rewrite R_metric_open_ball_is_interval.
+    apply open_interval_open.
   + constructor.
-    * apply (@open_intersection2 RTop);
-        apply Hsubbasis; constructor.
-    * repeat constructor; lra.
-  + extensionality_ensembles;
-      repeat constructor;
-      try apply Rabs_def2 in H0;
-      destruct H0;
-      try lra.
-    destruct H1.
-    apply Rabs_def1; lra.
-- intros.
-  apply open_neighborhood_is_neighborhood, RTop_neighborhood_is_neighbourhood in H.
+    rewrite metric_zero; auto.
+    apply R_metric_is_metric.
+- apply open_neighborhood_is_neighborhood, RTop_neighborhood_is_neighbourhood in H.
   destruct H.
   exists (open_ball (point_set RTop) R_metric x x0).
   split.
@@ -421,71 +436,6 @@ rewrite <- (@linear_continuum_convex_connected R Rle).
 typeclasses eauto.
 Qed.
 
-Lemma R_cauchy_sequence_bounded: forall x:nat->R,
-  cauchy R_metric x -> bound (Im Full_set x).
-Proof.
-intros.
-destruct (H 1) as [N].
-{ lra. }
-assert (exists y:R, forall n:nat, (n<N)%nat -> x n <= y).
-{ clear H0.
-  induction N.
-  - exists 0.
-    intros.
-    contradict H0.
-    auto with arith.
-  - destruct IHN as [y].
-    exists (Rmax y (x N)).
-    intros.
-    apply lt_n_Sm_le in H1.
-    destruct (le_lt_or_eq _ _ H1).
-    + apply Rle_trans with y.
-      * now apply H0.
-      * apply Rmax_l.
-    + rewrite H2.
-      apply Rmax_r. }
-destruct H1 as [y].
-exists (Rmax y (x N + 1)).
-red. intros.
-destruct H2 as [n].
-rewrite H3.
-clear y0 H3.
-destruct (le_or_lt N n).
-- apply Rle_trans with (x N + 1).
-  + assert (R_metric (x n) (x N) < 1).
-    { apply H0; auto with arith. }
-    apply Rabs_def2 in H4.
-    lra.
-  + apply Rmax_r.
-- apply Rle_trans with y; auto.
-  apply Rmax_l.
-Qed.
-
-Lemma R_cauchy_sequence_lower_bound: forall x:nat->R,
-  cauchy R_metric x -> lower_bound (Im Full_set x).
-Proof.
-intros.
-assert (cauchy R_metric (fun n:nat => - x n)).
-{ red. intros.
-  destruct (H eps H0) as [N].
-  exists N.
-  intros.
-  replace (R_metric (- x m) (- x n)) with (R_metric (x m) (x n)).
-  - now apply H1.
-  - unfold R_metric.
-    replace (x n - x m) with (- (- x n - - x m)) by ring.
-    apply Rabs_Ropp. }
-destruct (R_cauchy_sequence_bounded _ H0) as [m].
-exists (-m).
-red. intros.
-cut (-x0 <= m).
-- intros. lra.
-- apply H1.
-  destruct H2 as [n].
-  exists n; trivial.
-  now f_equal.
-Qed.
-
 Lemma metrizes_MetricSpace_open (X:TopologicalSpace) d d_metric :
   metrizes X d ->
     @open X = @open (@MetricTopology X d d_metric).
@@ -537,22 +487,23 @@ Qed.
 Lemma R_metric_complete: complete R_metric R_metric_is_metric.
 Proof.
 red. intros.
-destruct (R_cauchy_sequence_bounded _ H) as [b].
-destruct (R_cauchy_sequence_lower_bound _ H) as [a].
-destruct (bounded_real_net_has_cluster_point nat_DS x a b) as [x0].
-- intros;
-    split;
-    [ cut (x i >= a); auto with real; apply H1 | apply H0 ];
-    exists i;
-    trivial;
-    constructor.
-- exists x0.
-  apply cauchy_sequence_with_cluster_point_converges; trivial.
-  apply metric_space_net_cluster_point with R_metric;
-    try apply MetricTopology_metrizable.
-  intros.
-  apply metric_space_net_cluster_point_converse with RTop; trivial.
-  apply RTop_metrization.
+pose proof (cauchy_impl_bounded _ _ H).
+destruct H0 as [p [r]].
+rewrite R_metric_open_ball_is_interval in H0.
+destruct (bounded_real_net_has_cluster_point nat_DS x (p - r) (p + r)) as [x0].
+{ intros.
+  specialize (H0 (x i)).
+  destruct H0.
+  { apply Im_def. constructor. }
+  lra.
+}
+exists x0.
+apply cauchy_sequence_with_cluster_point_converges; trivial.
+apply metric_space_net_cluster_point with R_metric;
+  try apply MetricTopology_metrizable.
+intros.
+apply metric_space_net_cluster_point_converse with RTop; trivial.
+apply RTop_metrization.
 Qed.
 
 Lemma RTop_second_countable : second_countable RTop.

@@ -832,3 +832,6 @@ Proof.
   rewrite <- H.
   assumption.
 Qed.
+
+Definition bounded {X : Type} (d : X -> X -> R) (A : Ensemble X) :=
+  exists x r, Included A (open_ball X d x r).
