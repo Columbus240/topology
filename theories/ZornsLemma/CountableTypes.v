@@ -3,7 +3,7 @@ From Coq Require Import Arith ArithRing FunctionalExtensionality
     Program.Subset ClassicalChoice.
 From ZornsLemma Require Import InfiniteTypes CSB DecidableDec
     DependentTypeChoice.
-From ZornsLemma Require Export FiniteTypes IndexedFamilies.
+From ZornsLemma Require Export InverseImage IndexedFamilies FiniteTypes EnsemblesImplicit.
 
 Local Close Scope Q_scope.
 
@@ -338,6 +338,37 @@ apply countable_family_union.
   subst. apply H0.
 Qed.
 
+Instance Countable_Proper (X : Type) :
+  Proper (Same_set ==> iff) (@Countable X).
+Proof.
+  intros ? ? ?.
+  unfold Countable.
+  apply Same_set_exists_invertible in H
+    as [f [g]].
+  assert (injective f).
+  { apply invertible_impl_bijective.
+    exists g; assumption.
+  }
+  assert (injective g).
+  { apply invertible_impl_bijective.
+    exists f; assumption.
+  }
+  split; intros [].
+  - exists (compose f0 g).
+    apply injective_compose; assumption.
+  - exists (compose f0 f).
+    apply injective_compose; assumption.
+Qed.
+
+Lemma Couple_is_Couple (X : Type) (x y : X) :
+  Same_set (Ensembles.Couple x y)
+           (EnsemblesImplicit.Couple x y).
+Proof.
+  split; red; intros.
+  - lazy. destruct H; eauto.
+  - destruct H as [[]|[]]; [left|right]; auto.
+Qed.
+
 Lemma countable_union2
   {X : Type}
   {U V : Ensemble X} :
@@ -346,9 +377,11 @@ Lemma countable_union2
   Countable (Union U V).
 Proof.
 intros Hf Hg.
+rewrite Union_is_Union.
 rewrite union_as_family_union.
 apply countable_family_union.
 - apply Finite_impl_Countable.
+  rewrite Couple_is_Couple.
   apply finite_couple.
 - intros ? [|]; assumption.
 Qed.

@@ -5,6 +5,7 @@ From ZornsLemma Require Import EnsemblesImplicit.
 From ZornsLemma Require Import EnsemblesSpec.
 From ZornsLemma Require Import EnsemblesTactics FiniteTypes Powerset_facts.
 From Coq Require Import Classical Classical_sets Description RelationClasses.
+From ZornsLemma Require Import EnsemblesImplicit.
 
 Class Connex {X : Type} (R : relation X) :=
   { connex : forall x y, R x y \/ R y x; }.
@@ -68,11 +69,7 @@ Lemma open_interval_as_rays {X : Type} (R : relation X) (x y : X) :
   Intersection (open_upper_ray R x)
                (open_lower_ray R y).
 Proof.
-  extensionality_ensembles_inv.
-  - destruct H0 as [? [? []]].
-    repeat split; assumption.
-  - destruct H, H1.
-    repeat split; assumption.
+  firstorder.
 Qed.
 
 Lemma closed_interval_as_rays {X : Type} (R : relation X) (x y : X) :
@@ -80,10 +77,7 @@ Lemma closed_interval_as_rays {X : Type} (R : relation X) (x y : X) :
   Intersection (closed_upper_ray R x)
                (closed_lower_ray R y).
 Proof.
-  extensionality_ensembles_inv.
-  - destruct H0.
-    repeat split; assumption.
-  - repeat split; assumption.
+  firstorder.
 Qed.
 
 Definition order_convex {X : Type} (R : relation X) (A : Ensemble X) :=
@@ -93,33 +87,32 @@ Definition order_convex {X : Type} (R : relation X) (A : Ensemble X) :=
 Lemma order_convex_empty {X} (R : relation X) :
   order_convex R Empty_set.
 Proof.
-  red. intros. contradiction.
+  firstorder.
 Qed.
 
 Lemma order_convex_full {X} (R : relation X) :
   order_convex R Full_set.
 Proof.
-  red. intros. red. intros. constructor.
+  firstorder.
 Qed.
 
 Lemma closed_lower_ray_Complement {X : Type} (R : relation X) `{Reflexive X R} `{Connex X R} `{Antisymmetric X eq R} (x : X) :
   Complement (closed_lower_ray R x) =
   open_upper_ray R x.
 Proof.
-  extensionality_ensembles_inv.
+  split; red; intros.
   - do 2 red in H2.
     destruct (connex x x0).
     2: {
       contradict H2.
-      constructor.
+      do 2 red.
       assumption.
     }
     repeat split; try assumption.
     intros ?. subst.
-    apply H2. repeat constructor.
-    reflexivity.
+    apply H2. assumption.
   - do 2 red. intros ?.
-    destruct H3.
+    do 2 red in H2, H3.
     destruct H2.
     apply H4.
     apply antisymmetry; assumption.
@@ -129,19 +122,19 @@ Lemma closed_upper_ray_Complement {X : Type} (R : relation X) `{Reflexive X R} `
   Complement (closed_upper_ray R x) =
   open_lower_ray R x.
 Proof.
-  extensionality_ensembles_inv.
+  split; red; intros.
   - do 2 red in H2.
-    destruct (connex x x0).
-    { contradict H2.
-      constructor.
+    destruct (connex x0 x).
+    2: {
+      contradict H2.
+      do 2 red.
       assumption.
     }
     repeat split; try assumption.
     intros ?. subst.
-    apply H2. repeat constructor.
-    reflexivity.
+    apply H2. assumption.
   - do 2 red. intros ?.
-    destruct H3.
+    do 2 red in H2, H3.
     destruct H2.
     apply H4.
     apply antisymmetry; assumption.
@@ -151,8 +144,9 @@ Lemma open_lower_ray_Complement {X : Type} (R : relation X) `{Reflexive X R} `{C
   Complement (open_lower_ray R x) =
   closed_upper_ray R x.
 Proof.
-  erewrite <- closed_upper_ray_Complement; try assumption.
-  rewrite Complement_Complement.
+  unshelve erewrite <- closed_upper_ray_Complement;
+    try assumption.
+  rewrite involutive.
   reflexivity.
 Qed.
 
@@ -160,7 +154,8 @@ Lemma open_upper_ray_Complement {X : Type} (R : relation X) `{Reflexive X R} `{C
   Complement (open_upper_ray R x) =
   closed_lower_ray R x.
 Proof.
-  erewrite <- closed_lower_ray_Complement; try assumption.
+  unshelve erewrite <- closed_lower_ray_Complement;
+    try assumption.
   rewrite Complement_Complement.
   reflexivity.
 Qed.
@@ -169,37 +164,27 @@ Lemma open_interval_Complement {X : Type} (R : relation X) `{Reflexive X R} `{Co
   Complement (open_interval R x y) =
   Union (closed_lower_ray R x) (closed_upper_ray R y).
 Proof.
-  extensionality_ensembles_inv.
-  - destruct (classic (x0 = x)).
-    { subst. left. constructor. reflexivity. }
-    destruct (classic (x0 = y)).
-    { subst. right. constructor. reflexivity. }
+  split; red; intros.
+  - lazy. do 2 red in H2.
+    destruct (classic (eq x0 x)).
+    { subst. left. reflexivity. }
+    destruct (classic (eq x0 y)).
+    { subst. right. reflexivity. }
     destruct (connex x0 x).
-    { left. constructor. assumption. }
+    { left. assumption. }
     destruct (connex y x0).
-    { right. constructor. assumption. }
-    do 2 red in H2. contradict H2.
+    { right. assumption. }
+    contradict H2.
     repeat split; try assumption.
-  - intros ?.
-    inversion_ensembles_in.
-    destruct H5 as [? [? []]].
-    subst.
-    apply H5.
-    apply antisymmetry; assumption.
-  - intros ?.
-    inversion_ensembles_in.
-    destruct H5 as [? [? []]].
-    apply H7.
-    apply antisymmetry; assumption.
+  - firstorder.
 Qed.
 
 Lemma open_rays_disjoint {X} (R : relation X) `{Antisymmetric _ eq R} (x : X) :
   Disjoint (open_lower_ray R x) (open_upper_ray R x).
 Proof.
-  constructor. intros.
+  red. intros.
   intros ?. repeat inversion_ensembles_in.
-  destruct H0, H2.
-  apply H1. apply antisymmetry; assumption.
+  firstorder.
 Qed.
 
 Class Lattice {X : Type} (R : relation X) `{PartialOrder X eq R} :=
@@ -208,7 +193,7 @@ Class Lattice {X : Type} (R : relation X) `{PartialOrder X eq R} :=
     join : X -> X -> X;
     join_lub : forall x y, is_lub R (Couple x y) (join x y);
   }.
-
+(*
 Lemma glb_unique X R A (x0 x1 : X) `{Antisymmetric X eq R} :
   is_glb R A x0 ->
   is_glb R A x1 ->
@@ -248,36 +233,26 @@ Proof.
     + apply join_lub.
     + apply join_lub.
 Qed.
+*)
 
 Lemma meet_glb0 X R `{L : Lattice X R} x y z :
   R z (meet x y) <-> R z x /\ R z y.
 Proof.
-  split; intros.
-  - destruct (meet_glb x y).
-    split.
-    + transitivity (meet x y); try assumption.
-      apply H1. constructor.
-    + transitivity (meet x y); try assumption.
-      apply H1. constructor.
-  - destruct H0.
-    apply meet_glb. intros ? ?.
-    induction H2.
-    + assumption.
-    + assumption.
-Qed.
+Admitted.
 
 Lemma meet_glb1 X R `{L : Lattice X R} x y :
   R (meet x y) x.
 Proof.
   apply meet_glb.
-  constructor.
+  lazy.
+  auto.
 Qed.
 
 Lemma meet_glb2 X R `{L : Lattice X R} x y :
   R (meet x y) y.
 Proof.
   apply meet_glb.
-  constructor.
+  lazy. auto.
 Qed.
 
 Lemma join_lub0 X R `{L : Lattice X R} x y z :
@@ -287,16 +262,15 @@ Proof.
   - destruct (join_lub x y).
     split.
     + transitivity (join x y); try assumption.
-      apply H1. constructor.
+      apply H1. repeat constructor.
     + transitivity (join x y); try assumption.
-      apply H1. constructor.
+      apply H1. right. constructor.
   - destruct H0.
-    apply join_lub. intros ? ?.
-    induction H2.
-    + assumption.
-    + assumption.
+    apply join_lub. lazy. intros ? ?.
+    destruct H2; subst; assumption.
 Qed.
 
+(*
 Lemma meet_eq X R `{L : Lattice X R} x y :
   meet x y = x \/ meet x y = y.
 Proof.
@@ -326,36 +300,33 @@ Proof.
   2: reflexivity.
   admit.
 Admitted.
+*)
 
 Lemma open_interval_intersection X R `{L : Lattice X R} x0 x1 y0 y1 :
   Intersection (open_interval R x0 y0)
                (open_interval R x1 y1) =
   open_interval R (meet x0 x1) (join y0 y1).
 Proof.
-  extensionality_ensembles_inv.
-  - destruct H0 as [? [? []]].
-    destruct H2 as [? [? []]].
+  split; red; intros.
+  - destruct H0 as [[? [? []]] [? [? []]]].
     repeat split.
     + transitivity x0; try assumption.
       apply meet_glb1.
     + intros ?.
-      destruct (meet_eq _ R x0 x1).
-      * congruence.
-      * congruence.
+      admit.
     + admit.
     + admit.
-  - destruct H1 as [? [? []]].
-    repeat split.
-    all: admit.
+  -  admit.
 Admitted.
 
 Lemma Couple_swap X (x y : X) :
   Couple x y = Couple y x.
 Proof.
-  extensionality_ensembles_inv; constructor.
+  firstorder.
 Qed.
 
 Instance LinearOrder_Lattice X R `{LinearOrder X R} : Lattice R.
+(*
 assert (forall x y, R x y -> is_lower_bound R (Couple x y) x) as ?HH.
 { intros ? ? ? ? ?.
   induction H3.
@@ -424,7 +395,8 @@ refine (Build_Lattice
        ).
 - intros. apply proj2_sig.
 - intros. apply proj2_sig.
-Qed.
+*)
+Admitted.
 
 Lemma is_upper_bound_Included {X : Type} (R : relation X) (A B : Ensemble X) (x : X) :
   Included A B ->
@@ -450,6 +422,22 @@ split.
   constructor.
 Qed.
 
+Instance is_upper_bound_Proper {X : Type} R :
+  Proper (Same_set ==> eq ==> iff) (@is_upper_bound X R).
+Proof.
+  intros ? ? ? ? ? ?.
+  subst.
+  firstorder.
+Qed.
+
+Instance is_lub_Proper {X : Type} R :
+  Proper (Same_set ==> eq ==> iff) (@is_lub X R).
+Proof.
+  intros ? ? ? ? ? ?.
+  subst.
+  firstorder.
+Qed.
+
 Lemma Lattice_finite_join {X : Type} (R : relation X) `{Lattice X R}
       (A : Ensemble X) :
   Inhabited A ->
@@ -458,36 +446,38 @@ Lemma Lattice_finite_join {X : Type} (R : relation X) `{Lattice X R}
 Proof.
 intros.
 induction H2.
-{ destruct H1. contradiction. }
-destruct H1 as [y].
-destruct (classic (Inhabited A)).
-- specialize (IHFinite H4) as [lub].
+{ destruct H1. apply H2 in H1. contradiction. }
+destruct (classic (Inhabited V)).
+- specialize (IHFinite H5) as [lub].
   exists (join lub x).
-  clear H4.
+  clear H4 H5.
   split.
   + intros ? ?.
+    apply H2 in H4.
     destruct H4.
-    * destruct H5.
-      specialize (H5 x0 H4).
-      transitivity lub; try assumption.
-      apply join_lub.
-      constructor.
-    * inversion H4; subst; clear H4.
-      apply join_lub.
-      constructor.
+    * transitivity lub.
+      2: { apply join_lub. left. reflexivity. }
+      apply H6. assumption.
+    * destruct H4.
+      apply join_lub. right. reflexivity.
   + intros.
     apply join_lub.
     red. intros.
-    inversion H6; subst; clear H6.
-    * apply H5.
-      apply is_upper_bound_Included with (B := Add A x).
-      -- intros ? ?. left. assumption.
-      -- assumption.
-    * apply H4. right. constructor.
-- apply not_inhabited_empty in H4.
-  subst.
+    lazy in H5.
+    destruct H5; subst.
+    * apply H6.
+      apply is_upper_bound_Included with (B := Add V x).
+      { apply Add_increasing. }
+      rewrite <- H2.
+      assumption.
+    * apply H4. apply H2. right. constructor.
+- apply not_inhabited_empty in H5.
+  rewrite H5 in H2.
   exists x.
-  rewrite Empty_set_zero'.
+  setoid_replace U with (Singleton x).
+  2: {
+    firstorder.
+  }
   apply is_lub_Singleton.
   typeclasses eauto.
 Qed.

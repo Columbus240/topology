@@ -2,7 +2,7 @@ From ZornsLemma Require Export Families.
 From ZornsLemma Require Export Image.
 From ZornsLemma Require Import ImageImplicit.
 From ZornsLemma Require Import FiniteTypes.
-From ZornsLemma Require Export EnsemblesTactics.
+From ZornsLemma Require Export EnsemblesTactics EnsemblesImplicit.
 
 Set Implicit Arguments.
 
@@ -54,7 +54,7 @@ Lemma empty_indexed_intersection: forall {T:Type}
 Proof.
 intros.
 apply Extensionality_Ensembles; red; split; red; intros;
-  auto with sets.
+  firstorder.
 constructor.
 destruct a.
 Qed.
@@ -79,11 +79,11 @@ intro H.
 induction H;
   intros.
 - replace (IndexedUnion F) with (@Empty_set T).
-  + constructor.
+  + constructor. reflexivity.
   + extensionality_ensembles.
     destruct a.
 - replace (IndexedUnion F) with (Union (IndexedUnion (fun t => In (F (Some t)))) (F None)).
-  + apply Union_preserves_Finite.
+  + apply finite_union.
     * apply IHFiniteT.
       intro.
       apply H0.
@@ -112,8 +112,8 @@ induction H;
 Qed.
 
 Lemma Complement_IndexedUnion {A T : Type} {F : IndexedFamily A T} :
-  Ensembles.Complement (IndexedUnion F) =
-  IndexedIntersection (fun a:A => Ensembles.Complement (F a)).
+  Complement (IndexedUnion F) =
+  IndexedIntersection (fun a:A => Complement (F a)).
 Proof.
 apply Extensionality_Ensembles; split; red; intros.
 - constructor. intros.
@@ -127,8 +127,8 @@ apply Extensionality_Ensembles; split; red; intros.
 Qed.
 
 Lemma Complement_IndexedIntersection {A T : Type} {F : IndexedFamily A T} :
-  Ensembles.Complement (IndexedIntersection F) =
-  IndexedUnion (fun a:A => Ensembles.Complement (F a)).
+  Complement (IndexedIntersection F) =
+  IndexedUnion (fun a:A => Complement (F a)).
 Proof.
 apply Extensionality_Ensembles; split; red; intros.
 - red in H; red in H.
@@ -206,7 +206,7 @@ unfold Included.
 intuition.
 - destruct H.
   apply family_union_intro with (F a).
-  + apply Im_intro with a; auto with sets.
+  + apply Im_intro with a; firstorder.
   + assumption.
 - destruct H.
   destruct H.
@@ -233,7 +233,7 @@ intuition.
   destruct H.
   apply H.
   apply Im_intro with a;
-    auto with sets.
+    firstorder.
 Qed.
 
 End IndexedFamilyToFamily.

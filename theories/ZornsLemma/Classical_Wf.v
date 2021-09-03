@@ -54,19 +54,17 @@ intuition.
 apply not_all_ex_not in H.
 destruct H.
 assert (Inhabited [x:T | ~ Acc R x]).
-{ exists x.
-  constructor; assumption.
+{ exists x. assumption.
 }
 apply MEP in H0.
-destruct H0 as [? [[?] ?]].
+destruct H0 as [? []].
+unfold In in H0.
 contradict H0.
 constructor.
 intros.
 apply NNPP.
 intuition.
-apply H1 with y.
-- constructor; assumption.
-- assumption.
+apply H1 with y; assumption.
 Qed.
 
 End MinimalElements.

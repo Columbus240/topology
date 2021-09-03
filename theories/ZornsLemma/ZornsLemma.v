@@ -160,7 +160,8 @@ Definition chains_sup_def : forall F: Ensemble chains,
 refine (fun F H => exist _ [ x:T | exists S:chains, In F S /\
                              In (proj1_sig S) x ] _).
 red; intros.
-destruct H0, H1, H0, H1.
+red in H0, H1.
+destruct H0, H1.
 pose proof (H x0 x1).
 destruct x0, x1, H0, H1.
 apply H2 in H0; trivial.
@@ -180,9 +181,8 @@ intros.
 unfold chains_ord, Included, U.
 split;
   intros.
-- constructor.
-  now exists S.
-- destruct H0 as [[x0 [? H1]]].
+- now exists S.
+- destruct H0 as [x0 [? H1]].
   now apply H in H1.
 Qed.
 
@@ -359,7 +359,6 @@ let Hnew:=fresh"_H" in
       ** red; intros.
          pose proof (H0 (quotient_projection _ x) (quotient_projection _ y)).
          rewrite 2 inducedR_prop in H3.
-         destruct H1, H2.
          now apply H3.
       ** destruct H1.
          exists (quotient_projection _ x).
@@ -368,7 +367,7 @@ let Hnew:=fresh"_H" in
          destruct H3.
          rewrite inducedR_prop.
          apply H1.
-         now constructor.
+         now auto.
     + destruct H0 as [xbar],
                (quotient_projection_surjective xbar) as [x], H1.
       exists x.
@@ -380,9 +379,10 @@ let Hnew:=fresh"_H" in
         injection H2; intros.
         assert (In (equiv_class Requiv x) y).
         ** rewrite H3.
-           constructor.
+           do 2 red.
            now apply equiv_refl.
-        ** now destruct H4 as [[? ?]].
+        ** do 2 red in H4.
+           now destruct H4 as [? ?].
 Qed.
 
 End ZL_preorder.

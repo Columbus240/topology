@@ -1,5 +1,5 @@
 From Coq Require Export Image.
-From Coq Require Export Program.Basics.
+From Coq Require Export Program.Basics Program.Subset.
 From Coq Require Import Description.
 From Coq Require Import FunctionalExtensionality.
 
@@ -156,4 +156,34 @@ destruct H as [f'], H0 as [g'].
 exists (compose f' g'); intros; unfold compose.
 - rewrite H0. apply H.
 - rewrite H1. apply H2.
+Qed.
+
+Lemma Same_set_exists_invertible {X : Type} (U V : Ensemble X) :
+  Same_set X U V ->
+  exists f : {x | In X U x} -> {x | In X V x},
+    invertible f.
+Proof.
+  intros.
+  unshelve eexists.
+  { intros [].
+    exists x.
+    apply H. assumption.
+  }
+  unshelve eexists.
+  { intros [].
+    exists x.
+    apply H. assumption.
+  }
+  - simpl.
+    intros.
+    apply subset_eq.
+    destruct x.
+    simpl.
+    reflexivity.
+  - simpl.
+    intros.
+    apply subset_eq.
+    destruct y.
+    simpl.
+    reflexivity.
 Qed.

@@ -94,12 +94,11 @@ apply Extensionality_Ensembles; split; red; intros.
   red; intro.
   contradict H0.
   exists (Complement S).
-  + constructor. rewrite Complement_Complement. assumption.
+  + red. rewrite Complement_Complement. assumption.
   + assumption.
 - destruct H.
   red; red; intro.
   destruct H1.
-  destruct H.
   pose proof (H1 _ H).
   contradiction.
 Qed.
@@ -112,7 +111,7 @@ Proof.
 intros.
 apply Extensionality_Ensembles; split; red; intros.
 - constructor. intros.
-  destruct H0.
+  red in H0.
   apply NNPP. red; intro.
   red in H; red in H. contradict H.
   exists (Complement S); assumption.
@@ -122,7 +121,7 @@ apply Extensionality_Ensembles; split; red; intros.
   specialize (H (Complement S)).
   apply H.
   2: { assumption. }
-  constructor. rewrite Complement_Complement.
+  red. rewrite Complement_Complement.
   assumption.
 Qed.
 

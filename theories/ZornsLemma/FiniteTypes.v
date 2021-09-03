@@ -10,10 +10,29 @@ From Coq Require Import ProofIrrelevance.
 From Coq Require Import Description.
 From ZornsLemma Require Import Powerset_facts.
 From Coq Require Import FunctionalExtensionality.
-From ZornsLemma Require Import FiniteImplicit.
 From Coq Require Import PeanoNat.
 
 Set Asymmetric Patterns.
+
+Inductive Finite {X : Type} : Ensemble X -> Prop :=
+| Empty_is_finite U :
+    Same_set U Empty_set ->
+    Finite U
+| Add_is_finite U V x :
+    Same_set U (Add V x) ->
+    ~ In V x ->
+    Finite V ->
+    Finite U.
+
+Lemma Finite_Add {X : Type} A (x : X) :
+  ~ In A x -> Finite A ->
+  Finite (Add A x).
+Proof.
+  intros.
+  apply Add_is_finite with (V := A) (x0 := x);
+    try assumption.
+  reflexivity.
+Qed.
 
 Inductive FiniteT : Type -> Prop :=
   | empty_finite: FiniteT False
@@ -111,6 +130,8 @@ induction H.
     assumption.
 Qed.
 
+Infix "=" := eq : type_scope.
+
 Lemma finite_eq_dec: forall X:Type, FiniteT X ->
   forall x y:X, x = y \/ x <> y.
 Proof.
@@ -179,6 +200,23 @@ Proof.
 intros. apply finite_dep_choice; assumption.
 Qed.
 
+Lemma Add_increasing {X : Type} U (x : X) :
+  Included U (Add U x).
+Proof.
+intros ? ?. left. assumption.
+Qed.
+
+Lemma Add_inv (X : Type) A (x x0 : X) :
+  ~ In A x ->
+  In (Add A x) x0 ->
+  { In A x0 } + { x0 = x }.
+Proof.
+intros; apply exclusive_dec; auto.
+intros [].
+subst.
+auto.
+Qed.
+
 Lemma Finite_ens_type: forall {X:Type} (S:Ensemble X),
   Finite S -> FiniteT { x:X | In S x }.
 Proof.
@@ -186,78 +224,72 @@ intros.
 induction H.
 - apply bij_finite with False (False_rect _).
   + constructor.
-  + assert (g:{x:X | In Empty_set x}->False).
+  + assert (g:{x:X | In U x}->False).
     { intro.
       destruct X0.
+      apply H in i.
       destruct i.
     }
     exists g.
     * destruct x.
     * destruct y.
       destruct g.
-- assert (Included A (Add A x)).
-  { auto with sets. }
-  assert (In (Add A x) x).
-  { auto with sets. }
-  pose (g := fun (y: option {x:X | In A x}) =>
-    match y return {x0:X | In (Add A x) x0} with
-    | Some (exist y0 i) => exist (fun x2:X => In (Add A x) x2) y0 (H1 y0 i)
-    | None => exist (fun x2:X => In (Add A x) x2) x H2
-    end).
-  apply bij_finite with _ g.
-  + apply add_finite.
+- apply Same_set_exists_invertible in H
+    as [f0 [f1]].
+  unshelve eapply bij_finite
+           with (option {x:X | In V x}) _.
+  2: {
+    apply add_finite.
     assumption.
-  + assert (h:forall x0:X, In (Add A x) x0 ->
-      { In A x0 } + { x0 = x }).
-    { intros; apply exclusive_dec.
-      - intuition.
-        destruct H6; auto.
-      - destruct H3.
-        + left; assumption.
-        + right; destruct H3; reflexivity.
-    }
-    pose (ginv := fun s:{x0:X | In (Add A x) x0} =>
-      match s return option {x:X | In A x} with
-      | exist x0 i => match (h x0 i) with
-                      | left iA => Some (exist _ x0 iA)
-                      | right _ => None
-                      end
-      end).
-    exists ginv.
-    * intro; destruct x0.
-      -- destruct s.
-         simpl.
-         remember (h x0 (H1 x0 i)) as sum; destruct sum.
-         ++ destruct (proof_irrelevance _ i i0).
-            reflexivity.
-         ++ contradiction H0.
-            rewrite <- e; assumption.
-      -- simpl.
-         remember (h x H2) as sum; destruct sum.
-         ++ contradiction H0.
-         ++ reflexivity.
-    * intro.
-      unfold ginv.
-      destruct y.
-      destruct (h x0 i).
-      -- simpl.
-         generalize (H1 x0 i0); intro.
-         destruct (proof_irrelevance _ i i1).
-         reflexivity.
-      -- simpl.
-         destruct e.
-         destruct (proof_irrelevance _ H2 i).
-         reflexivity.
+  }
+  { intros x0.
+    apply f1.
+    refine
+      (match x0 with
+       | None => exist _ x _
+       | Some x0 => exist _ (proj1_sig x0) _
+       end).
+    - left. apply proj2_sig.
+    - right. constructor.
+  }
+  unshelve eexists.
+  { intros x0.
+    apply f0 in x0.
+    destruct x0 as [x0].
+    apply Add_inv in i; try assumption.
+    apply
+      (match i with
+       | left H => Some (exist _ x0 H)
+       | right _ => None
+       end).
+  }
+  + intros. simpl.
+    rewrite H2.
+    destruct x0.
+    * destruct (Add_inv _ _ _).
+      -- apply f_equal. apply subset_eq. reflexivity.
+      -- contradict H0. rewrite <- e.
+         apply proj2_sig.
+    * destruct (Add_inv _ _ _).
+      -- contradiction.
+      -- reflexivity.
+  + intros. simpl.
+    rewrite <- H.
+    apply f_equal.
+    destruct (f0 y).
+    * destruct (Add_inv _ _ _).
+      -- simpl. apply subset_eq. reflexivity.
+      -- subst. apply subset_eq. reflexivity.
 Qed.
 
 Lemma FiniteT_img: forall (X Y:Type) (f:X->Y),
   FiniteT X -> (forall y1 y2:Y, y1=y2 \/ y1<>y2) ->
-  Finite (Im Full_set f).
+  Finite (Im Ensembles.Full_set f).
 Proof.
 intros.
 induction H.
-- replace (Im Full_set f) with (@Empty_set Y).
-  { constructor. }
+- replace (Im Ensembles.Full_set f) with (@Empty_set Y).
+  { constructor. reflexivity. }
   apply Extensionality_Ensembles; split; red; intros.
   + destruct H.
   + destruct H. destruct x.
@@ -271,7 +303,7 @@ induction H.
   case H1.
   + intro.
     pose (g := fun (x:T) => f (Some x)).
-    replace (Im Full_set f) with (Im Full_set g).
+    replace (Im Ensembles.Full_set f) with (Im Ensembles.Full_set g).
     { apply IHFiniteT. }
     apply Extensionality_Ensembles; split; red; intros.
     * destruct H3. subst. exists (Some x).
@@ -286,22 +318,24 @@ induction H.
          ++ destruct H3. subst. symmetry. assumption.
   + intros.
     pose (g := fun x:T => f (Some x)).
-    replace (Im Full_set f) with (Add (Im Full_set g) (f None)).
-    { constructor.
-      - apply IHFiniteT.
-      - red; intro. destruct H3.
+    replace (Im Ensembles.Full_set f) with (Add (Im Ensembles.Full_set g) (f None)).
+    { eapply Add_is_finite.
+      { reflexivity. }
+      - intro. destruct H3.
         contradiction (H2 x).
         symmetry; assumption.
+      - apply IHFiniteT.
     }
     apply Extensionality_Ensembles; split; red; intros.
     * red; intros.
-      destruct H3, H3.
-      -- exists (Some x).
+      destruct H3.
+      -- destruct H3.
+         exists (Some x).
          ++ constructor.
          ++ assumption.
-      -- exists None.
-         ++ constructor.
-         ++ reflexivity.
+      -- inversion H3; subst; clear H3.
+         apply Im_def.
+         constructor.
     * red; intros.
       destruct H3.
       destruct x.
@@ -310,7 +344,7 @@ induction H.
          ++ assumption.
       -- right. auto with sets.
 - pose (g := fun (x:X) => f (f0 x)).
-  replace (Im Full_set f) with (Im Full_set g).
+  replace (Im Ensembles.Full_set f) with (Im Ensembles.Full_set g).
   { apply IHFiniteT. }
   apply Extensionality_Ensembles; split; red; intros.
   + destruct H2. exists (f0 x).
@@ -324,22 +358,22 @@ induction H.
 Qed.
 
 Lemma surj_finite: forall (X Y:Type) (f:X->Y),
-  FiniteT X -> surjective f ->
+  FiniteT X -> FunctionProperties.surjective f ->
   (forall y1 y2:Y, y1=y2 \/ y1<>y2) ->
   FiniteT Y.
 Proof.
 intros.
-apply bij_finite with {y:Y | In (Im Full_set f) y}
-  (@proj1_sig _ (fun y:Y => In (Im Full_set f) y)).
+apply bij_finite with {y:Y | In (Im Ensembles.Full_set f) y}
+  (@proj1_sig _ (fun y:Y => In (Im Ensembles.Full_set f) y)).
 - apply Finite_ens_type.
   apply FiniteT_img; assumption.
-- assert (forall y:Y, In (Im Full_set f) y).
+- assert (forall y:Y, In (Im Ensembles.Full_set f) y).
   { intro.
     destruct (H0 y).
     exists x; auto with sets.
   }
   pose (proj1_sig_inv := fun y:Y =>
-    exist (fun y0:Y => In (Im Full_set f) y0) y (H2 y)).
+    exist (fun y0:Y => In (Im Ensembles.Full_set f) y0) y (H2 y)).
   exists proj1_sig_inv.
   + destruct x.
     simpl. unfold proj1_sig_inv.
@@ -425,7 +459,7 @@ induction H.
 Qed.
 
 Lemma inj_finite: forall (X Y:Type) (f:X->Y),
-  FiniteT Y -> injective f ->
+  FiniteT Y -> Image.injective f ->
   (forall y:Y, (exists x:X, f x = y) \/
                (~ exists x:X, f x = y)) ->
   FiniteT X.
@@ -474,7 +508,7 @@ exists ginv.
 Qed.
 
 Lemma finite_inj_surj: forall (X:Type) (f:X->X),
-  FiniteT X -> injective f -> surjective f.
+  FiniteT X -> Image.injective f -> FunctionProperties.surjective f.
 Proof.
 intros.
 induction H.
@@ -490,7 +524,7 @@ induction H.
       | Some y => y
       | None => a
     end).
-    assert (surjective g).
+    assert (FunctionProperties.surjective g).
     { apply IHFiniteT.
       red; intros.
       remember (f (Some x)) as fx; destruct fx;
@@ -543,7 +577,7 @@ induction H.
         discriminate Heqfx.
     }
     pose (g := fun x:T => proj1_sig (X x)).
-    assert (surjective g).
+    assert (FunctionProperties.surjective g).
     { apply IHFiniteT.
       red; intros.
       unfold g in H1.
@@ -565,7 +599,7 @@ induction H.
       symmetry; assumption.
 - destruct H1.
   pose (f' := fun (x:X) => g (f (f0 x))).
-  assert (surjective f').
+  assert (FunctionProperties.surjective f').
   { apply IHFiniteT.
     red; intros.
     unfold f' in H3.
@@ -582,7 +616,7 @@ induction H.
 Qed.
 
 Lemma finite_surj_inj: forall (X:Type) (f:X->X),
-  FiniteT X -> surjective f -> injective f.
+  FiniteT X -> FunctionProperties.surjective f -> Image.injective f.
 Proof.
 intros.
 assert (exists g:X->X, forall x:X, f (g x) = x).
@@ -590,7 +624,7 @@ assert (exists g:X->X, forall x:X, f (g x) = x).
     assumption.
 }
 destruct H1 as [g].
-assert (surjective g).
+assert (FunctionProperties.surjective g).
 { apply finite_inj_surj.
   { assumption. }
   red; intros.
@@ -738,27 +772,66 @@ induction H.
     rewrite H2; reflexivity.
 Qed.
 
+Lemma Empty_set_is_Empty_set {X : Type} :
+  Same_set (@Empty_set X) (@Ensembles.Empty_set X).
+Proof.
+  firstorder.
+Qed.
+Lemma Add_is_Add {X : Type} A (x : X) :
+  Same_set (Add A x) (Ensembles.Add A x).
+Proof.
+  split; red; intros ? [].
+  - left. assumption.
+  - right. inversion H; subst; clear H.
+    constructor.
+  - left. assumption.
+  - right. destruct H.
+    constructor.
+Qed.
+
+Lemma Finite_equiv_Finite {X : Type} (A : Ensemble X) :
+  Finite A <-> Finite_sets.Finite X A.
+Proof.
+  split; intros.
+  - induction H.
+    + rewrite Empty_set_is_Empty_set in H.
+      apply Extensionality_Ensembles in H.
+      subst.
+      constructor.
+    + rewrite Add_is_Add in H.
+      apply Extensionality_Ensembles in H.
+      subst.
+      constructor; assumption.
+  - induction H.
+    + constructor.
+      symmetry. apply Empty_set_is_Empty_set.
+    + apply Add_is_finite with (V := A) (x0 := x);
+        try assumption.
+      symmetry. apply Add_is_Add.
+Qed.
+
 Lemma FiniteT_has_nat_cardinal: forall X:Type, FiniteT X ->
-  exists! n:nat, cardinal _ (@Full_set X) n.
+  exists! n:nat, cardinal _ (@Ensembles.Full_set X) n.
 Proof.
 intros.
 apply -> unique_existence; split.
 - apply finite_cardinal.
   rewrite Im_Full_set_surj with id.
   2: { apply id_bijective. }
+  apply Finite_equiv_Finite.
   apply FiniteT_img with (f:=fun x:X => x).
   + assumption.
   + intros.
     case (finite_eq_dec X H y1 y2); tauto.
 - red; intros.
-  apply cardinal_unicity with X Full_set; trivial.
+  apply cardinal_unicity with X Ensembles.Full_set; trivial.
 Qed.
 
 Definition FiniteT_nat_cardinal (X:Type) (H:FiniteT X) : nat :=
   proj1_sig (constructive_definite_description _
               (FiniteT_has_nat_cardinal X H)).
 Lemma FiniteT_nat_cardinal_def: forall (X:Type) (H:FiniteT X),
-  cardinal _ (@Full_set X) (FiniteT_nat_cardinal X H).
+  cardinal _ (@Ensembles.Full_set X) (FiniteT_nat_cardinal X H).
 Proof.
 intros; unfold FiniteT_nat_cardinal.
 destruct constructive_definite_description.
@@ -766,7 +839,7 @@ assumption.
 Qed.
 Lemma FiniteT_nat_cardinal_cond: forall (X:Type) (H:FiniteT X)
   (n:nat),
-  cardinal _ (@Full_set X) n ->
+  cardinal _ (@Ensembles.Full_set X) n ->
   FiniteT_nat_cardinal X H = n.
 Proof.
 intros.
@@ -781,16 +854,18 @@ transitivity x.
 Qed.
 
 Lemma FiniteT_nat_cardinal_False:
-  FiniteT_nat_cardinal False empty_finite = 0.
+  FiniteT_nat_cardinal False empty_finite = 0%nat.
 Proof.
 apply FiniteT_nat_cardinal_cond.
-rewrite (False_Ensembles_eq _ Empty_set).
+pose proof (False_Ensembles_eq Ensembles.Full_set Ensembles.Empty_set).
+apply Extensionality_Ensembles in H.
+rewrite H.
 constructor.
 Qed.
 
 Lemma injection_preserves_cardinal: forall (X Y:Type)
   (f:X->Y) (n:nat) (S:Ensemble X), cardinal _ S n ->
-  injective f -> cardinal _ (Im S f) n.
+  Image.injective f -> cardinal _ (Im S f) n.
 Proof.
 intros.
 induction H.
@@ -837,7 +912,7 @@ Qed.
 
 Lemma unique_FiniteT_nat_cardinal:
   exists! f: (forall (X:Type), FiniteT X -> nat),
-  f False empty_finite = 0 /\
+  f False empty_finite = 0%nat /\
   (forall (X:Type) (H:FiniteT X),
      f (option X) (add_finite X H) = S (f X H)) /\
   (forall (X Y:Type) (H:FiniteT X) (g:X->Y) (Hinv:invertible g),
@@ -871,7 +946,7 @@ Qed.
 (* Finite types can’t map surjectively onto [nat]. *)
 Lemma FiniteT_nat_no_surj (X : Type) :
   FiniteT X ->
-  ~ exists f : X -> nat, surjective f.
+  ~ exists f : X -> nat, FunctionProperties.surjective f.
 Proof.
 intros.
 induction H.
@@ -923,7 +998,7 @@ induction H.
 Qed.
 
 Lemma FiniteT_nat_embeds {X : Type} :
-  FiniteT X -> exists f : X -> nat, injective f.
+  FiniteT X -> exists f : X -> nat, Image.injective f.
 Proof.
 intros.
 induction H.
@@ -981,55 +1056,191 @@ Proof.
     + intros. destruct y as [|]; intuition.
 Qed.
 
+(* This lemma shows, that a sufficiently decidable equality is
+necessary to get the equation [Add (Subtract U x) x = U]. *)
+Lemma Add_Subtract_In_dec {X : Type} U (x : X) :
+  In U x ->
+  (forall y, In U y -> y = x \/ y <> x) <->
+  Same_set (Add (Subtract U x) x) U.
+Proof.
+  intros.
+  split; intros.
+  - split; red; intros.
+    + destruct H1.
+      * destruct H1. assumption.
+      * destruct H1. assumption.
+    + specialize (H0 x0) as [|]; try assumption.
+      * right. auto.
+      * left. split; auto.
+  - apply H0 in H1.
+    destruct H1; [right|left]; firstorder.
+Qed.
+
+Lemma Add_Subtract_In {X : Type} U (x : X) :
+  In U x ->
+  Same_set (Add (Subtract U x) x) U.
+Proof.
+  intros.
+  apply Add_Subtract_In_dec; auto.
+  intros.
+  apply classic.
+Qed.
+
+Lemma finite_included {X : Type} (U V : Ensemble X) :
+  Included U V -> Finite V -> Finite U.
+Proof.
+  intros.
+  generalize dependent U.
+  induction H0; intros.
+  - apply Empty_is_finite.
+    firstorder.
+  - rewrite H in H2.
+    clear U H.
+    destruct (classic (In U0 x)).
+    + apply Add_is_finite with
+          (V0 := Subtract U0 x) (x0 := x).
+      * symmetry. apply Add_Subtract_In; assumption.
+      * firstorder.
+      * apply IHFinite.
+        firstorder.
+    + apply IHFinite.
+      intros ? ?.
+      specialize (H2 x0 H3).
+      destruct H2; try assumption.
+      destruct H2.
+      contradiction.
+Qed.
+
+Instance Finite_Proper {X : Type} :
+  Proper (Same_set ==> iff) (@Finite X).
+Proof.
+  intros ? ? ?.
+  split; apply finite_included; apply H.
+Qed.
+
+Instance Add_Proper {X : Type} :
+  Proper (Same_set ==> eq ==> Same_set) (@Add X).
+Proof.
+  intros ? ? ? ? ? ?.
+  subst.
+  firstorder.
+Qed.
+
+Lemma Add_In {X : Type} U (x : X) :
+  In U x ->
+  Same_set (Add U x) U.
+Proof.
+  intros.
+  split.
+  - intros ? ?.
+    destruct H0; auto.
+    destruct H0. assumption.
+  - apply Add_increasing.
+Qed.
+
+Instance Union_BoundedSemiLattice (X : Type) :
+  @BoundedSemiLattice (Ensemble X) _
+                      (@Union X) (@Empty_set X).
+Proof.
+  split.
+  2: typeclasses eauto.
+  split.
+  2: typeclasses eauto.
+  split; try typeclasses eauto.
+  - firstorder.
+  - firstorder.
+Qed.
+
+Lemma finite_union {X} (U V : Ensemble X) :
+  Finite U -> Finite V ->
+  Finite (Union U V).
+Proof.
+intros.
+generalize dependent V.
+induction H.
+- intros.
+  rewrite H.
+  simpl.
+  (* TODO: Solve this using typeclasses *)
+  assert (Same_set (Union Empty_set V) V).
+  { firstorder. }
+  rewrite H1.
+  assumption.
+- intros.
+  rewrite H.
+  clear U H.
+  destruct (classic (In V0 x)).
+  + unfold Add.
+    rewrite <- associativity.
+    rewrite (commutativity _ V0).
+    fold (@Add X V0 x).
+    rewrite Add_In; try assumption.
+    apply IHFinite; assumption.
+  + unfold Add.
+    rewrite commutativity.
+    rewrite associativity.
+    fold (@Add X (Union V0 V) x).
+    rewrite commutativity.
+    apply Finite_Add; firstorder.
+Qed.
+Import EnsemblesImplicit.
+
+Lemma Singleton_as_Add {X} (x : X) :
+  Same_set (Singleton x) (Add Empty_set x).
+Proof.
+  firstorder.
+Qed.
+
+Lemma finite_singleton {X} (x : X) :
+  Finite (Singleton x).
+Proof.
+  rewrite Singleton_as_Add.
+  apply Finite_Add; firstorder.
+  constructor. reflexivity.
+Qed.
+  
 Lemma finite_couple {X} (x y : X) :
   Finite (Couple x y).
 Proof.
-  rewrite <- Couple_as_union.
-  apply Union_preserves_Finite.
-  all: apply Singleton_is_finite.
+  apply finite_union.
+  all: apply finite_singleton.
 Qed.
 
 Lemma finite_nat_initial_segment_ens: forall n:nat,
-  Finite [m : nat | m < n].
+  Finite [m : nat | m < n]%nat.
 Proof.
 intros.
 unfold lt.
 induction n.
-- replace [x:nat | _] with (@Empty_set nat).
-  { constructor. }
-  apply Extensionality_Ensembles; split; auto with sets.
+- setoid_replace [x:nat | x < 0]%nat with (@Empty_set nat).
+  { constructor. reflexivity. }
+  split; try firstorder.
   red; intros.
-  destruct H.
+  red in H.
   contradict H.
   auto with arith.
-- replace [x:nat | S x <= S n] with (Add [x:nat | x < n] n).
-  { constructor; trivial.
-    intro. destruct H.
+- setoid_replace [x:nat | S x <= S n] with (Add [x:nat | x < n]%nat n).
+  { apply Finite_Add; trivial.
+    intro. red in H.
     apply lt_irrefl in H. assumption.
   }
-  apply Extensionality_Ensembles; split; red; intros.
-  + red; intros.
-    case H.
-    * intros.
-      destruct H0; constructor.
+  split; red; intros.
+  + red in H.
+    lazy.
+    apply le_lt_or_eq in H.
+    destruct H; try (right; congruence).
+    left.
+    auto with arith.
+  + red.
+    lazy in H.
+    destruct H; subst;
       auto with arith.
-    * intros.
-      destruct H0.
-      constructor.
-      apply le_refl.
-  + destruct H.
-    assert (x <= n); auto with arith.
-    apply le_lt_or_eq in H0.
-    case H0.
-    * left; constructor; trivial.
-    * right; auto with sets.
 Qed.
 
 Lemma finite_nat_initial_segment: forall n:nat,
-  FiniteT { m:nat | m < n }.
+  FiniteT { m:nat | m < n }%nat.
 Proof.
 intros.
 apply Finite_ens_type.
-rewrite <- characteristic_function_to_ensemble_is_identity.
 apply finite_nat_initial_segment_ens.
 Qed.

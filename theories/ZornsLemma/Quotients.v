@@ -23,19 +23,18 @@ Proof.
 destruct equivR.
 intros.
 apply Extensionality_Ensembles; split; red; intros z ?.
-- constructor.
-  destruct H0.
+- do 2 red.
+  do 2 red in H0.
   apply equiv_trans with x; trivial.
   apply equiv_sym; trivial.
-- destruct H0.
-  constructor.
+- do 2 red. do 2 red in H0.
   apply equiv_trans with y; trivial.
 Qed.
 
 Lemma equiv_class_self x :
   In (equiv_class x) x.
 Proof.
-  constructor. apply equiv_refl. assumption.
+  red. apply equiv_refl. assumption.
 Qed.
 
 Lemma equality_of_equiv_class_impl_R:
@@ -45,7 +44,7 @@ destruct equivR.
 intros.
 pose proof (equiv_class_self x).
 rewrite H in H0.
-destruct H0.
+do 2 red in H0.
 apply equiv_sym.
 assumption.
 Qed.

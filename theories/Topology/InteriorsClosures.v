@@ -1,6 +1,6 @@
 From ZornsLemma Require Import EnsemblesTactics.
 Require Export TopologicalSpaces.
-From ZornsLemma Require Export EnsemblesSpec.
+From ZornsLemma Require Export EnsemblesSpec EnsemblesImplicit.
 
 Section interior_closure.
 
@@ -16,14 +16,15 @@ Lemma interior_open : open interior.
 Proof.
 apply open_family_union.
 intros.
-now destruct H as [[]].
+red in H.
+apply H.
 Qed.
 
 Lemma interior_deflationary : Included interior S.
 Proof.
 red; intros.
-destruct H.
-destruct H as [[]]; auto with sets.
+destruct H as [? ? [_]].
+auto with sets.
 Qed.
 
 Lemma interior_fixes_open: open S -> interior = S.
@@ -33,8 +34,8 @@ apply Extensionality_Ensembles; split.
 - apply interior_deflationary.
 - red; intros.
   exists S; trivial.
-  constructor.
-  auto with sets.
+  split; trivial.
+  reflexivity.
 Qed.
 
 Lemma interior_maximal: forall U:Ensemble X,
@@ -43,14 +44,14 @@ Proof.
 intros.
 red; intros.
 exists U; trivial.
-constructor; split; trivial.
+red; split; trivial.
 Qed.
 
 Lemma closure_closed : closed closure.
 Proof.
 apply closed_family_intersection.
 intros.
-destruct H as [[]]; trivial.
+destruct H as []; trivial.
 Qed.
 
 Lemma closure_inflationary : Included S closure.
@@ -58,9 +59,7 @@ Proof.
 red.
 intros.
 constructor.
-intros ? H0.
-destruct H0 as [[]].
-auto with sets.
+firstorder.
 Qed.
 
 Lemma closure_fixes_closed : closed S -> closure = S.
@@ -82,8 +81,7 @@ intros.
 red.
 intros.
 destruct H1.
-apply H1.
-constructor; split; trivial.
+firstorder.
 Qed.
 
 End interior_closure.
@@ -104,7 +102,6 @@ split.
 - apply interior_deflationary.
 - red. intros.
   econstructor; [ | eassumption ].
-  constructor.
   split.
   + apply interior_open.
   + intro.
@@ -119,7 +116,6 @@ split.
 - red. intros.
   destruct H.
   apply H.
-  constructor.
   split.
   + apply closure_closed.
   + red.
@@ -146,11 +142,12 @@ intros.
 apply Extensionality_Ensembles. split.
 - assert (Included (interior (Intersection S T)) (interior S)).
   { apply interior_increasing.
-    auto with sets. }
+    firstorder.
+  }
   assert (Included (interior (Intersection S T)) (interior T)).
   { apply interior_increasing.
-    auto with sets. }
-  auto with sets.
+    firstorder. }
+  firstorder.
 - apply interior_maximal.
   + apply open_intersection2; apply interior_open.
   + pose proof (interior_deflationary S).
@@ -170,7 +167,7 @@ apply interior_maximal.
 - apply open_union2; apply interior_open.
 - pose proof (interior_deflationary S).
   pose proof (interior_deflationary T).
-  auto with sets.
+  firstorder.
 Qed.
 
 Lemma complement_inclusion: forall {Y:Type} (S T:Ensemble Y),
@@ -232,12 +229,12 @@ apply Extensionality_Ensembles; split.
   + apply closed_union2; apply closure_closed.
   + pose proof (closure_inflationary S).
     pose proof (closure_inflationary T).
-    auto with sets.
+    firstorder.
 - assert (Included (closure S) (closure (Union S T))).
-  { apply closure_increasing; auto with sets. }
+  { apply closure_increasing; firstorder. }
   assert (Included (closure T) (closure (Union S T))).
-  { apply closure_increasing; auto with sets. }
-  auto with sets.
+  { apply closure_increasing; firstorder. }
+  firstorder.
 Qed.
 
 Lemma closure_intersection: forall S T:Ensemble X,
@@ -246,10 +243,10 @@ Lemma closure_intersection: forall S T:Ensemble X,
 Proof.
 intros.
 assert (Included (closure (Intersection S T)) (closure S)).
-{ apply closure_increasing; auto with sets. }
+{ apply closure_increasing; firstorder. }
 assert (Included (closure (Intersection S T)) (closure T)).
-{ apply closure_increasing; auto with sets. }
-auto with sets.
+{ apply closure_increasing; firstorder. }
+firstorder.
 Qed.
 
 Lemma closure_interior_idempotent:
@@ -258,7 +255,6 @@ Proof.
 intro.
 extensionality_ensembles;
 apply H;
-constructor;
 split;
 try apply closure_closed.
 - apply interior_deflationary.
@@ -267,10 +263,8 @@ try apply closure_closed.
   constructor.
   intros.
   destruct H1.
-  destruct H1.
   apply H2.
   econstructor; [ | eassumption].
-  constructor.
   split.
   + apply interior_open.
   + apply closure_inflationary.
@@ -280,20 +274,17 @@ Lemma interior_closure_idempotent:
   idempotent (fun S => interior (@closure X S)).
 Proof.
 intro.
-extensionality_ensembles;
-  destruct H.
+extensionality_ensembles.
 - eapply interior_maximal; try eassumption.
   eapply Inclusion_is_transitive; [ eassumption | ].
   red.
   intros.
   destruct H2 as [? H2].
   apply H2.
-  constructor.
   split.
   + apply closure_closed.
   + apply interior_deflationary.
 - econstructor; [ | eassumption ].
-  constructor.
   split; try eassumption.
   eapply Inclusion_is_transitive.
   + eapply interior_maximal; eassumption.
@@ -396,27 +387,32 @@ Proof.
 intros.
 replace S2 with (Union S1 S2).
 - rewrite cl_respects_union.
-  auto with sets.
+  firstorder.
 - extensionality_ensembles;
-    auto with sets.
+    firstorder.
 Qed.
 
 Definition Build_TopologicalSpace_from_closure_operator : TopologicalSpace.
 refine (Build_TopologicalSpace_from_closed_sets
-  (fun F => cl F = F) _ _ _).
-- apply cl_empty.
+  (fun F => Same_set (cl F) F) _ _ _ _).
+- rewrite cl_empty. reflexivity.
 - intros.
-  rewrite cl_respects_union; congruence.
-- intros.
-  extensionality_ensembles.
+  rewrite cl_respects_union.
+  rewrite H, H0. reflexivity.
+- intros. split.
   + constructor. intros.
-    rewrite <- (H S H1).
+    apply (H S H1).
     apply cl_increasing with (FamilyIntersection F); trivial.
     red. intros.
     destruct H2.
     apply H2; trivial.
   + apply cl_inflationary.
-    now constructor.
+- intros ? ? ?.
+  assert (Same_set (cl x) (cl y)).
+  { split; apply cl_increasing; apply H.
+  }
+  rewrite H0, H.
+  reflexivity.
 Defined.
 
 Lemma Build_TopologicalSpace_from_closure_operator_closure:
@@ -426,14 +422,16 @@ Proof.
 intros.
 apply Extensionality_Ensembles; split.
 - apply closure_minimal.
-  + apply <- Build_TopologicalSpace_from_closed_sets_closed.
-    apply cl_idempotent.
+  + apply Build_TopologicalSpace_from_closed_sets_closed.
+    rewrite cl_idempotent.
+    reflexivity.
   + trivial.
 - replace (closure S) with (cl (closure S)).
   + apply cl_increasing.
     apply (closure_inflationary S).
   + pose proof (closure_closed S).
-    apply -> Build_TopologicalSpace_from_closed_sets_closed in H.
+    apply Build_TopologicalSpace_from_closed_sets_closed in H.
+    apply Extensionality_Ensembles in H.
     exact H.
 Qed.
 
@@ -459,8 +457,8 @@ Proof.
 intros.
 replace S1 with (Intersection S1 S2).
 - rewrite int_respects_intersection.
-  auto with sets.
-- extensionality_ensembles; auto with sets.
+  firstorder.
+- extensionality_ensembles; firstorder.
 Qed.
 
 Lemma intersection_family_union : forall (S:Ensemble X) (F:Ensemble (Ensemble X)),
@@ -478,22 +476,29 @@ Lemma int_family_union: forall (S:Ensemble X) (F:Ensemble (Ensemble X)),
 Proof.
 intros.
 replace (int S) with (Intersection (int S) (int (FamilyUnion F))).
-- auto with sets.
+- firstorder.
 - rewrite <- int_respects_intersection.
   f_equal.
   now apply intersection_family_union.
 Qed.
 
 Definition Build_TopologicalSpace_from_interior_operator : TopologicalSpace.
-apply Build_TopologicalSpace with (point_set:=X) (open:=fun F => int F = F);
+apply Build_TopologicalSpace with (point_set:=X) (open:=fun F => Same_set (int F) F);
   intros.
-- extensionality_ensembles.
+- split; red; intros; repeat destruct_ensembles_in.
   + now apply int_deflationary.
   + eapply int_family_union; [ eassumption | ].
-    now rewrite H.
-- rewrite <- H, <- H0 at 2.
-  apply int_respects_intersection.
-- assumption.
+    now apply H.
+- rewrite int_respects_intersection.
+  rewrite H, H0.
+  reflexivity.
+- rewrite int_full. reflexivity.
+- intros ? ? ?.
+  assert (Same_set (int x) (int y)).
+  { split; apply int_increasing; apply H.
+  }
+  rewrite H0, H.
+  reflexivity.
 Defined.
 
 Lemma Build_TopologicalSpace_from_interior_operator_interior:
@@ -506,17 +511,16 @@ apply Extensionality_Ensembles; split.
   intros.
   destruct H.
   destruct H.
-  destruct H.
+  do 2 red in H.
   simpl in *.
-  eapply int_increasing;
-    [ | erewrite H ];
-    eassumption.
+  apply int_increasing with (S1 := S0);
+    try assumption.
+  now apply H.
 - red.
   intros.
   econstructor; [ | eassumption ].
-  constructor.
   split.
-  + apply int_idempotent.
+  + do 2 red. rewrite int_idempotent. reflexivity.
   + apply int_deflationary.
 Qed.
 

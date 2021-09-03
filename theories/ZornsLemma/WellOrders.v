@@ -229,14 +229,12 @@ refine (fun C H => let US := [ x:T | exists WO:partial_WO,
   destruct H0.
   destruct H0.
   split.
-  + constructor.
-    exists x0.
+  + exists x0.
     split.
     * assumption.
     * pose proof (pwo_R_lives_on_S x0 x y).
       tauto.
-  + constructor.
-    exists x0.
+  + exists x0.
     split.
     * assumption.
     * pose proof (pwo_R_lives_on_S x0 x y).
@@ -245,7 +243,6 @@ refine (fun C H => let US := [ x:T | exists WO:partial_WO,
   + assert (forall (WO:partial_WO) (x:{z:T | In (pwo_S WO) z}),
        In C WO -> In US (proj1_sig x)).
     { intros.
-      constructor.
       exists WO.
       split.
       - assumption.
@@ -312,7 +309,6 @@ refine (fun C H => let US := [ x:T | exists WO:partial_WO,
     destruct a.
     inversion i.
     destruct H2.
-    destruct H2.
     pose proof (H1 x0 H2 (exist _ x H3)).
     simpl in H4.
     assert (i = H0 x0 (exist _ x H3) H2).
@@ -327,10 +323,8 @@ refine (fun C H => let US := [ x:T | exists WO:partial_WO,
     unfold restriction_relation.
     simpl.
     destruct i.
-    destruct e.
     destruct a.
     destruct i0.
-    destruct e.
     destruct a.
 
     case (H x1 x2 i i0).
@@ -382,7 +376,6 @@ intros.
 constructor.
 - unfold Included.
   intros.
-  constructor.
   exists WO.
   tauto.
 - intros.
@@ -690,7 +683,7 @@ assert (forall a:A, Inhabited [ b:B | R a b ]).
   pose proof (H0 a).
   destruct H1.
   exists x.
-  constructor; assumption.
+  assumption.
 }
 
 exists (fun a:A => proj1_sig
@@ -699,7 +692,6 @@ intro.
 destruct @WO_minimum.
 simpl.
 destruct a.
-destruct H2.
 assumption.
 Qed.
 

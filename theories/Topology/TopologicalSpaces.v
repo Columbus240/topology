@@ -1,4 +1,5 @@
 Require Export Ensembles.
+Require Import InverseImage.
 From ZornsLemma Require Import EnsemblesImplicit.
 From ZornsLemma Require Export Families.
 From ZornsLemma Require Export IndexedFamilies.
@@ -14,8 +15,11 @@ Record TopologicalSpace : Type := {
     open (FamilyUnion F);
   open_intersection2: forall U V:Ensemble point_set,
     open U -> open V -> open (Intersection U V);
-  open_full : open Full_set
+  open_full : open Full_set;
+  open_proper : Proper (Same_set ==> iff) open;
 }.
+
+Existing Instance open_proper.
 
 Arguments open {t}.
 Arguments open_family_union {t}.
@@ -25,6 +29,7 @@ Lemma open_empty: forall X:TopologicalSpace,
   open (@Empty_set X).
 Proof.
 intros.
+rewrite Empty_set_is_Empty_set.
 rewrite <- empty_family_union.
 apply open_family_union.
 intros.
@@ -35,6 +40,7 @@ Lemma open_union2: forall {X:TopologicalSpace}
   (U V:Ensemble X), open U -> open V -> open (Union U V).
 Proof.
 intros.
+rewrite Union_is_Union.
 rewrite union_as_family_union.
 apply open_family_union.
 intros.
@@ -62,11 +68,13 @@ Proof.
 intros.
 induction H.
 - rewrite empty_indexed_intersection.
-  apply open_full.
+  eapply open_proper.
+  2: apply open_full.
+  split; red; intros; constructor.
 - assert (IndexedIntersection F = Intersection
     (IndexedIntersection (fun x:T => F (Some x)))
     (F None)).
-  { apply Extensionality_Ensembles; split; red; intros.
+  { split; red; intros.
     - destruct H1.
       constructor.
       + constructor.
@@ -87,7 +95,7 @@ induction H.
 - destruct H1.
   assert (IndexedIntersection F =
     IndexedIntersection (fun x:X0 => F (f x))).
-  { apply Extensionality_Ensembles; split; red; intros.
+  { split; red; intros.
     - constructor.
       destruct H3.
       intro; apply H3.
@@ -163,7 +171,7 @@ red.
 rewrite Complement_FamilyIntersection.
 apply open_family_union.
 intros.
-destruct H0.
+red in H0.
 pose proof (H _ H0).
 rewrite Complement_Complement in H1; assumption.
 Qed.
@@ -209,22 +217,26 @@ Hypothesis closedP_union2: forall F G:Ensemble X,
 Hypothesis closedP_family_intersection: forall F:Family X,
   (forall G:Ensemble X, In F G -> closedP G) ->
   closedP (FamilyIntersection F).
+Hypothesis closedP_proper :
+  Proper (Same_set ==> iff) closedP.
 
 Definition Build_TopologicalSpace_from_closed_sets : TopologicalSpace.
 refine (Build_TopologicalSpace X
-  (fun U:Ensemble X => closedP (Ensembles.Complement U)) _ _ _).
+  (fun U:Ensemble X => closedP (Ensembles.Complement U)) _ _ _ _).
 - intros.
   rewrite Complement_FamilyUnion.
   apply closedP_family_intersection.
-  destruct 1.
+  intros ? ?.
+  red in H0.
   rewrite <- Complement_Complement.
   apply H; trivial.
 - intros.
   rewrite Complement_Intersection.
   apply closedP_union2; trivial.
 - apply eq_ind with (1 := closedP_empty).
-  rewrite Complement_Full_set.
-  reflexivity.
+  apply Extensionality_Ensembles; split; red; firstorder.
+- intros ? ? ?.
+  rewrite H. reflexivity.
 Defined.
 
 Lemma Build_TopologicalSpace_from_closed_sets_closed:

@@ -32,7 +32,8 @@ induction H.
   + exists (False_rect _).
     split.
     * destruct j.
-    * symmetry; apply empty_indexed_intersection.
+    * symmetry; rewrite empty_indexed_intersection.
+      split; red; intros; constructor.
 - exists True.
   split.
   + exact True_finite.
@@ -40,7 +41,7 @@ induction H.
     split.
     * destruct j.
       simpl. assumption.
-    * apply Extensionality_Ensembles; split; red; intros.
+    * split; red; intros.
       -- constructor.
          destruct a; simpl.
          assumption.
@@ -57,18 +58,18 @@ induction H.
     end).
     split.
     * destruct j; auto.
-    * apply Extensionality_Ensembles; split; red; intros.
+    * split; red; intros.
       -- destruct H7.
-         rewrite H3 in H7; destruct H7.
-         rewrite H6 in H8; destruct H8.
+         apply H3 in H7; destruct H7.
+         apply H6 in H8; destruct H8.
          constructor.
          destruct a as [j|j]; auto.
       -- destruct H7.
          constructor.
-         ++ rewrite H3; constructor.
+         ++ apply H3; constructor.
             intro j.
             exact (H7 (inl _ j)).
-         ++ rewrite H6; constructor.
+         ++ apply H6; constructor.
             intro j.
             exact (H7 (inr _ j)).
 Qed.
@@ -136,11 +137,23 @@ dependent induction H.
 - destruct m, k;
     discriminate + injection x as x;
     subst.
-  + rewrite (finite_intersections_len_0_full_set H), Intersection_Full_set.
-    now apply IHfinite_intersections_len0.
-  + rewrite (finite_intersections_len_0_full_set H0), Intersection_commutative, Intersection_Full_set.
-    apply IHfinite_intersections_len.
-    lia.
+  + intuition.
+    apply finite_intersections_len_0_full_set in H.
+    apply Extensionality_Ensembles in H. subst.
+    replace (Intersection Full_set V) with V.
+    { assumption. }
+    apply Extensionality_Ensembles.
+    symmetry.
+    apply Intersection_Full_set.
+  + apply finite_intersections_len_0_full_set in H0.
+    apply Extensionality_Ensembles in H0.
+    subst.
+    replace (Intersection U Full_set) with U.
+    { apply IHfinite_intersections_len. lia. }
+    apply Extensionality_Ensembles.
+    symmetry.
+    rewrite commutativity.
+    apply Intersection_Full_set.
   + lia.
 Qed.
 
@@ -154,7 +167,7 @@ Lemma finite_intersections_len_SS_intersection
     In (finite_intersections_len F (S m)) V /\
     In (finite_intersections_len F (S k)) W /\
     U = Intersection V W /\
-    n = m + k.
+    eq n (m + k).
 Proof.
 intro H.
 red in H.
@@ -162,14 +175,27 @@ dependent induction H.
 - destruct m, k;
     discriminate + injection x as x;
     subst.
-  + rewrite (finite_intersections_len_0_full_set H), Intersection_Full_set.
-    now apply IHfinite_intersections_len0.
-  + rewrite (finite_intersections_len_0_full_set H0), Intersection_commutative, Intersection_Full_set.
-    apply IHfinite_intersections_len.
-    lia.
+  + apply finite_intersections_len_0_full_set in H.
+    apply Extensionality_Ensembles in H.
+    subst.
+    replace (Intersection Full_set V) with V.
+    { apply IHfinite_intersections_len0.
+      reflexivity.
+    }
+    apply Extensionality_Ensembles.
+    firstorder.
+  + apply finite_intersections_len_0_full_set in H0.
+    apply Extensionality_Ensembles in H0.
+    subst.
+    replace (Intersection U Full_set) with U.
+    { apply IHfinite_intersections_len.
+      lia.
+    }
+    apply Extensionality_Ensembles.
+    firstorder.
   + exists m, k, U, V.
-    repeat split;
-      lia + assumption.
+    repeat split.
+    all: firstorder; lia.
 Qed.
 
 Lemma finite_intersections_len_S_exists
@@ -195,8 +221,8 @@ apply (well_founded_ind lt_wf (fun n =>
 intros [|n] IH U H.
 - apply finite_intersections_len_1_in in H.
   exists Full_set, U.
-  now repeat split;
-    constructor + rewrite Intersection_Full_set.
+  repeat split; auto; try now constructor.
+  firstorder.
 - apply finite_intersections_len_SS_intersection in H.
   destruct H as [m [[|k] [V [W [HV [HW [eq1 eq2]]]]]]].
   + rewrite Nat.add_0_r in eq2.
@@ -206,11 +232,11 @@ intros [|n] IH U H.
     destruct HV as [V1 [V2 [HV1 [HV2 eq3]]]].
     rewrite eq2, plus_n_Sm.
     exists (Intersection V1 W), V2.
-    repeat (constructor; try easy).
     subst.
-    now rewrite (Intersection_associative V1 W),
-                (Intersection_commutative _ W),
-             <- (Intersection_associative V1).
+    apply Extensionality_Ensembles in eq3, eq1.
+    subst.
+    firstorder.
+    repeat constructor; assumption.
 Qed.
 
 Lemma finite_intersections_len_S_choice
@@ -237,7 +263,6 @@ Lemma finite_intersections_len_union
   (F : Family X) :
   IndexedUnion (finite_intersections_len F) = finite_intersections F.
 Proof.
-apply Extensionality_Ensembles.
 split.
 - intros ? [n U HU].
   red in HU.
@@ -272,6 +297,7 @@ apply countable_indexed_union.
     intros [U HU] [V HV] eq.
     apply proj1_sig_injective.
     simpl.
+    apply Extensionality_Ensembles.
     now rewrite (finite_intersections_len_0_full_set HU),
                 (finite_intersections_len_0_full_set HV).
   + destruct (finite_intersections_len_S_choice F n) as [g Hg],
@@ -285,6 +311,7 @@ apply countable_indexed_union.
   apply Hfn, proj1_sig_eq in eq1.
   apply Hf, proj1_sig_eq in eq2.
   apply Proj1SigInjective.proj1_sig_injective.
+  apply Extensionality_Ensembles.
   now rewrite Hg, Hg, eq1, eq2.
   Unshelve.
   destruct (snd (g U)).

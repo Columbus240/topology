@@ -1,12 +1,20 @@
 From ZornsLemma Require Export FunctionProperties.
 From Coq Require Export Ensembles.
-From ZornsLemma Require Import EnsemblesImplicit.
-From ZornsLemma Require Export EnsemblesSpec.
 From ZornsLemma Require Import IndexedFamilies.
+From ZornsLemma Require Export EnsemblesSpec.
+From ZornsLemma Require Import FiniteTypes EnsemblesImplicit.
 
 Definition inverse_image {X Y:Type} (f:X->Y) (T:Ensemble Y) : Ensemble X :=
   [ x:X | In T (f x) ].
 Global Hint Unfold inverse_image : sets.
+
+Require Import Morphisms.
+
+Instance inverse_image_Proper {X Y : Type} (f : X -> Y) :
+  Proper (Same_set ==> Same_set) (inverse_image f).
+Proof.
+  firstorder.
+Qed.
 
 Lemma inverse_image_increasing: forall {X Y:Type} (f:X->Y)
   (T1 T2:Ensemble Y), Included T1 T2 ->
@@ -14,8 +22,8 @@ Lemma inverse_image_increasing: forall {X Y:Type} (f:X->Y)
 Proof.
 intros.
 red; intros.
-destruct H0.
-constructor.
+do 2 red in H0.
+do 2 red.
 auto.
 Qed.
 
@@ -23,9 +31,8 @@ Lemma inverse_image_empty: forall {X Y:Type} (f:X->Y),
   inverse_image f Empty_set = Empty_set.
 Proof.
 intros.
-apply Extensionality_Ensembles; split; red; intros.
-- destruct H as [[]].
-- destruct H.
+apply Extensionality_Ensembles; split; red; intros;
+  contradiction.
 Qed.
 
 Lemma inverse_image_full: forall {X Y:Type} (f:X->Y),
@@ -42,11 +49,10 @@ Lemma inverse_image_intersection: forall {X Y:Type} (f:X->Y)
 Proof.
 intros.
 apply Extensionality_Ensembles; split; red; intros.
-- destruct H.
-  inversion H.
-  constructor; constructor; trivial.
-- destruct H as [? [] []].
-  constructor; constructor; trivial.
+- inversion H.
+  constructor; do 2 red; trivial.
+- destruct H as [?].
+  split; assumption.
 Qed.
 
 Lemma inverse_image_union: forall {X Y:Type} (f:X->Y)
@@ -55,12 +61,11 @@ Lemma inverse_image_union: forall {X Y:Type} (f:X->Y)
 Proof.
 intros.
 apply Extensionality_Ensembles; split; red; intros.
-- destruct H.
-  inversion H.
-  + left; constructor; trivial.
-  + right; constructor; trivial.
-- constructor.
-  destruct H as [? []|? []].
+- inversion H.
+  + left; do 2 red; trivial.
+  + right; do 2 red; trivial.
+- do 2 red.
+  destruct H.
   + left; trivial.
   + right; trivial.
 Qed.
@@ -72,13 +77,10 @@ Proof.
 intros.
 apply Extensionality_Ensembles; split; red; intros.
 - red; intro.
-  destruct H.
-  destruct H0.
-  contradiction H.
-- constructor.
-  intro.
-  contradiction H.
-  constructor; trivial.
+  lazy in *.
+  tauto.
+- lazy in *.
+  assumption.
 Qed.
 
 Lemma inverse_image_composition: forall {X Y Z:Type} (f:Y->Z) (g:X->Y)
@@ -86,12 +88,7 @@ Lemma inverse_image_composition: forall {X Y Z:Type} (f:Y->Z) (g:X->Y)
   inverse_image g (inverse_image f U).
 Proof.
 intros.
-apply Extensionality_Ensembles; split; red; intros.
-- constructor; constructor.
-  destruct H.
-  assumption.
-- destruct H; inversion H.
-  constructor; trivial.
+apply Extensionality_Ensembles; firstorder.
 Qed.
 
 Global Hint Resolve inverse_image_increasing : sets.
@@ -106,16 +103,13 @@ Lemma inverse_image_indexed_intersection :
 Proof.
 intros.
 apply Extensionality_Ensembles; split; red; intros.
-- destruct H.
-  inversion_clear H.
+- inversion_clear H.
   constructor. intros.
-  constructor.
   apply H0.
 - destruct H.
-  constructor.
+  do 2 red.
   constructor. intros.
-  destruct (H a).
-  exact H0.
+  apply H.
 Qed.
 
 Lemma inverse_image_indexed_union :
@@ -125,14 +119,10 @@ Lemma inverse_image_indexed_union :
 Proof.
 intros.
 apply Extensionality_Ensembles; split; red; intros.
-- destruct H.
-  inversion_clear H.
+- inversion_clear H.
   exists a.
-  constructor.
   exact H0.
-- destruct H.
-  inversion_clear H.
-  constructor.
+- inversion_clear H.
   exists a.
   exact H0.
 Qed.
@@ -143,12 +133,7 @@ Lemma inverse_image_fun
   (T : Ensemble Y) :
   inverse_image f T = fun x => T (f x).
 Proof.
-  apply Extensionality_Ensembles.
-  split;
-    red;
-    intros;
-    constructor + destruct H;
-    assumption.
+  apply Extensionality_Ensembles; firstorder.
 Qed.
 
 Lemma in_inverse_image
@@ -165,9 +150,8 @@ Qed.
 Lemma inverse_image_id {X : Type} (U : Ensemble X) :
   inverse_image (@id X) U = U.
 Proof.
-apply Extensionality_Ensembles; split; red; intros.
-- apply H.
-- constructor. apply H.
+apply Extensionality_Ensembles; split; red; intros;
+  assumption.
 Qed.
 
 Lemma inverse_image_id_comp
@@ -182,10 +166,10 @@ Proof.
   rewrite <- inverse_image_composition.
   apply Extensionality_Ensembles.
   split; red; intros.
-  - destruct H.
-    rewrite <- Hfg.
+  - rewrite <- Hfg.
+    do 2 red in H.
     assumption.
-  - constructor.
+  - do 2 red.
     rewrite Hfg.
     assumption.
 Qed.
@@ -193,18 +177,10 @@ Qed.
 Lemma inverse_image_union2 {X Y : Type} (f : X -> Y) (U V : Ensemble Y) :
   inverse_image f (Union U V) = Union (inverse_image f U) (inverse_image f V).
 Proof.
+lazy.
 apply Extensionality_Ensembles.
-split; red; intros.
-- destruct H.
-  inversion H;
-    subst;
-  [ left | right ];
-    now constructor.
-- now inversion H;
-    destruct H0;
-    subst;
-    constructor;
-  [ left | right ].
+lazy.
+auto.
 Qed.
 
 Lemma inverse_image_family_union
@@ -224,19 +200,19 @@ Proof.
     subst.
     rewrite <- Hgf.
     exists (inverse_image f S).
-    + constructor.
+    + do 2 red.
       rewrite inverse_image_id_comp.
       * exact H0.
       * exact Hfg.
     + rewrite Hgf.
-      constructor.
+      do 2 red.
       assumption.
   - destruct H.
     apply in_inverse_image in H.
-    constructor.
+    do 2 red.
     exists (inverse_image g S).
     + exact H.
-    + constructor.
+    + do 2 red.
       rewrite Hgf.
       assumption.
 Qed.
@@ -249,11 +225,12 @@ Lemma inverse_image_family_union_image
 Proof.
 apply Extensionality_Ensembles.
 split; red; intros;
-  inversion H;
-  inversion H0;
-  subst;
-  repeat econstructor;
-  eassumption + now destruct H1.
+  inversion H.
+- subst. repeat econstructor.
+  all: eassumption.
+- inversion H0; subst.
+  repeat econstructor.
+  all: eassumption.
 Qed.
 
 Lemma inverse_image_singleton
@@ -314,7 +291,7 @@ extensionality_ensembles_inv.
 - specialize (H _ H0) as [x0].
   subst.
   apply Im_def.
-  constructor. assumption.
+  do 2 red. assumption.
 Qed.
 
 Lemma inverse_image_image_surjective
@@ -337,9 +314,8 @@ Lemma inverse_image_surjective_singleton
   Included (inverse_image (inverse_image f) (Singleton T)) (Singleton (Im T f)).
 Proof.
 intros H U HU.
-destruct HU.
-inversion H0.
-subst.
+do 2 red in HU.
+inversion_clear HU.
 now rewrite inverse_image_image_surjective.
 Qed.
 
@@ -350,14 +326,19 @@ Lemma inverse_image_finite {X Y : Type} (f : X -> Y) (F : Family X) :
 Proof.
 intros Hf H.
 induction H.
-- rewrite inverse_image_empty.
-  constructor.
+- rewrite H.
+  rewrite inverse_image_empty.
+  constructor. reflexivity.
 - unfold Add.
+  rewrite H. unfold Add.
   rewrite inverse_image_union2.
-  pose proof (Singleton_is_finite _ (Im x f)).
-  now eapply Union_preserves_Finite,
-             Finite_downward_closed,
-             inverse_image_surjective_singleton.
+  pose proof (finite_singleton (Im x f)).
+  apply finite_union.
+  { assumption. }
+  apply finite_included with (V0 := Singleton (Im x f));
+    try assumption.
+  apply inverse_image_surjective_singleton.
+  assumption.
 Qed.
 
 Lemma inverse_image_surjective_injective
@@ -372,8 +353,8 @@ split; red; intros;
   destruct (H x);
   subst;
   apply (in_inverse_image f);
-[ rewrite <- eq | rewrite eq ];
-  now constructor.
+  [ rewrite <- eq | rewrite eq ];
+  assumption.
 Qed.
 
 Lemma image_inverse_image_included {X Y} (f : X -> Y) (U : Ensemble Y) :
@@ -381,7 +362,7 @@ Lemma image_inverse_image_included {X Y} (f : X -> Y) (U : Ensemble Y) :
 Proof.
   intros ? ?.
   inversion_ensembles_in.
-  subst. inversion_ensembles_in.
+  subst.
   assumption.
 Qed.
 
@@ -389,7 +370,6 @@ Lemma inverse_image_image_included {X Y} (f : X -> Y) (U : Ensemble X) :
   Included U (inverse_image f (Im U f)).
 Proof.
   intros ? ?.
-  constructor.
   apply Im_def.
   assumption.
 Qed.

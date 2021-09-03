@@ -254,7 +254,6 @@ assert (forall x:X, In ub_dom x -> { y:Y | exists z:partial_injection,
   apply constructive_definite_description.
   destruct H0.
   destruct H0.
-  destruct H0.
   exists (pi_func x0 x H1).
   red; split.
   - exists x0.
@@ -325,7 +324,6 @@ intros.
 constructor.
 - simpl.
   red; intros.
-  constructor.
   exists y.
   tauto.
 - simpl.
