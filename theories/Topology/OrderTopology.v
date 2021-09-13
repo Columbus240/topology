@@ -1201,3 +1201,16 @@ Proof.
   - eapply order_topology_convex_connected. assumption.
   - eapply order_topology_connected_convex; typeclasses eauto.
 Qed.
+
+Require Import Compactness.
+
+Lemma order_topology_compact_complete X (R : relation X) :
+  compact (OrderTopology R) <->
+  forall A : Ensemble (OrderTopology R),
+  exists lub glb,
+    is_lub R A lub /\ is_glb R A glb.
+Proof.
+  split; intros.
+  - admit.
+  - admit.
+Admitted.
