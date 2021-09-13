@@ -1,6 +1,8 @@
 From Coq Require Import Program.Subset.
 From Topology Require Export TopologicalSpaces.
 From Topology Require Import Homeomorphisms WeakTopology.
+From ZornsLemma Require Import EnsemblesImplicit.
+From MathClasses Require Import canonical_names.
 
 Section Subspace.
 
@@ -45,22 +47,24 @@ Qed.
 Lemma subspace_closure U :
   closure U = inverse_image subspace_inc (closure (Im U subspace_inc)).
 Proof.
-  apply Extensionality_Ensembles; split; red; intros.
-  - constructor.
+  split; red; intros.
+  - do 2 red.
     apply continuous_closure.
     { apply subspace_inc_continuous. }
     apply Im_def.
     assumption.
-  - destruct H.
+  - do 2 red in H.
     unfold closure in H.
     constructor. intros.
-    destruct H0. destruct H0.
+    red in H0.
+    destruct H0.
     rewrite subspace_closed_char in H0.
     destruct H0 as [V []].
-    subst. constructor.
+    apply H2. do 2 red.
     destruct H.
     apply H. repeat split; try assumption.
-    intros ? ?. inversion H2; subst; clear H2.
+    intros ? ?. inversion H3; subst; clear H3.
+    rewrite H2 in H1.
     apply H1. assumption.
 Qed.
 
@@ -73,7 +77,8 @@ Lemma subspace_full_homeomorphic (X : TopologicalSpace) :
   homeomorphic (SubspaceTopology (@Full_set X)) X.
 Proof.
   exists (subspace_inc Full_set).
-  exists (fun x => exist _ x (Full_intro _ x)).
+  unshelve eexists (fun x => exist _ x _).
+  - constructor.
   - apply subspace_inc_continuous.
   - apply subspace_continuous_char.
     unfold compose. simpl.
@@ -90,8 +95,8 @@ Proof.
   apply Extensionality_Ensembles; split; red; intros.
   { constructor. }
   destruct x.
-  rewrite subspace_closure.
-  constructor. simpl.
+  apply subspace_closure.
+  do 2 red. simpl.
   rewrite inverse_image_image_surjective_locally.
   { assumption. }
   intros.
@@ -122,13 +127,15 @@ apply Extensionality_Ensembles; split; red; intros.
   exists (exist _ x H2); trivial.
   apply NNPP. intro.
   change (In (Complement G) (exist (In F) x H2)) in H4.
-  rewrite H1 in H4.
-  now destruct H4.
+  apply H1 in H4.
+  do 2 red in H4.
+  simpl in H4.
+  contradiction.
 - destruct H2 as [[y]].
   subst y0.
   constructor; trivial.
   intro.
   absurd (In (Complement G) (exist _ y i)).
   + now intro.
-  + now rewrite H1.
+  + now apply H1.
 Qed.

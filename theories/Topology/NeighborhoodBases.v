@@ -45,7 +45,7 @@ destruct H.
 constructor;
   intros.
 - now split;
-    destruct H as [[? ?]];
+    destruct H as [? ?];
     [ apply open_basis_elements | ].
 - destruct H.
   destruct (open_basis_cover x U H H0).

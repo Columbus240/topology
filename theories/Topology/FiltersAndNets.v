@@ -1,6 +1,7 @@
 From ZornsLemma Require Import Powerset_facts.
 Require Export FilterLimits.
 Require Export Nets.
+From ZornsLemma Require Import EnsemblesImplicit.
 
 Section net_tail_filter.
 
@@ -26,8 +27,7 @@ refine (Build_Filter_from_basis tail_filter_basis _ _ _).
   assert (In Empty_set (x j)).
   { rewrite H1.
     exists j; trivial.
-    constructor.
-    apply preord_refl; apply DS_ord_cond.
+    red. apply preord_refl, DS_ord_cond.
   }
   destruct H3.
 - intros.
@@ -39,17 +39,17 @@ refine (Build_Filter_from_basis tail_filter_basis _ _ _).
   + red; intros.
     constructor.
     * destruct H5 as [i0].
-      destruct H5.
-      rewrite H1.
+      subst.
+      red in H5.
       exists i0; trivial.
-      constructor.
+      red.
       apply preord_trans with k; trivial.
       apply DS_ord_cond.
     * destruct H5 as [i0].
-      destruct H5.
-      rewrite H2.
+      subst.
+      red in H5.
       exists i0; trivial.
-      constructor.
+      red.
       apply preord_trans with k; trivial.
       apply DS_ord_cond.
 Defined.
@@ -60,24 +60,23 @@ Proof.
 intros.
 red; intros.
 red; intros U ?.
-destruct H0.
-destruct H0 as [V []].
-destruct H0.
-pose proof (H V H0 H2).
+destruct H0 as [V [[]]].
+pose proof (H V H0 H1).
 destruct H3 as [j0].
 apply filter_upward_closed with (net_tail j0).
-- constructor.
+- do 4 red.
   exists (net_tail j0).
   split.
   + exists j0; trivial.
     constructor.
   + auto with sets.
 - intros y ?.
-  apply H1.
+  apply H2.
   destruct H4 as [j].
   rewrite H5.
   apply H3.
-  destruct H4; assumption.
+  red in H4.
+  assumption.
 Qed.
 
 Lemma tail_filter_limit_impl_net_limit: forall x0:point_set X,
@@ -87,11 +86,11 @@ intros.
 intros U ? ?.
 assert (In (filter_family tail_filter) U).
 { apply H.
-  constructor.
+  do 3 red.
   apply open_neighborhood_is_neighborhood.
   split; trivial.
 }
-destruct H2.
+do 4 red in H2.
 destruct H2 as [T []].
 destruct H2 as [j0].
 exists j0.
@@ -99,7 +98,6 @@ intros.
 apply H3.
 rewrite H4.
 exists j; trivial.
-constructor; assumption.
 Qed.
 
 Lemma net_cluster_point_impl_tail_filter_cluster_point:
@@ -108,7 +106,6 @@ Lemma net_cluster_point_impl_tail_filter_cluster_point:
 Proof.
 intros.
 red; intros.
-destruct H0.
 destruct H0 as [T []].
 destruct H0 as [j0].
 apply meets_every_open_neighborhood_impl_closure.
@@ -120,7 +117,7 @@ constructor; trivial.
 apply H1.
 rewrite H2.
 exists j'.
-- constructor; trivial.
+- assumption.
 - reflexivity.
 Qed.
 
@@ -133,7 +130,6 @@ red; intros.
 red; intros.
 assert (In (closure (net_tail i)) x0).
 { apply H.
-  constructor.
   exists (net_tail i).
   split.
   - exists i; trivial.
@@ -145,9 +141,9 @@ pose proof (closure_impl_meets_every_open_neighborhood _ _ _ H2
 destruct H3.
 destruct H3.
 destruct H3.
-exists x1; split.
-- destruct H3; trivial.
-- rewrite <- H5; trivial.
+subst.
+red in H3.
+exists x1; split; assumption.
 Qed.
 
 End net_tail_filter.
@@ -180,6 +176,7 @@ assert (In (filter_family F) (Intersection ftn_S0 ftn_S1)).
 assert (Inhabited (Intersection ftn_S0 ftn_S1)).
 { apply NNPP; red; intro.
   pose proof (not_inhabited_empty _ H0).
+  apply Extensionality_Ensembles in H1.
   rewrite H1 in H.
   contradiction (filter_empty _ F).
 }
@@ -187,7 +184,7 @@ destruct H0 as [ftn_x'].
 exists (Build_filter_to_net_DS_set
   (Intersection ftn_S0 ftn_S1) ftn_x' H H0).
 simpl.
-split; auto with sets.
+split; firstorder.
 Defined.
 
 Definition filter_to_net : Net filter_to_net_DS X :=
@@ -200,7 +197,6 @@ intros.
 intros U ? ?.
 assert (In (filter_family F) U).
 { apply H.
-  constructor.
   apply open_neighborhood_is_neighborhood.
   split; trivial.
 }
@@ -215,7 +211,6 @@ Lemma filter_to_net_limit_impl_filter_limit: forall x0:point_set X,
 Proof.
 intros.
 intros U ?.
-destruct H0.
 destruct H0 as [V []].
 apply filter_upward_closed with V; trivial.
 destruct H0.
@@ -257,6 +252,7 @@ apply meets_every_open_neighborhood_impl_closure; intros.
 assert (Inhabited S).
 { apply NNPP; red; intro.
   pose proof (not_inhabited_empty S H3).
+  apply Extensionality_Ensembles in H4.
   subst.
   contradiction (filter_empty _ F).
 }

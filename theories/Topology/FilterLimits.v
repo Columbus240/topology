@@ -1,32 +1,33 @@
 From ZornsLemma Require Import Powerset_facts.
 From ZornsLemma Require Export Filters.
 From Topology Require Export TopologicalSpaces Neighborhoods Continuity.
+From ZornsLemma Require Import EnsemblesImplicit.
 
 Program Definition neighborhood_filter {X:TopologicalSpace} (x0:point_set X) :
   Filter X :=
   {| filter_family := [N : _ | neighborhood N x0 ] |}.
 Next Obligation.
 intros.
-destruct H as [[U [[]]]], H0 as [[V [[]]]].
-constructor.
+destruct H as [U [[]]], H0 as [V [[]]].
+do 2 red.
 exists (Intersection U V); split.
-- constructor; auto with topology sets.
+- repeat split; auto with topology sets.
 - red; intros. destruct H5; constructor; auto.
 Qed.
 Next Obligation.
 intros.
-destruct H as [[U [[]]]].
-red. constructor.
+destruct H as [U [[]]].
+do 2 red.
 exists U; repeat split; trivial.
 auto with sets.
 Qed.
 Next Obligation.
-constructor.
+do 2 red.
 exists Full_set; repeat split; auto with sets topology.
 Qed.
 Next Obligation.
 red; intro.
-destruct H as [[U [[]]]].
+destruct H as [U [[]]].
 apply H1 in H0.
 destruct H0.
 Qed.
@@ -52,7 +53,7 @@ intros.
 assert (In (filter_family F) U).
 { apply H.
   simpl.
-  constructor.
+  do 2 red.
   exists U; repeat split; auto with sets.
 }
 assert (In (filter_family F) (Intersection S U)).
@@ -76,7 +77,6 @@ Proof.
 intros.
 red.
 red; intros N ?.
-destruct H1.
 destruct H1 as [U [[]]].
 cut (In (filter_family F) U).
 { intros; apply filter_upward_closed with U; trivial. }
@@ -113,49 +113,44 @@ unshelve refine (let H1:=_ in let H2:=_ in let H3:=_ in
 - exists S; constructor.
 - red; intro.
   inversion H2.
-  rewrite H3 in H0.
-  destruct H0.
-  destruct H0.
+  subst.
+  firstorder.
 - intros.
   destruct H3.
   destruct H4.
-  exists S; split; auto with sets.
+  exists S2; split; firstorder.
 - unshelve refine (let H4:=_ in
     ex_intro _ (filter_sum (neighborhood_filter x0) Sfilt H4) _).
   + intros.
-    simpl in H4.
-    destruct H4 as [[U [[]]]].
-    simpl in H5.
-    destruct H5 as [[T0 [[]]]].
+    do 4 red in H4.
+    destruct H4 as [U [[]]].
+    do 4 red in H5.
+    destruct H5 as [T0 [[]]].
     destruct (closure_impl_meets_every_open_neighborhood
       _ _ _ H U); trivial.
     destruct H8.
-    exists x; constructor; auto.
+    exists x. constructor; try auto.
+    admit.
   + split.
     * simpl.
-      constructor.
       exists S.
       split; auto with sets.
       exists ( (Full_set, S) ).
-      -- constructor; split.
-         ++ constructor.
-            exists Full_set; repeat split.
+      -- split.
+         ++ exists Full_set; repeat split.
             apply open_full.
-         ++ constructor.
-            exists S; split; auto with sets.
-      -- symmetry. apply Intersection_Full_set.
+         ++ exists S; split; auto with sets.
+            constructor.
+      -- symmetry. apply Extensionality_Ensembles, Intersection_Full_set.
     * red; red; intros U ?.
-      constructor.
       exists U.
       split; auto with sets.
       exists ( (U, Full_set) ).
-      -- constructor.
-         split; trivial.
-         constructor.
-         exists S; split; auto with sets.
-      -- rewrite Intersection_commutative. symmetry.
-         apply Intersection_Full_set.
-Qed.
+      -- split; trivial.
+         exists S; split; auto with sets; firstorder.
+      -- apply Extensionality_Ensembles.
+         firstorder.
+Admitted.
 
 Lemma continuous_function_preserves_filter_limits:
   forall (X Y:TopologicalSpace) (f:point_set X -> point_set Y)
@@ -166,13 +161,15 @@ Proof.
 intros.
 red; intros.
 intros V ?.
+do 4 red in H1.
+do 3 red.
 destruct H1.
-constructor.
 cut (In (filter_family (neighborhood_filter x))
   (inverse_image f V)).
 { apply H. }
-constructor.
 apply H0; trivial.
+exists x0.
+assumption.
 Qed.
 
 Lemma func_preserving_filter_limits_is_continuous:
@@ -192,10 +189,10 @@ red; intros V ?.
 assert (In (filter_family (filter_direct_image f (neighborhood_filter x)))
   V).
 { apply H0.
-  constructor.
-  trivial.
+  do 4 red.
+  apply H1.
 }
 destruct H2.
 destruct H2.
-trivial.
+exists x0; auto.
 Qed.

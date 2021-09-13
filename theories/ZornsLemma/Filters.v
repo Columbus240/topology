@@ -1,6 +1,11 @@
 From ZornsLemma Require Import DecidableDec.
 From ZornsLemma Require Export Families.
-From ZornsLemma Require Import EnsemblesSpec.
+From ZornsLemma Require Import FiniteIntersections.
+From ZornsLemma Require Import ZornsLemma.
+From ZornsLemma Require Export IndexedFamilies.
+From ZornsLemma Require Export FiniteTypes.
+From ZornsLemma Require Export InverseImage.
+From ZornsLemma Require Import EnsemblesSpec EnsemblesImplicit.
 
 Record Filter (X:Type) : Type := {
   filter_family: Family X;
@@ -22,9 +27,6 @@ Record filter_basis {X:Type} (F:Filter X) (B:Family X) : Prop := {
     In (filter_family F) S -> exists S':Ensemble X,
     In B S' /\ Included S' S
 }.
-
-From ZornsLemma Require Export IndexedFamilies.
-From ZornsLemma Require Export FiniteTypes.
 
 Lemma filter_finite_indexed_intersection: forall {X:Type} (F:Filter X)
   {A:Type} (S:IndexedFamily A X),
@@ -61,31 +63,24 @@ Definition Build_Filter_from_basis : Filter X.
 refine (Build_Filter X [ S:Ensemble X | exists T:Ensemble X,
                        In B T /\ Included T S ] _ _ _ _).
 - intros.
-  destruct H.
-  destruct H0.
   destruct H as [T1 []].
   destruct H0 as [T2 []].
   destruct (B_basis_cond T1 T2 H H0) as [T' []].
-  constructor.
   exists T'; split; trivial.
   red; intros.
   apply H4 in H5.
   destruct H5.
   constructor; auto.
 - intros.
-  destruct H.
   destruct H as [T []].
-  constructor.
   exists T; split; auto with sets.
-- constructor.
-  destruct B_nonempty as [T].
+- destruct B_nonempty as [T].
   exists T; split; trivial.
   red; intros; constructor.
 - red; intro.
-  destruct H.
   destruct H as [T []].
   assert (T = Empty_set).
-  { apply Extensionality_Ensembles; split; auto with sets. }
+  { apply Extensionality_Ensembles; split; firstorder. }
   destruct H1.
   contradiction B_empty.
 Defined.
@@ -95,20 +90,15 @@ Proof.
 constructor.
 - simpl.
   red; intros S ?.
-  constructor.
   exists S; split; auto with sets.
 - intros.
   simpl in H.
-  destruct H.
   exact H.
 Qed.
 
 End filter_from_basis.
 
 Arguments Build_Filter_from_basis {X}.
-
-From ZornsLemma Require Export FiniteTypes.
-From ZornsLemma Require Export IndexedFamilies.
 
 Record filter_subbasis {X:Type} (F:Filter X) (B:Family X) : Prop := {
   filter_subbasis_elements: Included B (filter_family F);
@@ -119,7 +109,11 @@ Record filter_subbasis {X:Type} (F:Filter X) (B:Family X) : Prop := {
           Included (IndexedIntersection T) S
 }.
 
-From ZornsLemma Require Import FiniteIntersections.
+Instance Inhabited_Proper {X : Type} :
+  Proper (Same_set ==> iff) (@Inhabited X).
+Proof.
+  firstorder.
+Qed.
 
 Section filter_from_subbasis.
 
@@ -142,8 +136,9 @@ refine (Build_Filter_from_basis (finite_intersections B) _ _ _).
   destruct H3.
   destruct H3.
 - intros.
-  exists (Intersection S1 S2); split; auto with sets.
-  constructor 3; trivial.
+  exists (Intersection S1 S2); split.
+  + constructor 3; assumption.
+  + intros ? []. constructor; assumption.
 Defined.
 
 Lemma filter_from_subbasis_subbasis:
@@ -173,8 +168,6 @@ Arguments Build_Filter_from_subbasis {X}.
 Definition ultrafilter {X:Type} (F:Filter X) : Prop :=
   forall S:Ensemble X, In (filter_family F) S \/
                        In (filter_family F) (Ensembles.Complement S).
-
-From ZornsLemma Require Import ZornsLemma.
 
 Lemma ultrafilter_extension: forall {X:Type} (F:Filter X),
   exists U:Filter X, Included (filter_family F) (filter_family U) /\
@@ -273,16 +266,16 @@ assert (forall S':Ensemble X, In (filter_family U) S' ->
   apply NNPP; red; intro.
   contradiction H2.
   exists x.
-  auto with sets.
+  firstorder.
 }
 unshelve refine (let H2:=_ in let H3:=_ in let H4:=_ in
   let Uext := Build_Filter_from_basis
        (Im (filter_family U) (fun S':Ensemble X =>
           Intersection S' (Ensembles.Complement S))) H2 H3 H4 in _).
-- exists (Ensembles.Complement S).
+- exists (Complement S).
   exists Full_set.
   + apply filter_full.
-  + apply Extensionality_Ensembles; split; auto with sets.
+  + apply Extensionality_Ensembles; split; firstorder.
 - red; intros.
   inversion_clear H3 as [S'].
   destruct (H1 S' H4) as [x].
@@ -298,9 +291,9 @@ unshelve refine (let H2:=_ in let H3:=_ in let H4:=_ in
   + subst.
     apply Extensionality_Ensembles; split; red; intros.
     * destruct H6, H6, H7.
-      auto with sets.
+      firstorder.
     * destruct H6, H6.
-      auto with sets.
+      firstorder.
 - assert (Included (filter_family U) (filter_family Uext)).
   { red; intros.
     apply filter_upward_closed with (Intersection x (Ensembles.Complement S)).
@@ -311,10 +304,13 @@ unshelve refine (let H2:=_ in let H3:=_ in let H4:=_ in
       destruct H6.
       apply filter_basis_elements0.
       exists x; trivial.
-    - auto with sets.
+    - firstorder.
   }
   assert (Included (filter_family F) (filter_family Uext)).
-  { auto with sets. }
+  { intros ? ?.
+    apply H5.
+    
+    auto with sets. }
   assert (PO_ord (exist _ U i) (exist _ Uext H6)).
   { red. exact H5. }
   apply H in H7.
@@ -327,30 +323,26 @@ unshelve refine (let H2:=_ in let H3:=_ in let H4:=_ in
   apply filter_basis_elements0.
   exists Full_set.
   + apply filter_full.
-  + rewrite Intersection_Full_set. reflexivity.
+  + apply Extensionality_Ensembles. firstorder.
 Qed.
-
-From ZornsLemma Require Export InverseImage.
 
 Definition filter_direct_image {X Y:Type} (f:X->Y) (F:Filter X) : Filter Y.
 refine (Build_Filter Y
   [ S:Ensemble Y | In (filter_family F) (inverse_image f S) ]
   _ _ _ _).
 - intros.
-  destruct H.
-  destruct H0.
-  constructor.
-  rewrite inverse_image_intersection.
+  unfold inverse_image in H, H0.
+  red in H, H0.
+  red. rewrite inverse_image_intersection.
   apply filter_intersection; trivial.
 - intros.
-  destruct H.
-  constructor.
+  red. red in H.
   apply filter_upward_closed with (inverse_image f S1); auto with sets.
-- constructor.
+- red.
   rewrite inverse_image_full.
   apply filter_full.
 - red; intro.
-  destruct H.
+  red in H.
   rewrite inverse_image_empty in H.
   revert H; apply filter_empty.
 Defined.
@@ -371,17 +363,14 @@ refine (Build_Filter_from_basis
     (fun p:(Ensemble X)*(Ensemble X) => let (S,T):=p in
        Intersection S T))
   _ _ _).
-- exists Full_set.
+- exists (Intersection Full_set Full_set).
   exists ( (Full_set, Full_set) ).
-  + constructor.
-    split; apply filter_full.
-  + rewrite Intersection_Full_set.
-    reflexivity.
+  + red. split; apply filter_full.
+  + reflexivity.
 - red; intro.
   inversion_clear H.
   destruct x as [S T].
   destruct H0.
-  destruct H.
   assert (Inhabited (Intersection S T)).
   { apply F_G_compat; trivial. }
   rewrite <- H1 in H2.
@@ -391,24 +380,15 @@ refine (Build_Filter_from_basis
   destruct H.
   destruct x as [S1 T1].
   destruct H0.
-  destruct H0.
+  subst.
   destruct x as [S2 T2].
-  exists (Intersection y y0).
-  split; auto with sets.
   destruct H0.
   destruct H.
-  destruct H.
-  exists ( (Intersection S1 S2, Intersection T1 T2) ).
-  + constructor; split; apply filter_intersection; trivial.
-  + rewrite H1; rewrite H2.
-    apply Extensionality_Ensembles; split; red; intros.
-    * destruct H5.
-      destruct H5.
-      destruct H6.
-      constructor; constructor; trivial.
-    * destruct H5.
-      destruct H5; destruct H6.
-      constructor; constructor; trivial.
+  exists (Intersection (Intersection S1 T1) (Intersection S2 T2)).
+  split; auto with sets.
+  exists (Intersection S1 S2, Intersection T1 T2).
+  + red. split; now apply filter_intersection.
+  + apply Extensionality_Ensembles; firstorder.
 Defined.
 
 End filter_sum.

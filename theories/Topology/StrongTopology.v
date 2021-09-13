@@ -16,21 +16,22 @@ Definition strong_open (S:Ensemble Y) : Prop :=
   forall a:A, open (inverse_image (f a) S).
 
 Definition StrongTopology : TopologicalSpace.
-refine (Build_TopologicalSpace Y strong_open _ _ _).
+refine (Build_TopologicalSpace Y strong_open _ _ _ _).
 - intros.
   red; intro.
   assert (inverse_image (f a) (FamilyUnion F) =
     IndexedUnion (fun U:{ U:Ensemble Y | In F U } =>
                    inverse_image (f a) (proj1_sig U))).
   { apply Extensionality_Ensembles; red; split; red; intros.
-    - destruct H0.
-      inversion H0.
+    - inversion H0.
       exists (exist _ S H1).
-      constructor.
+      do 2 red. simpl.
       exact H2.
-    - destruct H0. destruct H0.
+    - destruct H0.
+      do 2 red in H0.
+      do 2 red.
       destruct a0 as [U].
-      constructor.
+      simpl in H0.
       exists U; trivial.
   }
   rewrite H0.
@@ -46,6 +47,9 @@ refine (Build_TopologicalSpace Y strong_open _ _ _).
 - red; intro.
   rewrite inverse_image_full.
   apply open_full.
+- intros ? ? ?.
+  unfold strong_open.
+  split; intros; [rewrite <- H|rewrite H]; auto.
 Defined.
 
 Lemma strong_topology_makes_continuous_funcs:
@@ -58,9 +62,9 @@ auto.
 Qed.
 
 Lemma strong_topology_strongest: forall (T':Ensemble Y->Prop)
-  (H1:_) (H2:_) (H3:_),
+  (H1:_) (H2:_) (H3:_) (H4:_),
   (forall a:A, continuous (f a)
-          (Y:=Build_TopologicalSpace Y T' H1 H2 H3)) ->
+          (Y:=Build_TopologicalSpace Y T' H1 H2 H3 H4)) ->
   forall V:Ensemble Y, T' V -> strong_open V.
 Proof.
 intros.

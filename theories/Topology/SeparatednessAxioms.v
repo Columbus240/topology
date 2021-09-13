@@ -1,6 +1,6 @@
 Require Export Nets.
 Require Import Homeomorphisms.
-From ZornsLemma Require Import EnsemblesTactics.
+From ZornsLemma Require Import EnsemblesTactics EnsemblesImplicit.
 
 Definition T0_sep (X:TopologicalSpace) : Prop :=
   forall x y:point_set X, x <> y ->
@@ -38,16 +38,14 @@ Proof.
     split;
       red;
       intros.
-    + destruct H.
-      inversion H.
-      eapply f_equal in H1.
-      rewrite Hfg, Hfg in H1.
-      subst.
-      constructor.
-    + inversion H.
-      subst.
-      constructor.
-      constructor.
+    + do 4 red in H.
+      eapply (f_equal f) in H.
+      rewrite Hfg, Hfg in H.
+      assumption.
+    + do 2 red in H.
+      do 4 red.
+      apply f_equal.
+      assumption.
 Qed.
 
 Definition Hausdorff (X:TopologicalSpace) : Prop :=
@@ -95,17 +93,21 @@ Proof.
     + red.
       rewrite <- inverse_image_complement.
       now apply Hcont_f.
-    + intros [contra].
+    + intros contra.
+      do 2 red in contra.
       now rewrite Hfg in contra.
     + exists (inverse_image g U), (inverse_image g V).
       repeat split;
         try apply Hcont_g;
         trivial.
-     * apply Hincl.
-       constructor.
-       now rewrite Hfg.
-     * erewrite <- inverse_image_intersection, <- inverse_image_empty.
-       now f_equal.
+      * intros ? ?.
+        do 2 red.
+        apply Hincl.
+        do 2 red.
+        now rewrite Hfg.
+      * erewrite <- inverse_image_intersection,
+                 <- inverse_image_empty.
+        now f_equal.
 Qed.
 
 Definition normal_sep (X:TopologicalSpace) : Prop :=
@@ -150,14 +152,13 @@ pose proof (H x x0 H1).
 destruct H2 as [U [V [? [? [? [? ?]]]]]].
 assert (In (interior (Complement (Singleton x))) x0).
 { exists V; trivial.
-  constructor; split; trivial.
+  split; trivial.
   red; intros.
   intro.
   destruct H8.
-  eapply Noone_in_empty.
-  erewrite <- H6.
-  econstructor;
-    eassumption. }
+  assert (In (Intersection U V) x1); [now split|].
+  rewrite H6 in H8.
+  destruct H8. }
 rewrite interior_complement in H7.
 now contradiction H7.
 Qed.
@@ -176,7 +177,8 @@ match type of H2 with | ?A -> ?B -> ?C => assert C end.
     now destruct H3.
 - destruct H3 as [U [V [? [? [? [? ?]]]]]].
   exists U, V.
-  auto 6 with sets.
+  repeat split; try assumption.
+  apply H6. reflexivity.
 Qed.
 
 Lemma normal_sep_impl_T3_sep: forall X:TopologicalSpace,
@@ -192,7 +194,8 @@ match type of H3 with | ?A -> ?B -> ?C -> ?D => assert D end.
   now extensionality_ensembles.
 - destruct H4 as [U [V [? [? [? [? ?]]]]]].
   exists U, V.
-  auto with sets.
+  repeat split; try assumption.
+  apply H6. reflexivity.
 Qed.
 
 Section Hausdorff_and_nets.

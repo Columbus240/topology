@@ -2,14 +2,14 @@ From Coq Require Import Program.Equality.
 From Coq Require Import Lia.
 From Coq Require Import ClassicalChoice.
 
-From Coq Require Export Ensembles.
-From ZornsLemma Require Import EnsemblesImplicit.
+From Coq Require Import Ensembles.
 From ZornsLemma Require Export Families.
 From ZornsLemma Require Export FiniteTypes.
 From ZornsLemma Require Export IndexedFamilies.
 From ZornsLemma Require Export CountableTypes.
 From ZornsLemma Require Import Proj1SigInjective.
 From ZornsLemma Require Export Powerset_facts.
+From ZornsLemma Require Import EnsemblesImplicit.
 
 Inductive finite_intersections {X:Type} (S:Family X) : Family X :=
   | intro_full: In (finite_intersections S) Full_set

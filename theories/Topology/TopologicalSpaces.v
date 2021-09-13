@@ -112,6 +112,16 @@ Qed.
 Definition closed {X:TopologicalSpace} (F:Ensemble X) :=
   open (Ensembles.Complement F).
 
+Instance closed_proper {X : TopologicalSpace} :
+  Proper (Same_set ==> iff) (@closed X).
+Proof.
+  intros ? ? ?.
+  unfold closed.
+  apply open_proper.
+  rewrite H.
+  reflexivity.
+Qed.
+
 Lemma closed_complement_open: forall {X:TopologicalSpace}
   (U:Ensemble X), closed (Ensembles.Complement U) ->
   open U.

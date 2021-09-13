@@ -4,6 +4,7 @@ From ZornsLemma Require Export InverseImage.
 Require Export OpenBases.
 Require Export NeighborhoodBases.
 Require Export Subbases.
+From ZornsLemma Require Import EnsemblesImplicit.
 
 Section continuity.
 
@@ -43,7 +44,6 @@ replace (inverse_image f V) with (interior (inverse_image f V)).
 apply Extensionality_Ensembles; split.
 { apply interior_deflationary. }
 red; intros.
-destruct H1.
 assert (neighborhood V (f x)).
 { exists V; repeat split; auto with sets. }
 pose proof (H x V H2).
@@ -96,7 +96,7 @@ pose proof (open_basis_to_open_neighborhood_basis B (f x) H).
 apply open_neighborhood_basis_is_neighborhood_basis in H1.
 apply (continuous_at_neighborhood_basis _ _ H1).
 intros.
-destruct H2 as [[? ?]].
+destruct H2 as [? ?].
 apply open_neighborhood_is_neighborhood.
 split; try constructor; auto.
 Qed.
@@ -111,13 +111,13 @@ apply (continuous_open_basis _
   (finite_intersections_of_subbasis_form_open_basis _ _ H)).
 intros.
 destruct H1.
-destruct H1 as [A [? [V' []]]].
-rewrite H3.
+destruct H1 as [A [V' []]].
+subst.
 rewrite inverse_image_indexed_intersection.
 apply open_finite_indexed_intersection; trivial.
 intros.
 apply H0.
-apply H2.
+apply H1.
 Qed.
 
 Lemma continuous_closed :
@@ -146,8 +146,10 @@ split.
   { apply H. apply interior_open. }
   apply (interior_maximal _ _ H1).
   + intros ? ?.
-    destruct H2. constructor.
-    apply interior_deflationary. assumption.
+    do 2 red in H2.
+    do 2 red.
+    apply interior_deflationary.
+    assumption.
   + assumption.
 - intros. red; intros.
   specialize (H V).
@@ -175,13 +177,12 @@ split.
   assert (Included (closure A) B).
   { subst B. apply closure_minimal; auto.
     intros ? ?.
-    constructor. apply closure_inflationary.
-    exists x; auto.
+    apply closure_inflationary.
+    apply Im_def. assumption.
   }
   intros ? ?.
   destruct H2; subst.
   apply H1 in H2.
-  destruct H2.
   assumption.
 - intros.
   assert (inverse_image f U = closure (inverse_image f U)).
@@ -251,14 +252,13 @@ destruct (classic (In V y0)).
 - replace (inverse_image f V) with (@Full_set X).
   { apply open_full. }
   apply Extensionality_Ensembles; split; red; intros.
-  + constructor; trivial.
+  + assumption.
   + constructor.
 - replace (inverse_image f V) with (@Empty_set X).
   { apply open_empty. }
   apply Extensionality_Ensembles; split; auto with sets;
     red; intros.
   destruct H1.
-  contradiction H0.
 Qed.
 
 Lemma continuous_at_is_local: forall (X Y:TopologicalSpace)
@@ -277,11 +277,9 @@ destruct H2 as [U2 [[]]].
 exists (Intersection U1 U2).
 repeat split; trivial.
 - apply open_intersection2; trivial.
-- destruct H7.
-  rewrite <- H0.
-  + apply H6 in H8.
-    destruct H8; trivial.
-  + auto.
+- intros ? [].
+  do 2 red.
+  rewrite <- H0; firstorder.
 Qed.
 
 Lemma dense_image_surjective {X Y : TopologicalSpace} {f : X -> point_set Y}
@@ -294,7 +292,7 @@ Proof.
 intros.
 apply Extensionality_Ensembles.
 split; red; intros; constructor.
-intros U [[? H4]].
+intros U [? H4].
 destruct (H0 x) as [x0 H5].
 assert (In (closure S) x0) as H6 by now rewrite H1.
 destruct H6.
@@ -304,6 +302,9 @@ repeat split.
 - red.
   rewrite <- inverse_image_complement.
   auto.
-- apply H4.
-  now econstructor; trivial.
+- intros ? ?.
+  do 2 red.
+  subst.
+  apply H4.
+  now apply Im_def.
 Qed.

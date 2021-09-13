@@ -126,7 +126,7 @@ exists [ U:Ensemble X | In B U /\ In U x ]; split.
   apply open_basis_to_open_neighborhood_basis; trivial.
 - apply countable_downward_closed with B; trivial.
   red; intros.
-  now destruct H1 as [[? ?]].
+  now destruct H1 as [? ?].
 Qed.
 
 Lemma second_countable_impl_separable:
@@ -193,7 +193,7 @@ destruct (ClassicalChoice.choice (fun (U:{U | In basis_elts_contained_in_cover_e
 - intros.
   destruct x.
   simpl.
-  now destruct i as [[? [? ?]]].
+  now destruct i as [? [? ?]].
 - exists (Im Full_set choice_fun).
   repeat split.
   + red; intros.
@@ -203,23 +203,23 @@ destruct (ClassicalChoice.choice (fun (U:{U | In basis_elts_contained_in_cover_e
   + apply countable_img, countable_type_ensemble.
     apply countable_downward_closed with B; trivial.
     red; intros.
-    now destruct H4 as [[]].
+    now destruct H4 as [].
   + extensionality_ensembles.
     * constructor.
     * assert (In (FamilyUnion cover) x).
     { rewrite H2. constructor. }
       destruct H4, H.
       destruct (open_basis_cover x S) as [V]; trivial.
-      ** now apply H1.
-      ** destruct H as [? [? ?]].
-         assert (In basis_elts_contained_in_cover_elt V).
-       { constructor.
-         repeat split; trivial.
-         - now exists x.
-         - exists S; now split. }
-         exists (choice_fun (exist _ V H8)).
-         *** exists (exist _ V H8); auto with sets.
-         *** pose proof (H3 (exist _ V H8)).
-             destruct H9.
-             now apply H10.
+      { now apply H1. }
+      destruct H as [? [? ?]].
+      assert (In basis_elts_contained_in_cover_elt V).
+      { do 2 red.
+        repeat split; trivial.
+        - now exists x.
+        - exists S; now split. }
+      exists (choice_fun (exist _ V H8)).
+      ** exists (exist _ V H8); auto with sets.
+      ** pose proof (H3 (exist _ V H8)).
+         destruct H9.
+         now apply H10.
 Qed.

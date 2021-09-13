@@ -31,7 +31,7 @@ Definition connected (X:TopologicalSpace) : Prop :=
 
 Lemma connected_img: forall {X Y:TopologicalSpace}
   (f:point_set X -> point_set Y),
-  connected X -> continuous f -> surjective f -> connected Y.
+  connected X -> continuous f -> FunctionProperties.surjective f -> connected Y.
 Proof.
 intros.
 red.
@@ -43,19 +43,18 @@ destruct (H (inverse_image f S)).
     rewrite <- inverse_image_complement.
     apply H0, H2.
 - left.
-  extensionality_ensembles.
+  split; intros ? ?; try contradiction.
   destruct (H1 x).
-  eapply False_ind, Noone_in_empty.
-  rewrite <- H3.
-  constructor.
-  now rewrite H5.
+  subst.
+  apply H3 in H4.
+  contradiction.
 - right.
-  extensionality_ensembles.
+  split; intros ? ?.
   + constructor.
   + destruct (H1 x).
-    rewrite <- H4.
-    apply in_inverse_image.
-    now rewrite H3.
+    subst.
+    apply H3.
+    constructor.
 Qed.
 
 Lemma connected_union: forall {X:TopologicalSpace}
@@ -84,20 +83,21 @@ destruct (classic (In S0 x)).
   destruct (H a _ (H3 a)).
   - assert (In (@Empty_set (point_set (SubspaceTopology (S a))))
       (exist _ x (H0 a))).
-  { rewrite <- H5.
-    now constructor. }
+  { now apply H5. }
     now destruct H6.
   - assumption. }
-  extensionality_ensembles.
+  split; intros ? ?.
   + constructor.
   + assert (In (IndexedUnion S) x0).
-  { rewrite H1. constructor. }
-    destruct H6.
+  { apply H1. constructor. }
+    destruct H7.
     assert (In (@Full_set (point_set (SubspaceTopology (S a))))
-      (exist _ x0 H6)) by
+      (exist _ x0 H7)) by
       constructor.
-    rewrite <- H5 in H7.
-    now destruct H7.
+    apply H5 in H8.
+    do 2 red in H8.
+    simpl in H8.
+    assumption.
 
 - left.
   assert (forall a:A, inverse_image (inc a) S0 = Empty_set).
@@ -107,18 +107,17 @@ destruct (classic (In S0 x)).
   - assert (In (@Full_set (point_set (SubspaceTopology (S a))))
       (exist _ x (H0 a))) by
       constructor.
-    rewrite <- H5 in H6.
-    destruct H6.
+    apply H5 in H6.
+    do 2 red in H6.
     contradiction H4. }
-  extensionality_ensembles.
+  split; intros ? ?; try contradiction.
   assert (In (IndexedUnion S) x0).
-{ rewrite H1. constructor. }
+{ apply H1. constructor. }
   destruct H7.
   assert (In (@Empty_set (point_set (SubspaceTopology (S a))))
     (exist _ x0 H7)).
-{ rewrite <- H5.
-  now constructor. }
-  destruct H8.
+{ apply H5. now do 2 red. }
+  exact H8.
 Qed.
 
 Lemma topological_property_connected :
@@ -126,21 +125,22 @@ Lemma topological_property_connected :
 Proof.
 intros X Y f [g Hcont_f Hcont_g Hgf Hfg] Hconn S [Hopen Hclose].
 destruct (Hconn (inverse_image f S));
-[ | left | right ];
-  try extensionality_ensembles.
+[ | left | right ].
 - split; red.
   + now apply Hcont_f.
   + rewrite <- inverse_image_complement.
     now apply Hcont_f.
-- rewrite <- Hfg.
+- split; intros ? ?; try contradiction.
+  rewrite <- Hfg.
   apply in_inverse_image.
-  rewrite inverse_image_empty, <- H.
-  constructor.
+  rewrite inverse_image_empty.
+  apply H.
+  do 2 red.
   now rewrite Hfg.
-- constructor.
-- rewrite <- Hfg.
+- split; intros ? ?; try constructor.
+  rewrite <- Hfg.
   apply in_inverse_image.
-  rewrite H.
+  apply H.
   constructor.
 Qed.
 
@@ -157,13 +157,16 @@ split.
   destruct (classic (In S x)).
   { right. now apply H. }
   left.
-  rewrite <- Complement_Complement, <- (Complement_Complement _ S).
-  apply f_equal.
+  rewrite <- Complement_Complement,
+          <- (Complement_Complement _ S).
+  setoid_replace (Complement S) with (@Complement X Empty_set).
+  { reflexivity. }
   rewrite Complement_Empty_set.
   apply H.
   + apply clopen_Complement. assumption.
   + auto.
 - intros.
   specialize (H S H0) as [|]; auto.
-  subst. destruct H1.
+  apply H in H1.
+  contradiction.
 Qed.

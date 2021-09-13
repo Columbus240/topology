@@ -1,5 +1,6 @@
 From ZornsLemma Require Export DirectedSets.
 From Topology Require Export TopologicalSpaces InteriorsClosures Continuity.
+From ZornsLemma Require Import EnsemblesImplicit.
 
 Set Asymmetric Patterns.
 
@@ -110,11 +111,11 @@ refine (Build_DirectedSet neighborhood_net_DS_set
   assert (open (Intersection U U0)) by
     now apply open_intersection2.
   assert (In (Intersection U U0) x) by
-    auto with sets.
+    firstorder.
   exists (intro_neighborhood_net_DS (Intersection U U0) x
     H H0 H0).
   simpl.
-  auto with sets.
+  firstorder.
 Defined.
 
 Definition neighborhood_net : Net neighborhood_net_DS X :=
@@ -153,7 +154,7 @@ assert (forall U:Ensemble (point_set X), open U -> In U x0 ->
       intro.
       contradiction H2.
       exists x.
-      auto with sets. }
+      firstorder. }
   contradict H1.
   now apply H3. }
 pose (Ssel := fun n:neighborhood_net_DS_set X x0 =>
@@ -178,7 +179,7 @@ assert (forall i j:our_DS_set, exists k:our_DS_set,
   assert (open (Intersection U U0)) by
     now apply open_intersection2.
   assert (In (Intersection U U0) x0) by
-    auto with sets.
+    firstorder.
   assert (Inhabited (Intersection S (Intersection U U0))) by
     now apply H0.
   destruct H4.
@@ -188,7 +189,7 @@ assert (forall i j:our_DS_set, exists k:our_DS_set,
   assert (Ssel k0).
   { red. now unfold k0. }
   exists (exist _ k0 H6).
-  split; red; simpl; auto with sets. }
+  split; red; simpl; firstorder. }
 pose (our_DS := Build_DirectedSet our_DS_set our_DS_ord H1 H2).
 exists our_DS.
 exists (fun i:our_DS_set => neighborhood_net X x0 (proj1_sig i)).
@@ -234,7 +235,7 @@ apply eventually_impl_base with (fun i:DS_set I => In U (x i));
   trivial.
 intros.
 assert (In (inverse_image f V) (x i)) by auto with sets.
-now destruct H9.
+assumption.
 Qed.
 
 Lemma func_preserving_net_limits_is_continuous:
@@ -253,8 +254,10 @@ destruct H1, (H0 V H1 H2).
 destruct x as [U].
 exists U.
 repeat split; trivial.
+intros ? ?.
+do 2 red.
 apply (H3 (intro_neighborhood_net_DS X x0 U x o i H4)).
-simpl. auto with sets.
+simpl. reflexivity.
 Qed.
 
 End Nets_and_continuity.

@@ -52,15 +52,14 @@ Lemma finite_intersections_of_subbasis_form_open_basis:
 Proof.
 constructor.
 - intros.
-  destruct H0.
-  destruct H0 as [A [? [V' [? ?]]]].
-  rewrite H2.
+  destruct H0 as [A [? [V' []]]].
+  subst.
   apply open_finite_indexed_intersection; trivial.
   intros.
   apply H; trivial.
 - intros.
-  pose proof (subbasis_cover H U x).
-  destruct H2 as [A [? [V [? [? ?]]]]]; trivial.
+  destruct (subbasis_cover H U x H1 H0)
+           as [A [? [V [? []]]]].
   exists (IndexedIntersection V).
   repeat split; trivial.
   + exists A; split; trivial.
@@ -116,7 +115,7 @@ constructor.
   destruct H5 as [A [? [W [? ?]]]].
   exists A; split; trivial.
   exists W; repeat split; trivial.
-  + rewrite H7 in H4; destruct H4; apply H4.
+  + apply H7 in H4. destruct H4; apply H4.
   + rewrite H7 in H3; assumption.
 Qed.
 

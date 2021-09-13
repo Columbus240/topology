@@ -2,6 +2,21 @@ From Topology Require Export Subbases SeparatednessAxioms.
 From ZornsLemma Require Export Relation_Definitions_Implicit.
 From ZornsLemma Require Import EnsemblesTactics Orders.
 From Coq Require Import RelationClasses.
+Require Import Connectedness.
+From ZornsLemma Require Import EnsemblesImplicit.
+From MathClasses Require Import canonical_names.
+
+Lemma Disjoint_Intersection {X : Type} (U V : Ensemble X) :
+  Disjoint U V <-> Intersection U V = Empty_set.
+Proof.
+  unfold Disjoint.
+  split; intros ?.
+  - split; intros ? ?; try contradiction.
+    apply (H _ H0).
+  - intros ? ?.
+    apply H in H0.
+    assumption.
+Qed.    
 
 Section OrderTopology.
 
@@ -97,7 +112,8 @@ match goal with |- forall x y:point_set OrderTopology, ?P =>
     repeat split; auto.
     * apply open_lower_ray_open.
     * apply open_upper_ray_open.
-    * apply Disjoint_Intersection.
+    * apply Extensionality_Ensembles.
+      apply Disjoint_Intersection.
       eapply open_rays_disjoint; typeclasses eauto.
   + exists (open_lower_ray R y),
            (open_upper_ray R x).
@@ -105,7 +121,6 @@ match goal with |- forall x y:point_set OrderTopology, ?P =>
     * apply open_lower_ray_open.
     * apply open_upper_ray_open.
     * extensionality_ensembles_inv.
-      destruct H2, H4.
       contradiction H1.
       exists x0.
       now repeat split.
@@ -117,8 +132,6 @@ End OrderTopology.
 
 Arguments OrderTopology {X}.
 
-Require Import Connectedness.
-
 Lemma order_topology_connected_convex (X : Type) (R : relation X)
       `{HR: RelationClasses.Reflexive X R}
       `{HR0: RelationClasses.Antisymmetric X eq R}
@@ -127,7 +140,7 @@ Lemma order_topology_connected_convex (X : Type) (R : relation X)
   connected (SubspaceTopology A) -> order_convex R A.
 Proof.
   intros. intros x y Hx Hy x0 ?Hx0.
-  destruct Hx0 as [[?Hx0 [?Hx0 [?Hx0 ?Hx0]]]].
+  destruct Hx0 as [?Hx0 [?Hx0 [?Hx0 ?Hx0]]].
   red in H. apply NNPP. intros ?Hx0.
   destruct (H (inverse_image (subspace_inc A) (open_lower_ray R x0))).
   2: {
@@ -135,7 +148,7 @@ Proof.
                               (open_lower_ray R x0))
                (exist _ x Hx)).
     2: {
-      rewrite H0 in H1.
+      apply H0 in H1.
       destruct H1.
     }
     repeat constructor; simpl in *; try assumption; try congruence.
@@ -143,11 +156,12 @@ Proof.
   2: {
     assert (In (inverse_image (subspace_inc A) (open_lower_ray R x0)) (exist _ y Hy)).
     2: {
-      destruct H1. simpl in *.
-      destruct H1. destruct H1.
-      apply H2. apply antisymmetry; assumption.
+      do 2 red in H1.
+      simpl in *.
+      destruct H1.
+      apply H2. eapply antisymmetry; eassumption.
     }
-    rewrite H0. constructor.
+    apply H0. constructor.
   }
   split.
   { apply subspace_inc_continuous.
@@ -159,11 +173,27 @@ Proof.
       (inverse_image (subspace_inc A) (open_upper_ray R x0)).
   { apply subspace_inc_continuous. apply open_upper_ray_open. }
   extensionality_ensembles_inv.
-  * constructor. constructor. tauto.
-  * constructor. constructor. simpl in *.
+  * do 4 red. assumption.
+  * do 4 red.
     split; try assumption.
     intros ?. subst.
     apply Hx4. apply (proj2_sig x1).
+Qed.
+
+Lemma not_empty_Inhabited {X : Type} (A : Ensemble X) :
+  A ≠ Empty_set <-> Inhabited A.
+Proof.
+  unfold Inhabited.
+  split; intros.
+  - apply NNPP.
+    intros ?.
+    contradict H.
+    split; intros ? ?; try contradiction.
+    apply H0. now exists x.
+  - intros ?.
+    destruct H.
+    apply H0 in H.
+    apply H.
 Qed.
 
 Lemma non_trivial_ensemble (X : Type) (S : Ensemble X) :
@@ -171,15 +201,24 @@ Lemma non_trivial_ensemble (X : Type) (S : Ensemble X) :
 Proof.
   split; intros []; split.
   - apply not_empty_Inhabited.
-    apply H.
+    intros ?.
+    apply Extensionality_Ensembles in H1.
+    auto.
   - apply not_empty_Inhabited.
     rewrite <- Powerset_facts.Complement_Full_set.
     intros ?.
-    apply Powerset_facts.Complement_injective in H1.
-    intuition.
-  - apply Inhabited_not_empty.
-    assumption.
-  - apply Inhabited_not_empty in H0.
+    contradict H0.
+    apply Extensionality_Ensembles.
+    split; intros.
+    + intros ? ?. constructor.
+    + intros ? ?.
+      apply NNPP. intros ?.
+      apply H1 in H2.
+      auto.
+  - apply not_empty_Inhabited in H.
+    intros ?.
+    apply H. rewrite H1. reflexivity.
+  - apply not_empty_Inhabited in H0.
     rewrite <- Powerset_facts.Complement_Full_set in H0.
     intros ?. apply H0. subst. reflexivity.
 Qed.
@@ -197,10 +236,9 @@ Proof.
   repeat split.
   - transitivity y1; tauto.
   - intros ?. subst.
-    destruct H as [_ [_ []]].
-    destruct H0.
-    contradict H2.
-    apply antisymmetry; assumption.
+    destruct H0 as [? [?]].
+    contradict H6.
+    eapply antisymmetry; eassumption.
 Qed.
 
 Lemma open_upper_ray_convex (X : Type) (R : relation X)
@@ -215,10 +253,9 @@ Proof.
   repeat split.
   - transitivity y0; tauto.
   - intros ?. subst.
-    destruct H as [? [? []]].
-    destruct H0.
-    contradict H2.
-    apply antisymmetry; tauto.
+    destruct H0 as [? [?]].
+    contradict H0.
+    eapply antisymmetry; eassumption.
 Qed.
 
 Lemma closed_lower_ray_convex (X : Type) (R : relation X)
@@ -229,8 +266,8 @@ Lemma closed_lower_ray_convex (X : Type) (R : relation X)
 Proof.
   intros y0 y1. intros Hy0 Hy1.
   intros z Hz.
-  repeat inversion_ensembles_in.
-  repeat split.
+  do 2 red.
+  do 2 red in Hy0, Hy1, Hz.
   transitivity y1; tauto.
 Qed.
 
@@ -242,8 +279,8 @@ Lemma closed_upper_ray_convex (X : Type) (R : relation X)
 Proof.
   intros y0 y1. intros Hy0 Hy1.
   intros z Hz.
-  repeat inversion_ensembles_in.
-  repeat split.
+  do 2 red in Hy0, Hy1, Hz.
+  do 2 red.
   transitivity y0; tauto.
 Qed.
 
@@ -256,10 +293,23 @@ Proof.
   intros.
   red; intros.
   red; intros.
+  do 2 red in H3.
   destruct H1, H2.
   split.
-  - apply (H x x1); try assumption.
-  - apply (H0 x x1); try assumption.
+  - apply (H x y); try assumption.
+  - apply (H0 x y); try assumption.
+Qed.
+
+Instance order_convex_Proper {X : Type} (R : relation X) :
+  Proper (Same_set ==> iff) (order_convex R).
+Proof.
+  intros ? ? ?.
+  unfold order_convex.
+  split; intros.
+  - transitivity x; try apply H.
+    apply H0; apply H; assumption.
+  - transitivity y; try apply H.
+    apply H0; apply H; assumption.
 Qed.
 
 Lemma open_interval_convex (X : Type) (R : relation X)
@@ -291,7 +341,7 @@ Definition lopen_interval {X : Type} (R : relation X) (x y : X) :=
 
 Definition ropen_interval {X : Type} (R : relation X) (x y : X) :=
   [z : X | R x z /\ R z y /\ z <> y].
-
+(*
 Lemma meet_left X R `{L : Lattice X R} (x y : X) :
   R x y -> meet x y = x.
 Proof.
@@ -1201,3 +1251,11 @@ Proof.
   - eapply order_topology_convex_connected. assumption.
   - eapply order_topology_connected_convex; typeclasses eauto.
 Qed.
+
+*)
+Require Import Compactness.
+Lemma order_topology_compact X R :
+  compact (OrderTopology R) <->
+  forall (A : Ensemble (OrderTopology R)),
+  exists lub glb : X,
+    is_lub R A lub /\ is_glb R A glb.

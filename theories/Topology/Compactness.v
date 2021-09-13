@@ -66,7 +66,7 @@ apply NNPP; red; intro.
 pose (C := [ U:Ensemble X | In F (Complement U) ]).
 unshelve refine (let H3:=(H C _ _) in _).
 - intros.
-  destruct H3.
+  do 2 red in H3.
   apply H0 in H3.
   now apply closed_complement_open.
 - extensionality_ensembles.
@@ -79,25 +79,28 @@ unshelve refine (let H3:=(H C _ _) in _).
     apply NNPP; red; intro.
     contradiction H3.
     exists (Complement S).
-    * constructor.
+    * do 2 red.
       now rewrite Complement_Complement.
     * assumption.
 - destruct H3 as [C' [? [? ?]]].
   pose (F' := [G : Ensemble X | In C' (Complement G)]).
   unshelve refine (let H6 := (H1 F' _ _) in _).
   + assert (F' = Im C' Complement).
-  { apply Extensionality_Ensembles; split; red; intros;
-      destruct H6.
+  { apply Extensionality_Ensembles; split; red; intros.
     - exists (Complement x); trivial.
       now rewrite Complement_Complement.
-    - constructor.
-      now rewrite H7, Complement_Complement. }
+    - do 2 red.
+      inversion H6; subst; clear H6.
+      now rewrite Complement_Complement. }
     rewrite H6.
-    now apply finite_image.
+    apply Finite_equiv_Finite.
+    apply finite_image.
+    apply Finite_equiv_Finite.
+    assumption.
   + red; intros.
-    destruct H6.
+    do 2 red in H6.
     apply H4 in H6.
-    destruct H6.
+    do 2 red in H6.
     now rewrite Complement_Complement in H6.
   + destruct H6 as [x0].
     destruct H6.
@@ -106,7 +109,7 @@ unshelve refine (let H3:=(H C _ _) in _).
     destruct H7.
     assert (In (Complement S) x).
   { apply H6.
-    constructor.
+    do 2 red.
     now rewrite Complement_Complement. }
     contradiction H9.
 Qed.
@@ -126,7 +129,7 @@ apply NNPP; red; intro.
 pose (F := [ G:Ensemble X | In C (Complement G) ]).
 unshelve refine (let H3 := (H F _ _) in _).
 - intros.
-  destruct H3.
+  do 2 red in H3.
   now apply H0.
 - intros.
   apply NNPP; red; intro.
@@ -139,14 +142,16 @@ unshelve refine (let H3 := (H F _ _) in _).
       ** econstructor.
          *** eassumption.
          *** now rewrite Complement_Complement.
-      ** constructor.
+      ** do 1 red.
          now rewrite H7, Complement_Complement.
     *  rewrite H6.
-       now apply finite_image.
+       apply Finite_equiv_Finite.
+       apply finite_image.
+       now apply Finite_equiv_Finite.
   + red; intros.
-    destruct H6.
+    red in H6.
     apply H4 in H6.
-    destruct H6.
+    do 2 red in H6.
     now rewrite Complement_Complement in H6.
   + extensionality_ensembles.
     * constructor.
@@ -158,7 +163,7 @@ unshelve refine (let H3 := (H F _ _) in _).
       apply NNPP; red; intro.
       contradiction H6.
       exists (Complement S).
-      ** constructor.
+      ** red.
          rewrite Complement_Complement; trivial.
       ** exact H8.
 - destruct H3.
@@ -168,7 +173,7 @@ unshelve refine (let H3 := (H F _ _) in _).
   assert (In (Complement S) x).
 { destruct H3.
   apply H3.
-  constructor.
+  do 2 red.
   now rewrite Complement_Complement. }
   contradiction H6.
 Qed.
@@ -183,17 +188,20 @@ pose proof (compact_finite_nonempty_closed_intersection
   _ H [ G:Ensemble X | In (filter_family F) G /\
                                    closed G ]) as [x0].
 - intros.
-  destruct H0 as [[]]; trivial.
+  destruct H0 as []; trivial.
 - intros.
   assert (closed (FamilyIntersection F')).
 { apply closed_family_intersection.
   intros.
   apply H1 in H2.
-  now destruct H2, H2. }
+  red in H2.
+  now destruct H2. }
   assert (In (filter_family F) (FamilyIntersection F')).
 { clear H2.
   induction H0.
-  - rewrite empty_family_intersection.
+  - apply Extensionality_Ensembles in H0.
+    subst.
+    rewrite empty_family_intersection.
     apply filter_full.
   - replace (FamilyIntersection (Add A x)) with
       (Intersection (FamilyIntersection A) x).

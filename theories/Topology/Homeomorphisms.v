@@ -32,7 +32,7 @@ red; intros.
 assert (Im U f = inverse_image g U).
 { extensionality_ensembles.
   - subst.
-    constructor.
+    do 2 red.
     now rewrite H1.
   - exists (g x); auto. }
 rewrite H4.
@@ -51,7 +51,7 @@ intros.
 assert (inverse_image g V = Im V f).
 { extensionality_ensembles.
   - exists (g x); auto.
-  - constructor.
+  - do 2 red.
     now rewrite H5, H. }
 rewrite H4.
 auto.

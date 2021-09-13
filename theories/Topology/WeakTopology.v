@@ -34,19 +34,21 @@ constructor; trivial.
 Qed.
 
 Lemma weak_topology_is_weakest: forall (T':Family X)
-  (H1:_) (H2:_) (H3:_),
+  (H1:_) (H2:_) (H3:_) (H4:_),
   (forall a:A, continuous (f a)
-     (X := Build_TopologicalSpace X T' H1 H2 H3)) ->
+     (X := Build_TopologicalSpace X T' H1 H2 H3 H4)) ->
   forall U:Ensemble X, @open WeakTopology U -> T' U.
 Proof.
 intros.
-destruct H0.
+do 5 red in H0.
+destruct H0 as [F []].
+rewrite H5.
 apply H1.
 intros.
-apply H0 in H4.
-induction H4.
+apply H0 in H6.
+induction H6.
 - exact H3.
-- destruct H4.
+- destruct H6.
   apply H; trivial.
 - apply H2; trivial.
 Qed.
@@ -102,10 +104,11 @@ assert (for large i:DS_set I, In V (x i)).
   - destruct I_nonempty.
     exists X0; constructor.
   - destruct H3.
-    destruct H5.
+    do 2 red in H5.
     apply eventually_impl_base with (fun i:DS_set I => In V (f a (x i))).
     + intros.
-      constructor; trivial.
+      do 2 red.
+      assumption.
     + apply H; trivial.
   - apply eventually_impl_base with
         (fun i:DS_set I => In U0 (x i) /\ In V (x i)).
@@ -152,14 +155,11 @@ split.
 2: {
   intros.
   destruct H as [V []].
-  subst.
+  rewrite H0.
   apply weak_topology1_makes_continuous_func.
   assumption.
 }
 intros.
-red in H.
-simpl in H.
-destruct H.
 assert (forall U:Ensemble X,
   In (finite_intersections (weak_topology_subbasis (True_rect f))) U ->
   exists V:Ensemble (point_set Y), open V /\ U = inverse_image f V).
@@ -168,12 +168,12 @@ assert (forall U:Ensemble X,
   - exists Full_set.
     split.
     + apply open_full.
-    + symmetry. apply inverse_image_full.
+    + symmetry. rewrite inverse_image_full. reflexivity.
   - destruct H0.
     destruct a.
     simpl.
     exists V.
-    split; trivial.
+    split; trivial. reflexivity.
   - destruct IHfinite_intersections as [V1 [? ?]].
     destruct IHfinite_intersections0 as [V2 [? ?]].
     exists (Intersection V1 V2).
@@ -181,40 +181,44 @@ assert (forall U:Ensemble X,
     + auto with topology.
     + rewrite H3; rewrite H5.
       rewrite inverse_image_intersection.
-      trivial.
+      trivial. reflexivity.
 }
+do 6 red in H.
+destruct H as [F []].
 destruct (choice (fun (U:{U:Ensemble X | In F U}) (V:Ensemble (point_set Y))
   => open V /\ proj1_sig U = inverse_image f V)) as [choice_fun].
 { intros.
-  destruct x as [U].
+  destruct x as [U0].
   simpl.
   apply H0; auto with sets.
 }
 exists (IndexedUnion choice_fun).
 split.
 { apply open_indexed_union.
-  apply H1.
+  apply H2.
 }
-apply Extensionality_Ensembles; split; red; intros.
-- destruct H2.
-  constructor.
-  exists (exist _ S H2).
-  pose proof (H1 (exist _ S H2)).
-  destruct H4.
-  simpl in H5.
-  rewrite H5 in H3.
+split; red; intros.
+- do 2 red.
+  apply H1 in H3.
   destruct H3.
-  exact H3.
-- destruct H2.
-  inversion H2.
-  pose proof (H1 a).
+  exists (exist _ S H3).
+  pose proof (H2 (exist _ S H3)).
   destruct H5.
-  destruct a as [U].
-  exists U; trivial.
   simpl in H6.
-  rewrite H6.
-  constructor.
-  exact H3.
+  apply H6 in H4.
+  do 2 red in H4.
+  exact H4.
+- do 2 red in H3.
+  inversion H3.
+  subst.
+  pose proof (H2 a) as [].
+  destruct a as [U0].
+  apply H1.
+  exists U0; trivial.
+  simpl in H6.
+  apply H6.
+  do 2 red.
+  exact H4.
 Qed.
 
 Lemma weak_topology1_topology_closed:
@@ -232,7 +236,8 @@ split.
   rewrite !Complement_Complement.
   auto.
 - intros. destruct H as [V []].
-  subst. apply continuous_closed; try assumption.
+  rewrite H0.
+  apply continuous_closed; try assumption.
   apply weak_topology1_makes_continuous_func.
 Qed.
 
