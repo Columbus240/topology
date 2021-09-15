@@ -3,6 +3,128 @@
    Associativity, idempotence, commutativity, complements, distributivity, …
 *)
 
+(* A library for "The following are equivalent" *)
+From Coq Require Import List.
+Import ListNotations.
+
+Inductive ForallNeighboringPairs {X : Type} (P : X -> X -> Prop) : list X -> Prop :=
+| FNP_nil : ForallNeighboringPairs P []
+| FNP_single x : ForallNeighboringPairs P [x]
+| FNP_cons x0 x1 l :
+    ForallNeighboringPairs P (x1 :: l) ->
+    P x0 x1 ->
+    ForallNeighboringPairs P (x0 :: x1 :: l).
+
+Definition TFAE (l : list Prop) : Prop :=
+  ForallNeighboringPairs (fun A B : Prop => A -> B) l /\
+  (last l True -> hd True l).
+
+Lemma TFAE_inv a l :
+  TFAE (a :: l) -> TFAE l.
+Proof.
+  intros.
+  destruct H.
+  inversion H; subst; clear H.
+  { repeat constructor. }
+  simpl hd in *.
+  split.
+  { assumption. }
+  simpl in *.
+  auto.
+Qed.
+
+Lemma TFAE_cons_revert a b l :
+  TFAE (a :: b :: l) -> b -> a.
+Proof.
+  induction l.
+  { intros [].
+    simpl in *.
+    assumption.
+  }
+  intros ?.
+  apply IHl.
+  clear IHl.
+  split.
+  2: {
+    simpl.
+    destruct H.
+    simpl in *.
+    inversion H; subst; clear H.
+    inversion H3; subst; clear H3.
+    inversion H2; subst; clear H2.
+    - auto.
+    - assumption.
+  }
+  destruct H.
+  clear H0.
+  inversion H; subst; clear H.
+  inversion H2; subst; clear H2.
+  inversion H1; subst; clear H1.
+  - repeat constructor; assumption.
+  - repeat (constructor; try assumption).
+    auto.
+Qed.
+
+Lemma TFAE_cons_In a b l :
+  TFAE (a :: l) -> In b l -> a <-> b.
+Proof.
+  revert a b.
+  induction l.
+  { contradiction. }
+  intros.
+  split.
+  - destruct H0.
+    { subst.
+      destruct H.
+      inversion H; subst; clear H.
+      assumption.
+    }
+    pose proof (TFAE_inv _ _ H).
+    specialize (IHl _ _ H1 H0).
+    intros.
+    apply IHl.
+    destruct H.
+    inversion H; subst; clear H.
+    auto.
+  - destruct H0.
+    { subst.
+      clear IHl.
+      eapply TFAE_cons_revert.
+      eassumption.
+    }
+    specialize (IHl _ _ (TFAE_inv _ _ H) H0).
+    intros.
+    apply IHl in H1.
+    revert H1.
+    eapply TFAE_cons_revert.
+    eassumption.
+Qed.
+
+Lemma TFAE_use (l : list Prop) :
+  TFAE l ->
+  ForallPairs iff l.
+Proof.
+  induction l.
+  { intros.
+    intros ? ? ?.
+    contradiction.
+  }
+  intros ? ? ? ? ?.
+  simpl in *.
+  destruct H0.
+  - subst.
+    destruct H1.
+    + subst.
+      reflexivity.
+    + eapply TFAE_cons_In; eassumption.
+  - destruct H1.
+    + subst.
+      symmetry. eapply TFAE_cons_In; eassumption.
+    + apply IHl; try assumption.
+      apply TFAE_inv in H.
+      assumption.
+Qed.
+
 From Coq.Sets Require Export Powerset_facts.
 From ZornsLemma Require Export EnsemblesImplicit EnsemblesTactics.
 From Coq Require Import Classical_Prop RelationClasses.
