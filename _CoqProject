@@ -15,6 +15,7 @@ theories/Topology/CountabilityAxioms.v
 theories/Topology/EuclideanSpaces.v
 theories/Topology/FilterLimits.v
 theories/Topology/FiltersAndNets.v
+theories/Topology/FreeModule.v
 theories/Topology/Homeomorphisms.v
 theories/Topology/InteriorsClosures.v
 theories/Topology/MetricSpaces.v

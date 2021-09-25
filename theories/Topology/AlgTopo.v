@@ -1,14 +1,14 @@
 Require Import ProductTopology.
 Require Import RTopology.
+Require Import FreeModule.
+Require Import List.
+Import ListNotations.
 
 Definition R_infty := ProductTopology (fun _ : nat => RTop).
 
 (* The [n]-th unit vector in [R_infty]. *)
 Definition E_n (n : nat) : R_infty :=
   fun m => if Nat.eqb n m then 1 else 0.
-
-Require Import List.
-Import ListNotations.
 
 (* The first [n] unit vectors. *)
 Definition E_ns (n : nat) : list R_infty :=
@@ -60,9 +60,12 @@ Require Import ZArith.
 (* A chain assigns a ring element to each simplex, but only finitely
    many ring elements get non-zero ring elements. *)
 Definition SingularChain (X : TopologicalSpace) (n : nat) :=
-  { f : SingularSimplex X n -> Z |
-    Finite (inverse_image f (Complement (Singleton 0%Z)))
-  }.
+  FreeModule Z (SingularSimplex X n).
+
+Require Import MathClasses.interfaces.vectorspace.
+Require Import MathClasses.implementations.stdlib_binary_integers.
+Require Import MathClasses.theory.rings.
+Require Import FreeModule.
 
 (* Define the face-maps. *)
 (* For technical reasons, we first define the [i]-th face-map on the whole of [R_infty]. *)
@@ -110,22 +113,8 @@ Require Import DecidableDec.
 
 Set Obligation Tactic idtac.
 
-Fixpoint chain_ctr_fn {X n} (l : list (Z * (SingularSimplex X n))) :
-  SingularSimplex X n -> Z :=
-  fun f0 =>
-       match l with
-       | [] => 0%Z
-       | (z, f) :: l0 =>
-         if classic_dec (f = f0) then
-           (z + ((chain_ctr_fn l0) f))%Z
-         else
-           (chain_ctr_fn l0) f
-       end.
-
 Program Definition chain_ctr {X n} l : SingularChain X n :=
-  chain_ctr_fn l.
-Next Obligation.
-Admitted.
+  l.
 
 Program Definition SimplexFace {X n} (sigma : SingularSimplex X (S n)) (i : nat) :
   SingularSimplex X n :=
@@ -145,30 +134,28 @@ Definition Boundary_of_Simplex {X n} (sigma : SingularSimplex X (S n)) : Singula
 
 Program Definition chain_sum {X n} (c0 c1 : SingularChain X n) :
   SingularChain X n :=
-  fun f =>
-    ((c0 f) + (c1 f))%Z.
-Next Obligation.
-Admitted.
+  FreeModule_Op _ _ c0 c1.
 
 Lemma chain_ind {X n} (c : SingularChain X n) :
   { l | c = chain_ctr l }.
 Proof.
-Admitted.
+  exists c. reflexivity.
+Qed.
 
 Definition SingularChain_zero X n : SingularChain X n :=
-  chain_ctr [].
+  FreeModule_Unit _ _.
 
 Program Definition chain_scale {X n} z (c : SingularChain X n) : SingularChain X n :=
-  fun i => (z * (c i))%Z.
-Next Obligation.
-Admitted.
+  FreeModule_ScalarMult _ _ z c.
 
 Definition Chain_Continuation {X n m} (f : SingularSimplex X n -> SingularChain X m) : SingularChain X n -> SingularChain X m :=
   fun c =>
     fold_left (fun acc p => chain_sum acc (chain_scale (fst p) (f (snd p)))) (proj1_sig (chain_ind c)) (SingularChain_zero X m).
+Search (Ring Z).
 
-Definition Boundary {X n} : SingularChain X (S n) -> SingularChain X n :=
-  Chain_Continuation (@Boundary_of_Simplex X n).
+Definition Boundary {X n} : SingularChain X (S n) -> SingularChain X n.
+  eapply FreeModule_free_extension.
+  @FreeModule_free_extension Z (SingularSimplex X (S n)) _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ (@Boundary_of_Simplex X n).
 
 (* Maybe the statement of the lemma is wrong with the current definitions.
 Lemma Face_Exchange n i j :
@@ -267,6 +254,7 @@ Proof.
   induction l; simpl; try rewrite H, IHl; auto.
 Qed.
 
+(*
 Lemma chain_scale_one {X n} (c : SingularChain X n) :
   chain_scale 1%Z c = c.
 Proof.
@@ -322,6 +310,7 @@ Proof.
   apply H.
   right. assumption.
 Qed.
+*)
 
 Proposition Boundary_is_exact X n :
   forall sig,
