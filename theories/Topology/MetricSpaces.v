@@ -50,6 +50,8 @@ Inductive metric_topology_neighborhood_basis (x:X) : Family X :=
   | intro_open_ball: forall r:R, r > 0 ->
     In (metric_topology_neighborhood_basis x) (open_ball x r).
 
+(* IDEA: Why is open_nbhd_basis used here and not subbasis?
+   Ah, well, for the additional properties... *)
 Definition MetricTopology : TopologicalSpace.
 refine (Build_TopologicalSpace_from_open_neighborhood_bases
   X metric_topology_neighborhood_basis _ _ _ _);
