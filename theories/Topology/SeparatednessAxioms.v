@@ -310,3 +310,63 @@ Proof.
   }
   contradiction.
 Qed.
+
+From ZornsLemma Require Import Cardinals.
+
+Axiom SubsetFilterBases : forall (X : Type) (S : Ensemble X), Type.
+
+Conjecture SubsetFilterBases_cardinal_bound :
+  forall X S, le_cardinal (cardinality (SubsetFilterBases X S))
+                     (cardinality (({ x | In S x} -> bool) -> bool)).
+
+Lemma Hausdorff_SubsetFilterBase_surj {X : TopologicalSpace} (S : Ensemble X) :
+  dense S ->
+  exists f : SubsetFilterBases X S -> X, surjective f.
+Proof.
+  intros.
+Admitted.
+
+Require Import RelationClasses.
+
+Instance eq_cardinal_Equivalence : Equivalence eq_cardinal.
+Proof.
+  destruct eq_cardinal_equiv.
+  split.
+  - apply equiv_refl.
+  - apply equiv_sym.
+  - apply equiv_trans.
+Qed.
+
+Instance le_cardinal_PreOrder : PreOrder le_cardinal.
+Proof.
+  destruct le_cardinal_preorder.
+  split.
+  - apply preord_refl.
+  - apply preord_trans.
+Qed.
+
+Instance le_cardinal_PartialOrder : PartialOrder eq_cardinal le_cardinal.
+Proof.
+  lazy.
+  intros.
+  split.
+  - intros.
+    split.
+    + apply eq_cardinal_impl_le_cardinal. assumption.
+    + apply eq_cardinal_impl_le_cardinal. symmetry. assumption.
+  - intros.
+    apply le_cardinal_antisym; apply H.
+Qed.
+
+Lemma Hausdorff_dense_cardinal_bounds {X : TopologicalSpace} (S : Ensemble X) :
+  dense S ->
+  le_cardinal (cardinality X) (cardinality (({ x | In S x} -> bool) -> bool)).
+Proof.
+  intros.
+  apply Hausdorff_SubsetFilterBase_surj in H.
+  destruct H.
+  apply surj_le_cardinal in H.
+  etransitivity.
+  1: eassumption.
+  apply SubsetFilterBases_cardinal_bound.
+Qed.
