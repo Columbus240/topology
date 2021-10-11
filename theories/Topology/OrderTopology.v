@@ -330,12 +330,16 @@ Proof.
   - apply join_lub. constructor.
 Qed.
 
-Lemma join_eq X R `{L : Lattice X R} x y :
+Lemma meet_eq X R `{L : Lattice X R} `{Connex X R} `{!LinearOrder R} x y :
+  meet x y = x \/ meet x y = y.
+Admitted.
+
+Lemma join_eq X R `{L : Lattice X R} `{Connex X R} `{!LinearOrder R} x y :
   join x y = x \/ join x y = y.
 Proof.
 Admitted.
 
-Lemma lattice_open_interval_lower_ray_intersection (X : Type) (R : relation X) `{L : Lattice X R} (x y z : X) :
+Lemma linearorder_open_interval_lower_ray_intersection (X : Type) (R : relation X) `{L : Lattice X R} `{Connex X R} `{HL : !LinearOrder R} (x y z : X) :
   Intersection (open_interval R x y) (open_lower_ray R z) =
   open_interval R x (meet y z).
 Proof.
@@ -344,24 +348,27 @@ Proof.
     + apply meet_glb0.
       split; try tauto.
     + destruct (meet_eq X R y z).
-      * rewrite H1. tauto.
-      * rewrite H1. tauto.
-  - destruct H1 as [? [? []]].
-    apply meet_glb0 in H2 as [].
-    repeat split; try tauto.
-    + intros ?. subst.
-      apply H3.
+      * rewrite H2. tauto.
+      * rewrite H2. tauto.
+  - destruct H2 as [? [? []]].
+    apply meet_glb0 in H3 as [].
+    split.
+    + constructor.
+      repeat split; try assumption.
+      intros ?. subst.
+      apply H4.
       symmetry.
-      apply meet_left.
-      assumption.
-    + intros ?. subst.
-      apply H3.
+      now apply meet_left.
+    + constructor.
+      repeat split; try assumption.
+      intros ?.
+      subst.
+      apply H4.
       symmetry.
-      apply meet_right.
-      assumption.
+      now apply meet_right.
 Qed.
 
-Lemma lattice_open_lower_ray_intersection (X : Type) (R : relation X) `{L : Lattice X R} (x y : X) :
+Lemma lattice_open_lower_ray_intersection (X : Type) (R : relation X) `{L : Lattice X R} `{Connex X R} `{!LinearOrder R} (x y : X) :
   Intersection (open_lower_ray R x) (open_lower_ray R y) =
   open_lower_ray R (meet x y).
 Proof.
@@ -370,27 +377,27 @@ Proof.
     + apply meet_glb0.
       split; tauto.
     + destruct (meet_eq X R x y).
-      * rewrite H1. tauto.
-      * rewrite H1. tauto.
-  - destruct H1.
-    apply meet_glb0 in H0.
-    destruct H0.
+      * rewrite H2. tauto.
+      * rewrite H2. tauto.
+  - destruct H2.
+    apply meet_glb0 in H1.
+    destruct H1.
     constructor.
     + repeat split; try tauto.
       intros ?. subst.
-      apply H1.
+      apply H2.
       symmetry.
       apply meet_left.
       tauto.
     + repeat split; try tauto.
       intros ?. subst.
-      apply H1.
+      apply H2.
       symmetry.
       apply meet_right.
       tauto.
 Qed.
 
-Lemma lattice_open_upper_ray_intersection (X : Type) (R : relation X) `{L : Lattice X R} (x y : X) :
+Lemma lattice_open_upper_ray_intersection (X : Type) (R : relation X) `{L : Lattice X R} `{Connex X R} `{!LinearOrder R} (x y : X) :
   Intersection (open_upper_ray R x) (open_upper_ray R y) =
   open_upper_ray R (join x y).
 Proof.
@@ -399,27 +406,27 @@ Proof.
     + apply join_lub0.
       split; tauto.
     + destruct (join_eq X R x y).
-      * rewrite H1. tauto.
-      * rewrite H1. tauto.
-  - destruct H1.
-    apply join_lub0 in H0.
-    destruct H0.
+      * rewrite H2. tauto.
+      * rewrite H2. tauto.
+  - destruct H2.
+    apply join_lub0 in H1.
+    destruct H1.
     constructor.
     + repeat split; try tauto.
       intros ?. subst.
-      apply H1.
+      apply H2.
       symmetry.
       apply join_left.
       tauto.
     + repeat split; try tauto.
       intros ?. subst.
-      apply H1.
+      apply H2.
       symmetry.
       apply join_right.
       tauto.
 Qed.
 
-Lemma lattice_open_interval_upper_ray_intersection (X : Type) (R : relation X) `{L : Lattice X R} (x y z : X) :
+Lemma lattice_open_interval_upper_ray_intersection (X : Type) (R : relation X) `{L : Lattice X R} `{Connex X R} `{!LinearOrder R} (x y z : X) :
   Intersection (open_interval R x y) (open_upper_ray R z) =
   open_interval R (join x z) y.
 Proof.
@@ -428,21 +435,15 @@ Proof.
     + apply join_lub0.
       split; try tauto.
     + destruct (join_eq X R x z).
-      * rewrite H1. tauto.
-      * rewrite H1. tauto.
-  - destruct H1 as [? [? []]].
-    apply join_lub0 in H0 as [].
-    repeat split; try tauto.
-    + intros ?. subst.
-      apply H1.
-      symmetry.
-      apply join_left.
-      assumption.
-    + intros ?. subst.
-      apply H1.
-      symmetry.
-      apply join_right.
-      assumption.
+      * rewrite H2. tauto.
+      * rewrite H2. tauto.
+  - destruct H2 as [? [? []]].
+    apply join_lub0 in H1 as [].
+    repeat split; try tauto;
+      intros ?; subst;
+      apply H2; symmetry;
+        [ apply join_left | apply join_right ];
+        assumption.
 Qed.
 
 Lemma lattice_open_upper_lower_ray_intersection (X : Type) (R : relation X) `{L : Lattice X R} (x y : X) :
@@ -456,7 +457,7 @@ Qed.
 
 Lemma order_topology_subbasis_finite_intersection
       (X : Type) (R : relation X)
-      `{L : Lattice X R}
+      `{L : Lattice X R} `{C : Connex X R} `{!LinearOrder R}
       I (HI : FiniteT I)
       (Fam : I -> Ensemble (OrderTopology R)) :
   (forall i : I, In (order_topology_subbasis X R) (Fam i)) ->
@@ -480,17 +481,20 @@ Proof.
       induction H0.
       - destruct H1 as [?y [?y]].
         rewrite H0. clear H0.
-        erewrite lattice_open_interval_lower_ray_intersection.
+        erewrite linearorder_open_interval_lower_ray_intersection.
+        2: typeclasses eauto.
         eexists _, _. reflexivity.
       - destruct H1 as [?y [?y]].
         rewrite H0. clear H0.
         erewrite lattice_open_interval_upper_ray_intersection.
+        2: typeclasses eauto.
         eexists _, _. reflexivity.
     }
     { specialize (H0 None).
       induction H0.
       - destruct H1. rewrite H0. clear H0.
         erewrite lattice_open_lower_ray_intersection.
+        2: typeclasses eauto.
         right. left.
         eexists. reflexivity.
       - destruct H1. rewrite H0. clear H0.
@@ -513,6 +517,7 @@ Proof.
       - destruct H1.
         + destruct H0. rewrite H0. clear H0.
           erewrite lattice_open_upper_ray_intersection.
+          2: assumption.
           right. right. left.
           eexists _. reflexivity.
         + rewrite H0. clear H0.
@@ -540,7 +545,7 @@ Require Import FiniteIntersections.
 
 Lemma order_topology_subbasis_finite_intersections
       (X : Type) (R : relation X)
-      `{L : Lattice X R}
+      `{L : Lattice X R} `{C : Connex X R} `{!LinearOrder R}
       U :
   In (finite_intersections (order_topology_subbasis X R)) U ->
   (exists x y, U = open_interval R x y) \/
@@ -556,7 +561,7 @@ Proof.
     assumption.
 Qed.
 
-Lemma order_topology_convex_connected_0 (X : Type) (R : relation X) `{HR : Lattice X R} (c : X)
+Lemma order_topology_convex_connected_0 (X : Type) (R : relation X) `{HR : Lattice X R} `{C : Connex X R} `{!LinearOrder R} (c : X)
       (A : Ensemble (OrderTopology R)) :
   open A ->
   In A c ->
@@ -573,7 +578,7 @@ Proof.
   2: { assumption. }
   destruct H1 as [I [?HI [Fam [?HI []]]]].
   pose proof (@order_topology_subbasis_finite_intersection
-                _ _ _ _ _ _ I HI Fam HI0)
+                _ _ _ _ _ _ _ _ I HI Fam HI0)
        as [[? [? HF]]|[[? HF]|[[? HF]|HF]]].
   all: rewrite HF in *; clear HF.
   - destruct H1.
@@ -617,7 +622,7 @@ Proof.
     + intros ? ?. apply H3. constructor.
 Qed.
 
-Lemma order_topology_convex_connected_4 {X R} `(HR : Lattice X R)
+Lemma order_topology_convex_connected_4 {X R} `(HR : Lattice X R) `{C : Connex X R} `{!LinearOrder R}
       (A : Ensemble (OrderTopology R)) c :
   open A ->
   In A c ->
@@ -634,7 +639,7 @@ Proof.
   2: { assumption. }
   destruct H1 as [I [?HI [Fam [?HI []]]]].
   pose proof (@order_topology_subbasis_finite_intersection
-                X _ _ _ _ HR I HI Fam HI0)
+                X _ _ _ _ HR _ _ I HI Fam HI0)
        as [[? [? HF]]|[[? HF]|[[? HF]|HF]]].
   all: rewrite HF in *; clear HF.
   - exists x. repeat inversion_ensembles_in.
@@ -686,7 +691,7 @@ Definition rel_restr {X : Type} (R : relation X) (A : Ensemble X) :
 
 Lemma order_topology_convex_connected_3 (X : Type) (R : relation X)
       `{L: Lattice X R} `{HD : DenseRelation X R}
-      `{HC : Connex X R}
+      `{HC : Connex X R} `{!LinearOrder R}
       (a b c : X)
       (Ha : forall x, R a x)
       (Hb : forall x, R x b)
@@ -847,7 +852,7 @@ Qed.
 (* On a convex subset of a totally ordered set, the subspace-topology and the induced order-topology coincide.
    Corresponds to theorem 16.4 of Munkres.
 *)
-Lemma order_topology_subspace {X : Type} (R : relation X) (A : Ensemble X) `{Lattice X R} :
+Lemma order_topology_subspace {X : Type} (R : relation X) (A : Ensemble X) `{Lattice X R} `{C : Connex X R} `{!LinearOrder R} :
   order_convex R A ->
   @open (@SubspaceTopology (OrderTopology R) A) =
   @open (OrderTopology (fun x y : { _ | In A _ } => R (proj1_sig x) (proj1_sig y))).
@@ -876,7 +881,7 @@ Proof.
     destruct H4.
     apply H2 in H3. clear H2.
     eapply order_topology_subbasis_finite_intersections in H3.
-    2: typeclasses eauto.
+    all: try typeclasses eauto.
     destruct H3 as [[y0 [y1]]|[[y]|[[y]|]]].
     + subst.
       rewrite open_interval_as_rays.
@@ -984,6 +989,10 @@ Proof.
       reflexivity.
 Admitted.
 
+Instance rel_restr_LinearOrder {X R} `{LinearOrder X R} A :
+  LinearOrder (rel_restr R A).
+Qed.
+
 Lemma order_topology_convex_connected_2 (X : Type) (R : relation X)
       `{HR : LinearContinuum X R}
       (a b : X)
@@ -1002,38 +1011,26 @@ Proof.
        (@order_topology_convex_connected_3
            { x | In (closed_interval R a b) x }
            (rel_restr R _)
-           _
-           _
-           _
-           _
+           _ _ _ _
            (rel_restr_DenseRelation _ _ _ _)
-           _
+           _ _
            (exist _ a (closed_interval_In_left Hab))
            (exist _ b (closed_interval_In_right Hab))
-           c
-        ); try typeclasses eauto.
-  - eapply LinearOrder_Lattice.
-    constructor.
+           c _ _ A0 B0
+        ); try typeclasses eauto; try assumption.
   - eapply closed_interval_convex; typeclasses eauto.
-  - apply A0.
-  - apply B0.
   - intros. apply (proj2_sig x).
   - intros. apply (proj2_sig x).
-  - assumption.
   - (* [open A0] *)
     erewrite order_topology_subspace in HA0;
       try typeclasses eauto.
     + assumption.
     + eapply closed_interval_convex; typeclasses eauto.
-  - assumption.
   - (* [open B0] *)
     erewrite order_topology_subspace in HB0;
       try typeclasses eauto.
     + assumption.
     + eapply closed_interval_convex; typeclasses eauto.
-  - assumption.
-  - assumption.
-  - assumption.
 Qed.
 
 (* Note that the converse does not hold. Counterexample:

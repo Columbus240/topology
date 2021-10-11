@@ -1,6 +1,7 @@
 Require Export MetricSpaces.
 Require Import Psatz.
 From Coq Require Import ProofIrrelevance.
+From ZornsLemma Require Import Orders.
 
 Section Completeness.
 
@@ -192,6 +193,13 @@ Proof.
   auto.
 Qed.
 
+Instance Rle_PreOrder : PreOrder Rle.
+Admitted.
+Instance Rle_PartialOrder : PartialOrder eq Rle.
+Admitted.
+Instance Rle_Lattice : Lattice Rle.
+Admitted.
+
 Lemma cauchy_impl_bounded {X : Type} (d : X -> X -> R) (x : nat -> X) :
   cauchy d x -> bounded d (Im Full_set x).
 Proof.
@@ -225,7 +233,6 @@ destruct (le_or_lt N n).
   }
   apply H1.
   exists n.
-  constructor.
-  assumption.
-  reflexivity.
+  + constructor. lia.
+  + reflexivity.
 Qed.

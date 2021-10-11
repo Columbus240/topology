@@ -1,0 +1,39 @@
+Things which could be proven:
+- Metrization theorems
+- Characterize RTop, characterize euclidean spaces
+- Brouwer fixed point theorem
+
+Things which could be introduced to the library:
+- Homotopy
+- Uniform spaces
+- Some Lattice/Order theory
+- Examples of topological spaces (for example going through the
+  counterexamples book)
+- Euclidean spaces, manifolds, differential topology
+- Category of topological spaces and its many subcategories and their
+  properties (maybe following the "Allgemeine Topologie" book)
+- Eine passende Definition von Ordinalzahlen, die möglichst ohne
+  Universen-Problemen auskommt.
+
+Ways how the library itself could be improved:
+- Add a coding/proof style
+- Define a convention on dealing with API changes.
+- Harmonize the naming
+- Improve automation, create automation tactics & tools
+  (automatically prove continuity)
+- Schauen, dass ein sinnvolles Dokument von coqdoc generiert wird.
+
+ReverseCSB sollte glaubs separat bewiesen werden, da es mehr eine Anwendung der
+Bibliothek ist und nicht so viel Zusammenhang mitm Rest hat. Es wird nirgends
+sonst in der Bibliothek angewendet und das wird auch so bleiben. Wenn ein
+Beweis ReverseCSB benötigt, gehört er wahrscheinlich nicht in den Kontext
+dieser Bibliothek.
+
+HarmonizeNotation:
+Erreiche eine einheitliche Benamsung der Lemmata und Definitionen.
+
+Verbessere den Umgang mit metrischen Räumen. Im Moment ist das "zerfleddert".
+
+Wie wäre es, Hierarchy Builder zu verwenden?
+
+Topologische Gruppen & Ringe könnte man einführen...

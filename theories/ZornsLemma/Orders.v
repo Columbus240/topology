@@ -202,6 +202,192 @@ Proof.
   apply H1. apply antisymmetry; assumption.
 Qed.
 
+Class CompletePartialOrder {X : Type} (R : relation X) `{PartialOrder X eq R} :=
+  { sup_ens : Ensemble X -> X;
+    sup_ens_lub : forall A, is_lub R A (sup_ens A);
+    inf_ens : Ensemble X -> X;
+    inf_ens_lub : forall A, is_glb R A (inf_ens A);
+  }.
+
+Record ClosureOperator (X : Type) :=
+  { closure_operator :> Ensemble X -> Ensemble X;
+    closure_op_extensive U : Included U (closure_operator U);
+    closure_op_idempotent U : closure_operator (closure_operator U) = closure_operator U;
+    closure_op_isotone U V :
+      Included U V ->
+      Included (closure_operator U) (closure_operator V);
+  }.
+
+Require Import Families.
+
+Definition ClosureOperator_inf {X : Type} (C : ClosureOperator X) (F : Family X) : Ensemble X :=
+  FamilyIntersection (Im F C).
+
+Definition ClosureOperator_sup {X : Type} (C : ClosureOperator X) (F : Family X) : Ensemble X :=
+  C (FamilyUnion F).
+
+Definition ClosureOperator_closeds {X : Type} (C : ClosureOperator X) : Type :=
+  { A : Ensemble X | C A = A }.
+Definition ClosureOperator_closeds_coercion {X C} (A : @ClosureOperator_closeds X C) : Ensemble X :=
+  proj1_sig A.
+Coercion ClosureOperator_closeds_coercion : ClosureOperator_closeds >-> Ensemble.
+
+Definition ClosureOperator_CPO {X : Type} (C : ClosureOperator X) :
+  relation (ClosureOperator_closeds C) :=
+  fun A B => Included A B.
+
+Instance Included_PreOrder {X} : PreOrder (@Included X).
+Proof.
+  split; red; intros; red; intros; auto.
+Qed.
+
+Instance Same_set_Equivalence {X} : Equivalence (@Same_set X).
+Proof.
+  split; red; split.
+  1, 2: reflexivity.
+  1, 2: apply H.
+  1, 2: etransitivity; try apply H; try apply H0.
+Qed.
+
+Instance Included_PartialOrder {X} : PartialOrder Same_set (@Included X).
+Proof.
+  red. unfold relation_equivalence, relation_conjunction, flip.
+  unfold predicate_equivalence, predicate_intersection.
+  simpl.
+  unfold Same_set.
+  reflexivity.
+Qed.
+
+Instance ClosureOperator_CPO_PreOrder {X C} : PreOrder (@ClosureOperator_CPO X C).
+Proof.
+  unfold ClosureOperator_CPO.
+  split; red; intros.
+  - reflexivity.
+  - etransitivity; eassumption.
+Qed.
+Require Import Program.Subset.
+Instance ClosureOperator_CPO_PartialOrder {X C} : PartialOrder eq (@ClosureOperator_CPO X C).
+Proof.
+  unfold ClosureOperator_CPO.
+  lazy.
+  split; intros.
+  - subst. auto.
+  - apply subset_eq.
+    apply Extensionality_Ensembles; split; red; intros.
+    + apply H. assumption.
+    + apply H. assumption.
+Qed.
+
+Program Instance ClosureOperator_CPO_Complete {X C} : CompletePartialOrder (@ClosureOperator_CPO X C) :=
+  {| sup_ens F := exist _ (ClosureOperator_sup C (Im F (@proj1_sig _ _))) _;
+     inf_ens F := exist _ (ClosureOperator_inf C (Im F (@proj1_sig _ _))) _; |}.
+Next Obligation.
+  unfold ClosureOperator_sup.
+  apply closure_op_idempotent.
+Qed.
+Next Obligation.
+  unfold ClosureOperator_sup.
+  split.
+  - intros ? ?. intros ? ?.
+    simpl.
+    apply closure_op_extensive.
+    exists (proj1_sig y); auto.
+    apply Im_def. assumption.
+  - intros.
+    red in H.
+    red. simpl.
+    unfold ClosureOperator_CPO in H.
+    intros ? ?.
+    simpl in *.
+    admit.
+Admitted.
+Next Obligation.
+  unfold ClosureOperator_inf.
+  apply Extensionality_Ensembles; split.
+  2: apply closure_op_extensive.
+  intros ? ?.
+  constructor.
+  intros ? ?.
+  inversion H0; subst; clear H0.
+  inversion H1; subst; clear H1.
+  apply (closure_op_isotone X C (FamilyIntersection (Im (Im F (@proj1_sig _ _)) C)) x1).
+  - intros ? ?.
+    destruct H1.
+    apply H1.
+    exists x1.
+    2: { symmetry. apply (proj2_sig x1). }
+    apply Im_def.
+    assumption.
+  - assumption.
+Qed.
+Next Obligation.
+  split.
+  - intros ? ?.
+    unfold ClosureOperator_CPO. simpl.
+    unfold ClosureOperator_inf.
+    intros ? ?.
+    destruct H0.
+    apply H0.
+    exists y.
+    2: { symmetry. apply (proj2_sig y). }
+    apply Im_def.
+    assumption.
+  - intros.
+    unfold ClosureOperator_CPO. simpl.
+    unfold ClosureOperator_inf.
+    red in H.
+    unfold ClosureOperator_CPO in H.
+    intros ? ?.
+    constructor.
+    intros.
+    inversion H1; subst; clear H1.
+    apply (H (exist _ (C x0) (closure_op_idempotent _ _ _))).
+    + inversion H2; subst; clear H2.
+      replace (exist _ _ _) with x1.
+      { assumption. }
+      apply subset_eq.
+      simpl. symmetry. apply (proj2_sig x1).
+    + assumption.
+Qed.
+
+Program Definition DedekindMcNeilleClosure {X : Type} (R : relation X) `{PartialOrder X eq R} : ClosureOperator X :=
+  {| closure_operator A :=
+       is_lower_bound R (is_upper_bound R A); |}.
+Next Obligation.
+  lazy.
+  auto.
+Qed.
+Next Obligation.
+  lazy.
+  apply Extensionality_Ensembles; split; lazy; intros.
+  - apply H0.
+    intros.
+    apply H2.
+    assumption.
+  - apply H0.
+    intros.
+    apply H1.
+    auto.
+Qed.
+Next Obligation.
+  lazy.
+  intros.
+  apply H1.
+  intros.
+  apply H0 in H3.
+  auto.
+Qed.
+
+Definition DedekindMcNeille_Type {X} (R : relation X) `{PartialOrder X eq R} :=
+  ClosureOperator_closeds (DedekindMcNeilleClosure R).
+
+Definition DedekindMcNeille_Order {X} {R : relation X} `{PartialOrder X eq R} :
+  relation (DedekindMcNeille_Type R) := ClosureOperator_CPO (DedekindMcNeilleClosure R).
+
+Definition DedekindMcNeille_Embedding {X} {R : relation X} `{PartialOrder X eq R} :
+  X -> DedekindMcNeille_Type R :=
+  fun x => exist _ (DedekindMcNeilleClosure R (Singleton x)) (closure_op_idempotent _ _ _).
+
 Class Lattice {X : Type} (R : relation X) `{PartialOrder X eq R} :=
   { meet : X -> X -> X;
     meet_glb : forall x y, is_glb R (Couple x y) (meet x y);
@@ -297,57 +483,23 @@ Proof.
     + assumption.
 Qed.
 
-Lemma meet_eq X R `{L : Lattice X R} x y :
-  meet x y = x \/ meet x y = y.
-Proof.
-  pose proof (meet_glb1 _ _ x y).
-  pose proof (meet_glb2 _ _ x y).
-  destruct (classic (R x y)).
-  { left.
-    Ltac apply_antisym :=
-    match goal with
-    | H : PartialOrder eq ?R,
-      H0 : ?R ?a ?b,
-      H1 : ?R ?b ?a |- _ =>
-      pose proof (@antisymmetry _ _ _ _ (partial_order_antisym H) _ _ H0 H1)
-    end.
-    apply antisymmetry; try assumption.
-    apply meet_glb.
-    red; intros.
-    induction H3.
-    - reflexivity.
-    - assumption.
-  }
-  right.
-  apply antisymmetry; try assumption.
-  apply meet_glb.
-  red; intros.
-  induction H3.
-  2: reflexivity.
-  admit.
-Admitted.
-
 Lemma open_interval_intersection X R `{L : Lattice X R} x0 x1 y0 y1 :
-  Intersection (open_interval R x0 y0)
-               (open_interval R x1 y1) =
-  open_interval R (meet x0 x1) (join y0 y1).
+  Included
+  (Intersection (open_interval R x0 y0)
+               (open_interval R x1 y1))
+  (closed_interval R (join x0 x1) (meet y0 y1)).
 Proof.
-  extensionality_ensembles_inv.
-  - destruct H0 as [? [? []]].
-    destruct H2 as [? [? []]].
-    repeat split.
-    + transitivity x0; try assumption.
-      apply meet_glb1.
-    + intros ?.
-      destruct (meet_eq _ R x0 x1).
-      * congruence.
-      * congruence.
-    + admit.
-    + admit.
-  - destruct H1 as [? [? []]].
-    repeat split.
-    all: admit.
-Admitted.
+  red; intros.
+  destruct H0.
+  destruct H0, H1.
+  destruct H0 as [? [? []]].
+  destruct H1 as [? [? []]].
+  repeat split.
+  + apply join_lub0.
+    split; assumption.
+  + apply meet_glb0.
+    split; assumption.
+Qed.
 
 Lemma Couple_swap X (x y : X) :
   Couple x y = Couple y x.

@@ -1,0 +1,55 @@
+\documentclass{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+\usepackage{microtype}
+%\usepackage{amsfonts}
+
+\usepackage[a4paper]{geometry}
+
+\begin{document}
+\section{About cardinalities in Type Theories}
+The usual definition of “cardinality order” in set-theory is the following:
+For two sets $A, B$ we write $A \le_c B$ iff there is an injective function $f : A \to B$ and we write $A =_c B$ iff there is a bijective function $f : A \to B$.
+
+In type theory there are two things to which we’d like to compare by cardinality: types and ensembles\footnote{
+  Following the nomenclature of the Coq std. library.
+  They are sometimes called “sets” (for example in the math-comp library) or “predicates”.
+  For a type $A$, ensembles of $A$ have type $A \to \mathsf{Type}$ or $A \to \mathsf{Prop}$ depending on the formalism.}.
+As is usual for such situations, we’d like to define concepts or prove theorems only for one case and use some well-behaved transfer principles between the two.
+
+One apprach would be to define cardinality-order and -equality for types completely analogously to the definitions in set-theory.
+Then define the cardinality of an ensemble $P : A \to \mathsf{Type}$ as the cardinality of its sigma-type $\{a : A \mid P a\}$.
+
+This approach only “works well” if we have “proof irrelevance” for $P$. I.e. we need to have for all $a : A$ and proofs $\phi, \psi : P a$ that $\phi = \psi$.
+Otherwise the sigma-type might even have a bigger cardinality than $A$ had.
+Proof-irrelevance very often doesn’t hold in type theories but can be added using axioms.
+
+An axiom-free definition, but with a bit more bookkeeping is the following:
+Let $A, B$ be types and $P : A \to \mathsf{Type}$, $Q : B \to \mathsf{Type}$ be ensembles on $A$ resp. on $B$.
+Let $f : \{ a : A \mid P a \} \to \{ b : B \mid Q b \}$ be a function between the sigma-types of $P$ and $Q$.
+Let $\pi_A$ be the canonical projection from $\{ a : A \mid P a\}$ to $A$ and $\pi_B$ be the canonical projection from $\{ b : B \mid Q b \}$ to $B$.
+We’ll call $f$ \emph{relatively injective} if for all $a_0, a_1 : \{ a : A \mid P a \}$, $\pi_B (f (a_0)) = \pi_B (f (a_1)) \Rightarrow \pi_A a_0 = \pi_A a_1$.
+We’ll call $f$ \emph{relatively surjective} if for all $b_0 : \{ b : B \mid Q b \}$ there exists some $a_0 : \{ a : A \mid P a \}$ such that $\pi_B b_0 = \pi_B (f (a_0))$.
+We’ll call $f$ \emph{relatively bijective} if it is both relatively injective and relatively surjective.
+
+We now write $P \le_c Q$ if there exists a relatively injective function $f : \{ a : A \mid P a \} \to \{ b : B \mid Q a \}$.
+We write $P =_c Q$ if there exists a relatively bijective function $f : \{ a : A \mid P a \} \to \{ b : B \mid Q a \}$.
+
+Now we can pull these relations back to types.
+For any type $A$ let $F_A : A \to Type$ be the “full ensemble” i.e. function mapping $a \mapsto \top$ where $\top$ is some inhabited type (corresponding to the truth value “true”).
+Then for types $A, B$ define $A \le_c B$ iff $F_A \le_c F_B$.
+
+Using the natural map $A \hookrightarrow \{ a : A \mid F_A a \}$ we can prove helper-lemmas and recover the “classical” definitions given initially.
+This way we avoided proof irrelevance for arguing about cardinalities.
+
+2021-10-10
+
+P.S. I forgot to add a “proper-ness” requirement.
+
+A problem I didn’t foresee was the following: the $\le_c$ and $=_c$ types become dependent.
+So they can’t be treated with the usual machinery for binary relations.
+Introducing a sigma type is also not much use.
+
+\end{document}
