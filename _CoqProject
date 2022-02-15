@@ -5,6 +5,7 @@
 -arg -w -arg -deprecated-instance-without-locality
 
 theories/Topology/AdjunctionSpace.v
+theories/Topology/BrouwerFixedpoint.v
 theories/Topology/Compactness.v
 theories/Topology/Completeness.v
 theories/Topology/Completion.v
