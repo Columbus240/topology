@@ -120,8 +120,7 @@ Qed.
 
 (** the [Hausdorff] property is hereditary *)
 Lemma Hausdorff_Subspace {X : TopologicalSpace} (A : Ensemble X) :
-  Hausdorff X ->
-  Hausdorff (SubspaceTopology A).
+  Hausdorff X -> Hausdorff A.
 Proof.
   intros HX.
   intros [x Hx] [y Hy] H.
