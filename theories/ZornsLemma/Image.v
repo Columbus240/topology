@@ -117,3 +117,22 @@ Proof.
   exists x. apply H in H3.
   congruence.
 Qed.
+
+Lemma Subtract_Im_inj {X Y : Type} (U : Ensemble X) (x : X) (f : X -> Y) :
+  injective f ->
+  Subtract (Im U f) (f x) = Im (Subtract U x) f.
+Proof.
+  intros.
+  extensionality_ensembles.
+  - subst. exists x0; [|reflexivity].
+    split; [assumption|].
+    intros ?.
+    destruct H2.
+    apply H1. constructor.
+  - subst. split.
+    + exists x0; auto.
+    + intros ?.
+      inversion H1; subst; clear H1.
+      apply H in H4.
+      apply H2. subst. constructor.
+Qed.

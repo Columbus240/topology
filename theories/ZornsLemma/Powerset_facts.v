@@ -265,3 +265,56 @@ Proof.
   - left; left; assumption.
   - right; constructor.
 Qed.
+
+Lemma Subtract_Union_not_in_l X U V (x : X) :
+  ~ In U x ->
+  Subtract (Union U V) x = Union U (Subtract V x).
+Proof.
+  intros.
+  extensionality_ensembles.
+  - left; assumption.
+  - right. split; assumption.
+  - split.
+    + left; assumption.
+    + intros ?. destruct H1; contradiction.
+  - split.
+    + right; assumption.
+    + assumption.
+Qed.
+
+Corollary Subtract_Union_not_in_r X U V (x : X) :
+  ~ In V x ->
+  Subtract (Union U V) x = Union (Subtract U x) V.
+Proof.
+  intros.
+  rewrite ?(Union_commutative _ _ V).
+  apply Subtract_Union_not_in_l.
+  assumption.
+Qed.
+
+Lemma Disjoint_Subtract_r X U V (x : X) :
+  Disjoint U V ->
+  Disjoint U (Subtract V x).
+Proof.
+  intros.
+  constructor.
+  destruct H.
+  intros.
+  intros ?.
+  specialize (H x0).
+  apply H.
+  destruct H0.
+  destruct H1.
+  split; assumption.
+Qed.
+
+Corollary Disjoint_Subtract_l X U V (x : X) :
+  Disjoint U V ->
+  Disjoint (Subtract U x) V.
+Proof.
+  intros.
+  symmetry.
+  apply Disjoint_Subtract_r.
+  symmetry.
+  assumption.
+Qed.
