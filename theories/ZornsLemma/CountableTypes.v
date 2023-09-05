@@ -7,7 +7,7 @@ From Coq Require Import Arith ArithRing FunctionalExtensionality Lia
     Program.Subset ClassicalChoice Description.
 From ZornsLemma Require Import InfiniteTypes CSB DecidableDec
     DependentTypeChoice Finite_sets FunctionPropertiesEns.
-From ZornsLemma Require Export FiniteTypes IndexedFamilies.
+From ZornsLemma Require Import FiniteTypes IndexedFamilies.
 
 Local Close Scope Q_scope.
 
