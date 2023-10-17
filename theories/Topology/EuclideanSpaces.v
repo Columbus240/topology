@@ -937,8 +937,7 @@ Proof.
   intros.
   destruct H2.
   apply subbasis_cover with (SB := SB) (x := x) in H2
-      as [A [HA [V [HV0 [HV1 HV2]]]]]; auto.
-  destruct HV1 as [? HV1].
+      as [V [HV0 [HV1 HV2]]]; auto.
   (* it would be nice, if we could
      construct an element of [NB] that is included in
      [IndexedIntersection V]. *)
@@ -1019,7 +1018,7 @@ Proof.
        (fun p : { n : nat | (n < S N)%nat } => Vn (proj1_sig p))).
   repeat split; try lra.
   { apply open_finite_indexed_intersection.
-    * apply InfiniteTypes.finite_nat_initial_segment.
+    * apply finite_nat_initial_segment.
     * intros. apply H1.
   }
   destruct H2.
@@ -1856,7 +1855,7 @@ Proof.
 Qed.
 
 Lemma Rinfty_bounded_metric_complete :
-  complete Rinfty_bounded_metric Rinfty_bounded_metric_metric.
+  complete Rinfty_bounded_metric.
 Proof.
   red. intros.
   (* Applying countable choice here *)
@@ -1869,25 +1868,31 @@ Proof.
                             (@MetricTopology R R_metric R_metric_is_metric)
                             (fun m : nat => x m n) r)) as [x0].
   - intros.
-    pose proof (R_metric_complete (fun m => x m n)).
-    apply H0. clear H0.
-    red. intros.
+    pose proof (R_metric_complete (fun m => x m n)) as [y Hy].
+    2: {
+      exists y.
+      apply metric_space_net_limit with (d := R_metric);
+        auto.
+      apply MetricTopology_metrized.
+    }
+    intros eps Heps.
     (* maybe [eps] in the following line has to be adapted. *)
-    specialize (H eps H0) as [N].
-    exists N. intros. specialize (H m n0 H1 H2).
-    unfold Rinfty_bounded_metric in H.
+    specialize (H eps Heps) as [N HN].
+    exists N. intros m0 m1 Hm0 Hm1.
+    specialize (HN m0 m1 Hm0 Hm1).
+    unfold Rinfty_bounded_metric in HN.
     destruct (sup _ _ _).
     simpl in *.
-    assert (/ (INR (S n)) * Rmin (R_metric (x m n) (x n0 n)) 1 < x0 + / INR (S n) * / INR (S n)).
+    assert (/ (INR (S n)) * Rmin (R_metric (x m0 n) (x m1 n)) 1 <
+              x0 + / INR (S n) * / INR (S n)) as H.
     { destruct i.
-      clear H4.
       match goal with
       | H : is_upper_bound (Im Full_set ?f) x0 |- _ =>
           unshelve epose proof (H (f n) _); clear H
       end.
       { apply Im_def. constructor. }
       rewrite !S_INR in *.
-      simpl in H4. destruct n.
+      simpl in H1. destruct n.
       { simpl. lra. }
       rewrite !S_INR in *.
       apply (Rle_lt_trans _ x0); auto.
@@ -1897,18 +1902,22 @@ Proof.
       apply Rinv_0_lt_compat.
       apply Rmult_lt_0_compat; lra.
     }
-    (* this follows by multiplying [H3] on both sides with ... *)
-    assert (Rmin (R_metric (x m n) (x n0 n)) 1 < INR (S n) * x0 + / INR (S n)).
+    (* this follows by multiplying [H] on both sides with ... *)
+    assert (Rmin (R_metric (x m0 n) (x m1 n)) 1 <
+              INR (S n) * x0 + / INR (S n)) as H0.
     { admit. }
-    clear H3.
+    clear H.
     (* these need an additional assumption on [N] *)
-    assert (R_metric (x m n) (x n0 n) < 1).
+    assert (R_metric (x m0 n) (x m1 n) < 1).
     { admit. }
     assert (INR (S n) * x0 + / INR (S n) < eps).
     { admit. }
-    unfold Rmin in H4. destruct (Rle_dec _ _); lra.
+    unfold Rmin in H0. destruct (Rle_dec _ _); lra.
   - exists x0.
-    apply (@net_limit_nbhd_basis
+    (*
+    apply metric_space_net_limit_converse.
+    { apply Rinfty_bounded_metric_metrizes. }
+    apply (net_limit_nbhd_basis).
              (@MetricTopology Rinfty _ _) nat_DS
              x0 x (metric_topology_neighborhood_basis
                      Rinfty_bounded_metric x0)).
@@ -1917,6 +1926,7 @@ Proof.
     inversion H1; subst; clear H1.
     unfold In, open_ball.
     simpl DS_set.
+*)
     admit.
 Admitted.
 
@@ -1932,10 +1942,10 @@ Proof.
 Admitted.
 
 Corollary HeineBorel_not_impl_complete :
-  exists X d H,
-    metrizes X d /\ complete d H /\ ~ HeineBorel X d.
+  exists (X : TopologicalSpace) d,
+    metrizes X d /\ complete d /\ ~ HeineBorel X d.
 Proof.
-  exists Rinfty, Rinfty_bounded_metric, Rinfty_bounded_metric_metric.
+  exists Rinfty, Rinfty_bounded_metric.
   split; [|split].
   - apply Rinfty_bounded_metric_metrizes.
   - apply Rinfty_bounded_metric_complete.
@@ -2299,7 +2309,7 @@ Qed.
 Definition seq_compact (X : TopologicalSpace) :=
   forall sequence : Net nat_DS X,
   exists (subseq : Net nat_DS X) (limit : X),
-    Subnet X nat_DS sequence subseq /\
+    Subnet sequence subseq /\
     net_limit subseq limit.
 
 Lemma metrizable_limit_point_compact_impl_seq_compact X :
