@@ -168,3 +168,12 @@ Proof.
     apply Hf in H1; subst.
     assumption.
 Qed.
+
+Lemma Inhabited_Im {X Y : Type} (f : X -> Y) (U : Ensemble X) :
+  Inhabited (Im U f) <-> Inhabited U.
+Proof.
+  split.
+  - intros [y Hy]. destruct Hy as [x y].
+    exists x; assumption.
+  - intros [x Hx]. exists (f x). exists x; auto.
+Qed.
