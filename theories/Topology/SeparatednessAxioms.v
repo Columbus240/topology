@@ -405,3 +405,51 @@ destruct H2 as [J [x' [? ?]]].
 Qed.
 
 End Hausdorff_and_nets.
+
+(** two continuous functions into a Hausdorff space that differ in a
+  point, differ in an open nbhd of the point. *)
+Lemma map_into_Hausdorff_differ_on_nbhd
+  {X Y : TopologicalSpace} (HY : Hausdorff Y)
+  (f g : X -> Y)
+  (Hf : continuous f)
+  (Hg : continuous g)
+  (x : X)
+  (Hfgx : f x <> g x) :
+  exists U : Ensemble X,
+    open_neighborhood U x /\
+      forall x0 : X,
+        In U x0 -> f x0 <> g x0.
+Proof.
+  specialize (HY (f x) (g x) Hfgx) as
+    [V0 [V1 [HV0 [HV1 [HfV0 [HgV1 HVV]]]]]].
+  exists (Intersection (inverse_image f V0) (inverse_image g V1)).
+  split.
+  { split; auto with topology.
+    split; constructor; assumption.
+  }
+  intros _ [x0 [Hx0] [Hx1]] Hfgx0.
+  assert (In Empty_set (f x0)); try contradiction.
+  rewrite <- HVV; split; congruence.
+Qed.
+
+(** continuous functions into a Hausdorff space are determined by their
+   values on dense subsets. *)
+Lemma map_into_Hausdorff_eq_on_dense
+  {X Y : TopologicalSpace} (HY : Hausdorff Y)
+  (f g : X -> Y) (Hf : continuous f) (Hg : continuous g)
+  (D : Ensemble X) (HD : dense D)
+  (Hfg : forall x : X, In D x -> f x = g x) :
+  forall x : X, f x = g x.
+Proof.
+  intros x. apply NNPP.
+  intros Hfgx.
+  apply map_into_Hausdorff_differ_on_nbhd in Hfgx; auto.
+  destruct Hfgx as [U [HUx HUfg]].
+  pose proof (dense_meets_every_nonempty_open
+                X D HD U (proj1 HUx)) as [d Hd].
+  { exists x; apply HUx. }
+  destruct Hd as [d HDd HUd].
+  specialize (Hfg d HDd).
+  specialize (HUfg d HUd).
+  tauto.
+Qed.
