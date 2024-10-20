@@ -157,3 +157,27 @@ Proof.
   pose proof (triangle_inequality
                 d_metric x0 b x). lra.
 Qed.
+
+Lemma totally_bounded_closure {X : TopologicalSpace} (d : X -> X -> R)
+  (d_metric : metric d) (HX : metrizes X d) (U : Ensemble X) :
+  totally_bounded d U -> totally_bounded d (closure U).
+Proof.
+  intros HU eps Heps.
+  specialize (HU (eps / 2) ltac:(lra)) as [B [HB_fin [HBU HUB]]].
+  exists B. split; [assumption|split].
+  { transitivity U; auto. apply closure_inflationary. }
+  intros y Hy.
+  assert (Inhabited U) as HU_inh.
+  { apply closure_Inhabited. exists y; exact Hy. }
+  unshelve eapply closure_impl_dist_to_set_zero in Hy; eauto.
+  pose proof (@dist_to_set_approx X d d_metric U HU_inh y (eps/2) ltac:(lra))
+    as [x0 [HUx0 Hyx0]].
+  rewrite Hy in Hyx0. clear Hy HU_inh.
+  apply HUB in HUx0. clear U HBU HUB.
+  destruct HUx0 as [ob x0 Hob Hx0].
+  apply Im_inv in Hob. destruct Hob as [b [HBb Hob]].
+  subst ob. destruct Hx0. exists (open_ball d b eps).
+  { apply Im_def with (f := fun x => open_ball d x eps), HBb. }
+  constructor. pose proof (triangle_inequality d_metric b x0 y).
+  rewrite (metric_sym d_metric y x0) in Hyx0. lra.
+Qed.
