@@ -796,6 +796,12 @@ Next Obligation.
   now exists (d x y), y.
 Defined.
 
+Definition dist_to_set_prop (x : X) :
+  is_glb (Im S (d x)) (dist_to_set x) :=
+  proj2_sig
+    (inf (Im S (d x)) (dist_to_set_obligation_1 x)
+         (dist_to_set_obligation_2 x)).
+
 Lemma dist_to_set_nonneg (x : X) :
   0 <= dist_to_set x.
 Proof.
@@ -844,6 +850,31 @@ apply Rle_lt_trans with (d y z).
     lra.
 Qed.
 
+Lemma dist_to_set_approx (x : X) :
+  forall eps,
+    eps > 0 ->
+    exists s : X, In S s /\ d x s < dist_to_set x + eps.
+Proof.
+  intros eps Heps.
+  pose proof (glb_approx
+                (Im S (d x)) _ eps
+                (dist_to_set_prop x) Heps) as [r [HSr Hr]].
+  apply Im_inv in HSr. destruct HSr as [s [HSs Hsr]]. subst r.
+  exists s; split; [assumption|lra].
+Qed.
+
+Lemma dist_to_set_approx_above (x : X) (r : R) :
+  (forall eps : R, eps > 0 -> exists s : X, In S s /\ d x s < r + eps) ->
+  dist_to_set x <= r.
+Proof.
+  intros Hr.
+  apply lt_plus_epsilon_le.
+  intros eps Heps. specialize (Hr eps Heps) as [s [HSs Hxs]].
+  pose proof (proj1 (dist_to_set_prop x) (d x s)
+                ltac:(apply Im_def, HSs)).
+  lra.
+Qed.
+
 End dist_to_set.
 
 Arguments dist_to_set {X}.
@@ -864,68 +895,33 @@ Lemma dist_to_set_zero_impl_closure: forall x:X,
   dist_to_set d d_is_metric S S_nonempty x = 0 -> In (closure S) x.
 Proof.
 intros.
-apply NNPP; intro.
-destruct (d_metrizes_X x).
-destruct (open_neighborhood_basis_cond (Complement (closure S))) as [V [? ?]].
-- split; trivial.
-  apply closure_closed.
-- destruct H1 as [r].
-  unfold dist_to_set in H.
-  destruct inf in H.
-  simpl in H.
-  rewrite H in i; clear x0 H.
-  destruct i.
-  assert (is_lower_bound (Im S (d x)) r).
-  { red. intros y ?.
-    destruct H4 as [y].
-    rewrite H5. clear y0 H5.
-    destruct (total_order_T (d x y) r) as [[?|?]|?]; auto with real rorders.
-    assert (In (open_ball d x r) y) by
-      now constructor.
-    apply H2 in H5.
-    contradiction H5.
-    now apply closure_inflationary. }
-  apply H3 in H4.
-  lra.
+apply meets_every_open_neighborhood_impl_closure.
+intros U HU HUx.
+pose proof (open_neighborhood_basis_cond
+              _ x (d_metrizes_X x) U (conj HU HUx)) as [B [HB HBU]].
+destruct HB as [r Hr].
+pose proof (dist_to_set_approx d_is_metric S_nonempty x Hr)
+  as [u [HUu Hxu]].
+exists u. split; [assumption|]. apply HBU. clear U HU HUx HBU.
+constructor. lra.
 Qed.
 
 Lemma closure_impl_dist_to_set_zero: forall x:X,
   In (closure S) x -> dist_to_set d d_is_metric S S_nonempty x = 0.
 Proof.
-intros.
-unfold dist_to_set; destruct inf.
-destruct i.
-simpl.
+intros x Hx.
 apply Rle_antisym.
 2: {
-  apply r. apply metric_Im_lower_bound_0, d_is_metric.
+  apply dist_to_set_nonneg.
 }
-apply lt_plus_epsilon_le.
-intros.
-ring_simplify.
-assert (exists y:X, In S y /\ d x y < eps).
-{ apply NNPP; intro.
-  pose proof (not_ex_all_not _ _ H1).
-  clear H1.
-  simpl in H2.
-  assert (In (interior (Complement S)) x).
-  { exists (open_ball d x eps).
-    - constructor. split.
-      { auto using metric_space_open_ball_open. }
-      intros y [Hy].
-      intros HSy.
-      specialize (H2 y).
-      contradict H2.
-      split; assumption.
-    - constructor.
-      now rewrite metric_zero. }
-  rewrite interior_complement in H1.
-  now contradiction H1. }
-destruct H1 as [y [? ?]].
-assert (d x y >= x0).
-{ apply i.
-  now exists y. }
-lra.
+apply dist_to_set_approx_above.
+intros eps Heps.
+apply closure_impl_meets_every_open_neighborhood
+  with (U := open_ball d x eps) in Hx.
+2: apply metric_space_open_ball_open; assumption.
+2: apply metric_open_ball_In; assumption.
+destruct Hx as [u Hu]. exists u. destruct Hu as [u HSu Hxu].
+destruct Hxu as [Hxu]. rewrite Rplus_0_l. tauto.
 Qed.
 
 Variable T:Ensemble X.
@@ -1192,4 +1188,23 @@ Proof.
   - apply finite_image, HU.
   - intros _ [x HUx C]. subst C.
     apply bounded_Singleton, Hd.
+Qed.
+
+Lemma bounded_closure {X : TopologicalSpace} (d : X -> X -> R)
+  (d_metric : metric d) (HX : metrizes X d) (U : Ensemble X) :
+  bounded d U -> bounded d (closure U).
+Proof.
+  intros [x [r HU]]. exists x, (r + 1).
+  intros y Hy.
+  assert (Inhabited U) as HU_inh.
+  { apply closure_Inhabited. exists y; exact Hy. }
+  unshelve eapply closure_impl_dist_to_set_zero in Hy; eauto.
+  pose proof (@dist_to_set_approx X d d_metric U HU_inh y 1 ltac:(lra))
+    as [x0 [HUx0 Hyx0]].
+  rewrite Hy in Hyx0.
+  constructor. apply HU in HUx0. destruct HUx0.
+  clear U HU HU_inh Hy.
+  pose proof (triangle_inequality d_metric x x0 y).
+  rewrite (metric_sym d_metric y x0) in Hyx0.
+  lra.
 Qed.
