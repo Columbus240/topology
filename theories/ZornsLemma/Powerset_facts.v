@@ -280,3 +280,29 @@ Proof.
   contradict H0.
   constructor.
 Qed.
+
+Lemma Subtract_Subtract_eq {X : Type}
+  (U : Ensemble X) (x : X) :
+  Subtract (Subtract U x) x = Subtract U x.
+Proof.
+  apply Extensionality_Ensembles; split.
+  - intros y Hy. destruct Hy as [Hy0 Hy1].
+    exact Hy0.
+  - intros y [Hy0 Hy1].
+    split; auto. split; auto.
+Qed.
+
+Lemma Add_Subtract_eq {X : Type}
+  (U : Ensemble X) (x : X) :
+  Add (Subtract U x) x = Add U x.
+Proof.
+  apply Extensionality_Ensembles; split.
+  - intros y Hy. destruct Hy as [y Hy|y Hy].
+    + destruct Hy. left; assumption.
+    + right. assumption.
+  - intros y Hy. destruct Hy as [y Hy|y Hy].
+    + destruct (classic (x = y)) as [H|H].
+      * right. apply Singleton_intro, H.
+      * left. split; auto with sets.
+    + right. assumption.
+Qed.

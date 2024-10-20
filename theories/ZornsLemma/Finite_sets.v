@@ -5,6 +5,7 @@ From Coq Require Export
   Finite_sets
   Finite_sets_facts.
 From ZornsLemma Require Import
+  Cardinals.CardinalsEns
   DecidableDec
   EnsemblesImplicit
   Families
@@ -179,6 +180,21 @@ Proof.
 Qed.
 
 (** ** Constructing finite ensembles *)
+Lemma finite_eq_cardinal_ens {X Y : Type}
+  (U : Ensemble X) (V : Ensemble Y) :
+  eq_cardinal_ens U V ->
+  Finite U -> Finite V.
+Proof.
+  intros HUV HU_fin. destruct HUV as [[HY HU_empty]|HUV].
+  - replace V with (@Empty_set Y).
+    + constructor.
+    + apply Extensionality_Ensembles; split;
+        intros ? ?; contradiction.
+  - destruct HUV as [f [Hf_ran [Hf_inj Hf_surj]]].
+    rewrite image_surjective_ens_range with f U V; auto.
+    apply finite_image, HU_fin.
+Qed.
+
 Lemma finite_couple {X} (x y : X) :
   Finite (Couple x y).
 Proof.
@@ -202,6 +218,149 @@ Proof.
   apply Finite_downward_closed with U; auto.
   red; intros.
   destruct H1. apply H1. assumption.
+Qed.
+
+Lemma finite_family_union {X : Type} (F : Family X) :
+  (forall U : Ensemble X, In F U -> Finite U) ->
+  Finite F ->
+  Finite (FamilyUnion F).
+Proof.
+  intros HF0 HFfin.
+  induction HFfin.
+  { rewrite empty_family_union.
+    constructor.
+  }
+  rewrite family_union_add.
+  apply Union_preserves_Finite; auto.
+  - apply IHHFfin. intros U HU. apply HF0. left; assumption.
+  - apply HF0. right. constructor.
+Qed.
+
+Lemma finite_inverse_image_of_singleton {X Y : Type}
+  (f : X -> Y)
+  (Hf : forall y : Y, Finite (inverse_image f (Singleton y)))
+  (U : Ensemble Y) (HU : Finite U) :
+  Finite (inverse_image f U).
+Proof.
+  induction HU.
+  { rewrite inverse_image_empty. constructor. }
+  unfold Add.
+  rewrite inverse_image_union.
+  apply Union_preserves_Finite; auto.
+Qed.
+
+Lemma finite_subsingleton {X : Type} (U : Ensemble X) :
+  (forall x y, In U x -> In U y -> x = y) ->
+  Finite U.
+Proof.
+  intros HU.
+  destruct (classic (Inhabited U)) as [HU_inh|HU_inh].
+  - destruct HU_inh as [x Hx].
+    assert (U = Singleton x) as HUx.
+    { apply Extensionality_Ensembles; split.
+      - intros y Hy. specialize (HU x y Hx Hy).
+        subst y. constructor.
+      - intros x0 Hx0. destruct Hx0. assumption.
+    }
+    subst U. apply Singleton_is_finite.
+  - apply not_inhabited_empty in HU_inh.
+    subst U. constructor.
+Qed.
+
+Local Lemma Subtract_inverse_image_Singleton {X : Type}
+  (U : Ensemble X) (x : X) :
+  Included
+    (inverse_image (fun U => Subtract U x) (Singleton U))
+    (Couple (Subtract U x) (Add U x)).
+Proof.
+  intros V HV. destruct HV. apply Singleton_inv in H.
+  subst U. rewrite Subtract_Subtract_eq.
+  rewrite Add_Subtract_eq.
+  destruct (classic (In V x)) as [Hx|Hx].
+  - rewrite Non_disjoint_union; auto. right.
+  - rewrite Non_disjoint_union'; auto. left.
+Qed.
+
+Local Lemma Subtract_has_finite_inverse_image {X : Type}
+  (x : X) (U : Ensemble X) :
+  Finite (inverse_image (fun U => Subtract U x) (Singleton U)).
+Proof.
+  eapply Finite_downward_closed.
+  2: apply Subtract_inverse_image_Singleton.
+  apply finite_couple.
+Qed.
+
+Lemma finite_family_union_inv {X : Type} (F : Family X) :
+  Finite (FamilyUnion F) ->
+  (forall U : Ensemble X, In F U -> Finite U) /\
+    Finite F.
+Proof.
+  intros HF.
+  remember (FamilyUnion F) as FU.
+  revert F HeqFU.
+  induction HF.
+  { intros F HeqFU.
+    symmetry in HeqFU.
+    rewrite <- family_union_empty_sets in HeqFU.
+    split.
+    { intros U HU; specialize (HeqFU U HU).
+      subst U. constructor.
+    }
+    apply finite_subsingleton.
+    intros x y Hx Hy.
+    pose proof (HeqFU x Hx).
+    pose proof (HeqFU y Hy).
+    congruence.
+  }
+  intros F HF0.
+  specialize (IHHF (Im F (fun U : Ensemble X => Subtract U x)))
+    as [HA0 HA1].
+  { apply Extensionality_Ensembles; split.
+    - intros y Hy.
+      pose proof (Add_intro1 _ A x y Hy) as Hy0.
+      rewrite HF0 in Hy0. destruct Hy0 as [S y HFS HSy].
+      exists (Subtract S x).
+      + apply (Im_def F (fun U => Subtract U x) S);
+          assumption.
+      + split; auto. intros H0. destruct H0. contradiction.
+    - intros y Hy.
+      destruct Hy as [S y HFS HSy].
+      destruct HFS as [S HS]. subst.
+      destruct HSy as [Hy0 Hy1].
+      pose proof (FamilyUnion_In_Included F S HS y Hy0).
+      rewrite <- HF0 in H0. destruct H0; tauto.
+  }
+  split.
+  - intros U HU.
+    destruct (classic (In U x)) as [HUx|HUx].
+    + replace U with (Add (Subtract U x) x).
+      { constructor.
+        2: apply Subtract_not_in.
+        apply HA0.
+        apply (Im_def F (fun U => Subtract U x) U);
+          assumption.
+      }
+      symmetry.
+      apply Extensionality_Ensembles.
+      apply Add_Subtract_discouraging.
+      split; auto. intros ? ?. apply classic.
+    + rewrite <- Non_disjoint_union' with _ U x; auto.
+      apply HA0.
+      apply (Im_def F (fun U => Subtract U x) U);
+        assumption.
+  - assert (Finite (inverse_image
+                      (fun U => Subtract U x)
+                      (Im F (fun U => Subtract U x)))) as H0.
+    { apply finite_inverse_image_of_singleton; auto.
+      apply Subtract_has_finite_inverse_image.
+    }
+    eapply Finite_downward_closed_dec.
+    { eapply H0. }
+    { intros. apply classic. }
+    { intros. apply classic. }
+    intros U HU. constructor.
+    apply (Im_def F (fun U => Subtract U x) U);
+      assumption.
 Qed.
 
 (** ** Finite and functions *)
