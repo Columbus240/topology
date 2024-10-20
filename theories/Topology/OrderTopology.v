@@ -51,6 +51,16 @@ Proof.
     + destruct H1. assumption.
 Qed.
 
+Lemma order_total_finite_maximal_ens {X : Type} (R : relation X)
+  (HR : order R) (HR_total : forall x y, R x y \/ R y x)
+  (B : Ensemble X) (HBfin : Finite B) :
+  B = Empty_set \/
+    exists b : X, In B b /\ forall b0 : X, In B b0 -> R b0 b.
+Proof.
+  exact (order_total_finite_minimal_ens (flip R) (order_flip R HR)
+           ltac:(clear -HR_total; firstorder) B HBfin).
+Qed.
+
 (** * Order Topology *)
 Section OrderTopology.
 
