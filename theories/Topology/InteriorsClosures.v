@@ -98,6 +98,17 @@ Proof.
   apply closed_empty.
 Qed.
 
+Lemma closure_Inhabited {X : TopologicalSpace} (U : Ensemble X) :
+  Inhabited (closure U) <-> Inhabited U.
+Proof.
+  split.
+  - intros [x Hx].
+    destruct (classic (Inhabited U)); auto.
+    apply not_inhabited_empty in H. subst.
+    rewrite closure_empty in Hx. contradiction.
+  - intros [x Hx]; exists x. apply closure_inflationary, Hx.
+Qed.
+
 Section interior_closure_relations.
 
 Definition idempotent {T:Type} (f:T->T) := forall x, f (f x) = f x.
