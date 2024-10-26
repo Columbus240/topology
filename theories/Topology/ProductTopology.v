@@ -395,11 +395,25 @@ Proof.
 Qed.
 
 Lemma EnsembleProduct_open {X Y : TopologicalSpace} (U : Ensemble X) (V : Ensemble Y) :
-open U -> open V -> @open (@ProductTopology2 X Y) (EnsembleProduct U V).
+  open U -> open V -> @open (@ProductTopology2 X Y) (EnsembleProduct U V).
 Proof.
 intros.
 apply ProductTopology2_basis_is_basis.
 constructor; assumption.
+Qed.
+
+Lemma EnsembleProduct_closed {X Y : TopologicalSpace}
+  (U : Ensemble X) (V : Ensemble Y) :
+  closed U -> closed V -> @closed (@ProductTopology2 X Y) (EnsembleProduct U V).
+Proof.
+intros. red.
+replace (@Complement (ProductTopology2 X Y) (@EnsembleProduct X Y U V)) with
+  (Union (EnsembleProduct Full_set (Complement V)) (EnsembleProduct (Complement U) Full_set)).
+2: symmetry; apply (EnsembleProduct_Complement U V).
+apply (@open_union2 (ProductTopology2 X Y)).
+all: apply ProductTopology2_basis_is_basis.
+all: constructor; try assumption.
+all: apply open_full.
 Qed.
 
 Lemma Hausdorff_ProductTopology2 {X Y : TopologicalSpace} :
