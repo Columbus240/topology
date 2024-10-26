@@ -1,6 +1,21 @@
-From Coq Require Import Reals.Ratan Lia Lra Logic.IndefiniteDescription Program.Subset.
-From ZornsLemma Require Import Quotients.
-From Topology Require Import ProductTopology AdjunctionSpace SubspaceTopology RTopology RFuncContinuity Homeomorphisms.
+(** Define the unit circle [S1] as [SubspaceTopology] of ℝ^2 ([R * R]), then
+  show that it is homeomorphic to a closed interval of [R] where the
+  ends are identified. *)
+From Coq Require Import
+  IndefiniteDescription
+  Lia
+  Lra
+  Program.Subset
+  Reals.Ratan.
+From ZornsLemma Require Import
+  Quotients.
+From Topology Require Import
+  AdjunctionSpace
+  Homeomorphisms
+  ProductTopology
+  RTopology
+  RFuncContinuity
+  SubspaceTopology.
 
 Section RealLemmas.
 
