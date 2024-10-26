@@ -268,21 +268,10 @@ split.
   apply Rabs_def1; lra.
 Qed.
 
-Lemma R_closed_interval_compact: forall a b:R, a <= b ->
-  compact (SubspaceTopology ([x:RTop | a <= x <= b])).
+Lemma R_closed_interval_closed (a b : R) :
+  closed [x:RTop | a <= x <= b].
 Proof.
-intros a b Hbound.
-apply net_cluster_point_impl_compact.
-intros.
-pose (y := fun i:I => proj1_sig (x i)).
-destruct (bounded_real_net_has_cluster_point _ y a b).
-{ intros.
-  unfold y.
-  destruct (x i).
-  now destruct i0.
-}
-assert (closed [x:RTop | a <= x <= b]).
-{ replace [x:RTop | a <= x <= b] with
+  replace [x:RTop | a <= x <= b] with
         (Intersection
           [ x:RTop | a <= x ]
           [ x:RTop | x <= b ]) by
@@ -291,18 +280,33 @@ assert (closed [x:RTop | a <= x <= b]).
   apply closed_intersection2.
   - apply upper_closed_ray_closed.
     + constructor; red; intros; auto with real.
-      apply Rle_trans with y0; trivial.
+      apply Rle_trans with y; trivial.
     + apply OrderTopology_orders_top.
     + intros.
-      destruct (total_order_T x1 y0) as [[|]|]; auto with real.
+      destruct (total_order_T x y) as [[|]|]; auto with real.
   - apply lower_closed_ray_closed.
     + constructor; red; intros; auto with real.
-      apply Rle_trans with y0; trivial.
+      apply Rle_trans with y; trivial.
     + apply OrderTopology_orders_top.
     + intros.
-      destruct (total_order_T x1 y0) as [[|]|]; auto with real. }
-assert (Ensembles.In [x:RTop | a <= x <= b] x0).
-{ rewrite <- (closure_fixes_closed _ H1).
+      destruct (total_order_T x y) as [[|]|]; auto with real.
+Qed.
+
+Lemma R_closed_interval_compact: forall a b:R, a <= b ->
+  compact (SubspaceTopology ([x:RTop | a <= x <= b])).
+Proof.
+intros a b Hbound.
+apply net_cluster_point_impl_compact.
+intros.
+pose (y := fun i:I => proj1_sig (x i)).
+destruct (bounded_real_net_has_cluster_point _ y a b) as [x0 Hx0].
+{ intros.
+  unfold y.
+  destruct (x i).
+  now destruct i0.
+}
+unshelve eexists (exist _ x0 _).
+{ rewrite <- (closure_fixes_closed _ (R_closed_interval_closed a b)).
   apply net_cluster_point_in_closure with y; trivial.
   destruct H as [i0].
   exists i0.
@@ -310,17 +314,17 @@ assert (Ensembles.In [x:RTop | a <= x <= b] x0).
   constructor.
   unfold y.
   destruct (x j).
-  now destruct i. }
-exists (exist _ x0 H2).
-red. intros.
-rewrite subspace_open_char in H3.
-destruct H3 as [V []].
+  now destruct i.
+}
+red. intros U HU_open HUx0.
+rewrite subspace_open_char in HU_open.
+destruct HU_open as [V [HV]].
 subst U.
-destruct H4.
+destruct HUx0.
 red. intros.
-assert (Ensembles.In V x0).
+assert (Ensembles.In V x0) as HVx0.
 { assumption. }
-destruct (H0 V H3 H4 i) as [j []].
+destruct (Hx0 V HV HVx0 i) as [j []].
 exists j.
 split; trivial.
 now constructor.
