@@ -780,3 +780,163 @@ Section Clamp.
     - apply rcbi_clamp_surj'.
   Qed.
 End Clamp.
+
+(** ** Pasting Paths *)
+Section PastingPaths.
+  (** Any two functions from closed intervals can be "pasted together",
+      if they agree at the "glueing point". *)
+
+  Context {I1 I2 : Rclosed_bnd_interval} {X : TopologicalSpace}
+    (f1 : I1 -> X) (f2 : I2 -> X)
+    (Hf1 : continuous f1) (Hf2 : continuous f2)
+    (Hf12 : f1 (rcbi_max' I1) = f2 (rcbi_min' I2)).
+
+  Context (I3 : Rclosed_bnd_interval) (t0 : I3)
+    (Ht0 : rcbi_min I3 < proj1_sig t0 < rcbi_max I3).
+
+  (** Goal is to define a continuous function [f3 : I3 -> X] which
+  behaves like [f1] from [rcbi_min I3] to [t0] and like [f2] from [t0]
+  to [rcbi_max I3]. *)
+
+  Definition path_paste : I3 -> X :=
+    fun t : I3 =>
+      match rcbi_split_dec t0 Ht0 t with
+      | inl t => f1 (@rcbi_map_ord_prsv'
+                      (rcbi_split_left t0 Ht0) I1 t)
+      | inr t => f2 (@rcbi_map_ord_prsv'
+                      (rcbi_split_right t0 Ht0) I2 t)
+      end.
+
+  Lemma path_paste_left (t : I3) (Ht : proj1_sig t <= proj1_sig t0) :
+    path_paste t =
+      f1 (@rcbi_map_ord_prsv'
+            (rcbi_split_left t0 Ht0) I1
+            (exist _ (proj1_sig t)
+                   (rcbi_split_dec_helper0 t0 Ht0 t Ht))).
+  Proof.
+    unfold path_paste, rcbi_split_dec.
+    cbn. destruct (Rle_lt_dec _ _); try lra.
+    2: {
+      exfalso. apply (Rlt_irrefl (proj1_sig t)).
+      eapply Rle_lt_trans; eassumption.
+    }
+    f_equal. f_equal. apply Subset.subset_eq. reflexivity.
+  Qed.
+
+  Lemma path_paste_right (t : I3) (Ht : proj1_sig t0 <= proj1_sig t) :
+    path_paste t =
+      f2 (@rcbi_map_ord_prsv'
+            (rcbi_split_right t0 Ht0) I2
+            (exist _ (proj1_sig t)
+                   (conj Ht (proj2 (proj2_sig t))))).
+  Proof.
+    unfold path_paste, rcbi_split_dec.
+    cbn. destruct (Rle_lt_dec _ _); try lra.
+    2: {
+      (* [t0 < t] *)
+      f_equal. f_equal. apply Subset.subset_eq. cbn. reflexivity.
+    }
+    (* [t0 = t] *)
+    pose proof (Rle_antisym _ _ Ht r) as Ht1.
+    cbn in *. destruct t as [t Ht2]. cbn in *.
+    subst t.
+    replace (exist _ (proj1_sig t0) _) with (rcbi_max' (rcbi_split_left t0 Ht0)).
+    2: {
+      apply Subset.subset_eq. cbn. reflexivity.
+    }
+    replace (exist _ (proj1_sig t0) _) with (rcbi_min' (rcbi_split_right t0 Ht0)).
+    2: {
+      apply Subset.subset_eq. cbn. reflexivity.
+    }
+    rewrite rcbi_map_ord_prsv_max', rcbi_map_ord_prsv_min'.
+    assumption.
+  Qed.
+
+  Lemma path_paste_min' :
+    path_paste (rcbi_min' I3) = f1 (rcbi_min' I1).
+  Proof.
+    unshelve erewrite path_paste_left.
+    { cbn in *; lra. }
+    cbn. f_equal.
+    rewrite <- (@rcbi_map_ord_prsv_min' (rcbi_split_left t0 Ht0) I1).
+    f_equal. apply Subset.subset_eq. reflexivity.
+  Qed.
+
+  Lemma path_paste_max' :
+    path_paste (rcbi_max' I3) = f2 (rcbi_max' I2).
+  Proof.
+    unshelve erewrite path_paste_right.
+    { cbn in *; lra. }
+    cbn. f_equal.
+    rewrite <- (@rcbi_map_ord_prsv_max' (rcbi_split_right t0 Ht0) I2).
+    f_equal. apply Subset.subset_eq. reflexivity.
+  Qed.
+
+  Lemma path_paste_mid1' :
+    path_paste t0 = f1 (rcbi_max' I1).
+  Proof.
+    unshelve erewrite path_paste_left.
+    { cbn in *; lra. }
+    cbn. f_equal.
+    rewrite <- (@rcbi_map_ord_prsv_max' (rcbi_split_left t0 Ht0) I1).
+    f_equal. apply Subset.subset_eq. reflexivity.
+  Qed.
+
+  Lemma path_paste_mid2' :
+    path_paste t0 = f2 (rcbi_min' I2).
+  Proof.
+    unshelve erewrite path_paste_right.
+    { cbn in *; lra. }
+    cbn. f_equal.
+    rewrite <- (@rcbi_map_ord_prsv_min' (rcbi_split_right t0 Ht0) I2).
+    f_equal. apply Subset.subset_eq. reflexivity.
+  Qed.
+
+  Lemma path_paste_continuous :
+    continuous path_paste.
+  Proof.
+    unshelve eapply
+      (@pasting_lemma_cts'
+         I3 X
+         (rcbi_split_left_ens t0 Ht0)
+         (rcbi_split_right_ens t0 Ht0)
+         (compose f1
+           (compose (@rcbi_map_ord_prsv' (rcbi_split_left t0 Ht0) I1)
+              (fun p : SubspaceTopology (rcbi_split_left_ens t0 Ht0) =>
+                 exist _ (proj1_sig (proj1_sig p)) _)))
+         (compose f2
+            (compose (@rcbi_map_ord_prsv' (rcbi_split_right t0 Ht0) I2)
+               (fun p => exist _ (proj1_sig (proj1_sig p)) _)))
+         path_paste
+      ).
+    - cbn. apply (proj2_sig p).
+    - cbn. apply (proj2_sig p).
+    - apply rcbi_split_ens_Union.
+    - intros [t Ht]. destruct Ht as [Ht]. cbn.
+      unshelve erewrite path_paste_left with (Ht := proj2 Ht).
+      unfold compose. f_equal. f_equal.
+      apply Subset.subset_eq. cbn. reflexivity.
+    - intros [t Ht]. destruct Ht as [Ht]. cbn.
+      unshelve erewrite path_paste_right with (Ht := proj1 Ht).
+      unfold compose. f_equal. f_equal.
+      apply Subset.subset_eq. cbn. reflexivity.
+    - apply rcbi_split_left_ens_closed.
+    - apply rcbi_split_right_ens_closed.
+    - apply (continuous_composition f1); auto.
+      apply (continuous_composition rcbi_map_ord_prsv').
+      1: apply rcbi_map_ord_prsv_cts'.
+      apply subspace_continuous_char. cbn.
+      unfold compose. cbn.
+      apply (@continuous_composition _ I3 RTop).
+      + apply (@subspace_inc_continuous RTop).
+      + apply (@subspace_inc_continuous I3).
+    - apply (continuous_composition f2); auto.
+      apply (continuous_composition rcbi_map_ord_prsv').
+      1: apply rcbi_map_ord_prsv_cts'.
+      apply subspace_continuous_char. cbn.
+      unfold compose. cbn.
+      apply (@continuous_composition _ I3 RTop).
+      + apply (@subspace_inc_continuous RTop).
+      + apply (@subspace_inc_continuous I3).
+  Qed.
+End PastingPaths.
