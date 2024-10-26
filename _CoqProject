@@ -39,6 +39,7 @@ theories/Topology/TotallyBounded.v
 theories/Topology/UniformTopology.v
 theories/Topology/UrysohnsLemma.v
 theories/Topology/WeakTopology.v
+theories/Topology/Examples/RealClosedBoundedInterval.v
 theories/Topology/Examples/S1.v
 theories/ZornsLemma/Cardinals.v
 theories/ZornsLemma/Cardinals/Cardinals.v
