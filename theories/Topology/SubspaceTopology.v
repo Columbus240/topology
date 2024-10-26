@@ -298,3 +298,48 @@ Section PastingLemma.
      + apply continuous_closed; assumption.
   Qed.
 End PastingLemma.
+
+Section PastingLemma_alt.
+  Context {X Y : TopologicalSpace} {A B : Ensemble X}
+    (f : SubspaceTopology A -> Y) (g : SubspaceTopology B -> Y)
+    (h : X -> Y)
+    (HAB : Union A B = Full_set)
+    (Hfh_compat : forall p, f p = h (proj1_sig p))
+    (Hgh_compat : forall p, g p = h (proj1_sig p)).
+
+  Lemma pasting_lemma_cts' :
+    closed A -> closed B ->
+    continuous f -> continuous g -> continuous h.
+  Proof using HAB Hfh_compat Hgh_compat.
+   intros HA HB Hf Hg.
+   apply continuous_closed.
+   intros U HU.
+   replace (inverse_image h U)
+     with
+     (Union
+        (Im (inverse_image f U) (subspace_inc _))
+        (Im (inverse_image g U) (subspace_inc _))).
+   1: {
+     apply closed_union2.
+     all: apply subspace_inc_takes_closed_to_closed; auto.
+     all: apply continuous_closed; auto.
+   }
+   apply Extensionality_Ensembles; split; red.
+   - intros x Hx. constructor.
+     destruct Hx as [x Hx|x Hx].
+     + destruct Hx as [p Hp x Hx].
+       subst x. unfold subspace_inc.
+       rewrite <- Hfh_compat. apply Hp.
+     + destruct Hx as [p Hp x Hx].
+       subst x. unfold subspace_inc.
+       rewrite <- Hgh_compat. apply Hp.
+   - intros x Hx.
+     destruct Hx as [Hx].
+     pose proof (Full_intro _ x) as Hx0.
+     rewrite <- HAB in Hx0. destruct Hx0 as [x HAx|x HBx].
+     + left. exists (exist _ x HAx); auto. constructor.
+       rewrite Hfh_compat. exact Hx.
+     + right. exists (exist _ x HBx); auto. constructor.
+       rewrite Hgh_compat. exact Hx.
+  Qed.
+End PastingLemma_alt.
