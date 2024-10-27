@@ -11,7 +11,7 @@ Lemma Rinv_0_le_compat (r : R) :
   0 <= r -> 0 <= / r.
 Proof.
   intros Hr.
-  destruct Hr.
+  destruct Hr as [H|H].
   - apply Rinv_0_lt_compat in H. left. assumption.
   - right. subst r. symmetry. apply Rinv_0.
 Qed.

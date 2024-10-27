@@ -18,15 +18,14 @@ Definition closure := FamilyIntersection
 Lemma interior_open : open interior.
 Proof.
 apply open_family_union.
-intros.
+intros ? H.
 now destruct H as [[]].
 Qed.
 
 Lemma interior_deflationary : Included interior S.
 Proof.
-red; intros.
-destruct H.
-destruct H as [[]]; auto with sets.
+red; intros ? H.
+destruct H as [? ? [[]]]; auto with sets.
 Qed.
 
 Lemma interior_fixes_open: open S -> interior = S.
@@ -43,7 +42,7 @@ Qed.
 Lemma interior_maximal: forall U:Ensemble X,
   open U -> Included U S -> Included U interior.
 Proof.
-intros.
+intros U **.
 red; intros.
 exists U; trivial.
 constructor; split; trivial.
@@ -52,7 +51,7 @@ Qed.
 Lemma closure_closed : closed closure.
 Proof.
 apply closed_family_intersection.
-intros.
+intros ? H.
 destruct H as [[]]; trivial.
 Qed.
 
@@ -72,8 +71,7 @@ intro.
 apply Extensionality_Ensembles.
 split.
 - red.
-  intros.
-  destruct H0.
+  intros ? [? H0].
   apply H0; split; auto with sets.
 - apply closure_inflationary.
 Qed.
@@ -83,8 +81,7 @@ Lemma closure_minimal: forall F:Ensemble X,
 Proof.
 intros.
 red.
-intros.
-destruct H1.
+intros ? [? H1].
 apply H1.
 constructor; split; trivial.
 Qed.
@@ -103,7 +100,7 @@ Lemma closure_Inhabited {X : TopologicalSpace} (U : Ensemble X) :
 Proof.
   split.
   - intros [x Hx].
-    destruct (classic (Inhabited U)); auto.
+    destruct (classic (Inhabited U)) as [H|H]; auto.
     apply not_inhabited_empty in H. subst.
     rewrite closure_empty in Hx. contradiction.
   - intros [x Hx]; exists x. apply closure_inflationary, Hx.
@@ -119,39 +116,22 @@ Variable X:TopologicalSpace.
 
 Lemma interior_idempotent : idempotent (@interior X).
 Proof.
-intro.
-apply Extensionality_Ensembles.
-split.
-- apply interior_deflationary.
-- red. intros.
-  econstructor; [ | eassumption ].
-  constructor.
-  split.
-  + apply interior_open.
-  + intro.
-    exact id.
+intros ?.
+apply interior_fixes_open.
+apply interior_open.
 Qed.
 
 Lemma closure_idempotent : idempotent (@closure X).
 Proof.
-intro.
-apply Extensionality_Ensembles.
-split.
-- red. intros.
-  destruct H.
-  apply H.
-  constructor.
-  split.
-  + apply closure_closed.
-  + red.
-    now intros.
-- apply closure_inflationary.
+intros ?.
+apply closure_fixes_closed.
+apply closure_closed.
 Qed.
 
 Lemma interior_increasing: forall S T:Ensemble X,
   Included S T -> Included (interior S) (interior T).
 Proof.
-intros.
+intros S T ?.
 apply interior_maximal.
 - apply interior_open.
 - assert (Included (interior S) S) by
@@ -163,7 +143,7 @@ Lemma interior_intersection: forall S T:Ensemble X,
   interior (Intersection S T) =
   Intersection (interior S) (interior T).
 Proof.
-intros.
+intros S T.
 apply Extensionality_Ensembles. split.
 - assert (Included (interior (Intersection S T)) (interior S)).
   { apply interior_increasing.
@@ -174,11 +154,11 @@ apply Extensionality_Ensembles. split.
   auto with sets.
 - apply interior_maximal.
   + apply open_intersection2; apply interior_open.
-  + pose proof (interior_deflationary S).
-    pose proof (interior_deflationary T).
+  + pose proof (interior_deflationary S) as HS.
+    pose proof (interior_deflationary T) as HT.
     red. intros x H1.
     constructor;
-      [ apply H | apply H0];
+      [ apply HS | apply HT ];
       now destruct H1.
 Qed.
 
@@ -186,7 +166,7 @@ Lemma interior_union: forall S T:Ensemble X,
   Included (Union (interior S) (interior T))
            (interior (Union S T)).
 Proof.
-intros.
+intros S T.
 apply interior_maximal.
 - apply open_union2; apply interior_open.
 - pose proof (interior_deflationary S).
@@ -207,7 +187,7 @@ Qed.
 Lemma interior_complement: forall S:Ensemble X,
   interior (Complement S) = Complement (closure S).
 Proof.
-intros.
+intros S.
 apply Extensionality_Ensembles; split.
 - rewrite <- Complement_Complement with (A:=interior (Complement S)).
   apply complement_inclusion.
@@ -228,7 +208,7 @@ Qed.
 Lemma closure_increasing: forall S T:Ensemble X,
   Included S T -> Included (closure S) (closure T).
 Proof.
-intros.
+intros S T ?.
 apply closure_minimal.
 - apply closure_closed.
 - pose proof (closure_inflationary T).
@@ -247,8 +227,8 @@ Qed.
 Lemma closure_complement: forall S:Ensemble X,
   closure (Complement S) = Complement (interior S).
 Proof.
-intros.
-pose proof (interior_complement (Complement S)).
+intros S.
+pose proof (interior_complement (Complement S)) as H.
 rewrite Complement_Complement in H.
 now rewrite H, Complement_Complement.
 Qed.
@@ -256,7 +236,7 @@ Qed.
 Lemma closure_union: forall S T:Ensemble X,
   closure (Union S T) = Union (closure S) (closure T).
 Proof.
-intros.
+intros S T.
 apply Extensionality_Ensembles; split.
 - apply closure_minimal.
   + apply closed_union2; apply closure_closed.
@@ -274,7 +254,7 @@ Lemma closure_intersection: forall S T:Ensemble X,
   Included (closure (Intersection S T))
            (Intersection (closure S) (closure T)).
 Proof.
-intros.
+intros S T.
 assert (Included (closure (Intersection S T)) (closure S)).
 { apply closure_increasing; auto with sets. }
 assert (Included (closure (Intersection S T)) (closure T)).
@@ -285,7 +265,7 @@ Qed.
 Lemma closure_interior_idempotent:
   idempotent (fun S => closure (@interior X S)).
 Proof.
-intro.
+intros A.
 extensionality_ensembles;
 apply H;
 constructor;
