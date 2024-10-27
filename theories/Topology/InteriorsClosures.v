@@ -174,34 +174,24 @@ apply interior_maximal.
   auto with sets.
 Qed.
 
-Lemma complement_inclusion: forall {Y:Type} (S T:Ensemble Y),
-  Included S T -> Included (Complement T) (Complement S).
-Proof.
-intros.
-red. intros.
-intro.
-contradiction H0.
-auto with sets.
-Qed.
-
 Lemma interior_complement: forall S:Ensemble X,
   interior (Complement S) = Complement (closure S).
 Proof.
 intros S.
 apply Extensionality_Ensembles; split.
 - rewrite <- Complement_Complement with (A:=interior (Complement S)).
-  apply complement_inclusion.
+  rewrite Complement_Included.
   apply closure_minimal.
   + red.
     rewrite Complement_Complement.
     apply interior_open.
   + pattern S at 1.
     rewrite <- Complement_Complement with (A:=S).
-    apply complement_inclusion.
+    rewrite Complement_Included.
     apply interior_deflationary.
 - apply interior_maximal.
   + apply closure_closed.
-  + apply complement_inclusion.
+  + apply Complement_Included.
     apply closure_inflationary.
 Qed.
 

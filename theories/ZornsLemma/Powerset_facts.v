@@ -91,6 +91,18 @@ apply Extensionality_Ensembles; split; red; intros.
 - intro. destruct H0.
 Qed.
 
+Lemma Complement_Included {X:Type} (S T:Ensemble X) :
+  Included (Complement T) (Complement S) <->
+    Included S T.
+Proof.
+  split.
+  - intros HTS x HSx.
+    apply NNPP. intros HTx.
+    exact (HTS x HTx HSx).
+  - intros HST x HTx HSx.
+    exact (HTx (HST x HSx)).
+Qed.
+
 Lemma False_Ensembles_eq (U V : Ensemble False) : U = V.
 Proof.
 apply Extensionality_Ensembles; split; red;
