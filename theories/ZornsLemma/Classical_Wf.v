@@ -22,26 +22,22 @@ Proof.
 unfold well_founded.
 unfold minimal_element_property.
 intros WF S Hinh.
-destruct Hinh.
-revert x H.
+destruct Hinh as [x Hx].
+revert x Hx.
 apply (@well_founded_ind T R WF
  (fun x:T =>
   In S x -> exists y:T, In S y /\ (forall z:T, In S z -> ~ R z y))).
-intros.
+intros x HI HSx.
 case (classic (forall y:T, In S y -> ~ R y x)).
-- exists x.
-  split.
-  + assumption.
-  + assumption.
-- intro.
+- exists x; split; assumption.
+- intro H1.
   apply not_all_ex_not in H1.
-  destruct H1.
+  destruct H1 as [x0 H1].
   apply imply_to_and in H1.
-  destruct H1.
-  apply H with x0.
-  + apply NNPP.
-    assumption.
-  + assumption.
+  destruct H1 as [H H0].
+  apply HI with x0.
+  + apply NNPP; exact H0.
+  + exact H.
 Qed.
 
 (* Prop. 2.1 from n-lab page "well-founded relation" 2021-11-21
@@ -53,22 +49,19 @@ Lemma MEP_inh_impl_LEM :
   (exists x y, R y x) ->
   (forall P : Prop, P \/ ~ P).
 Proof.
-  intros ? ? Q.
-  destruct H0 as [x [y Hxy]].
+  intros Hmep [x [y Hxy]] Q.
   pose (P := Union (Singleton x) (fun a => R y x /\ Q)).
-  specialize (H P).
-  destruct H as [x0].
+  specialize (Hmep P) as [x0 Hx0].
   { exists x. left. constructor. }
-  destruct H.
-  destruct H.
+  destruct Hx0 as [HPx0 Hx0_minimal].
+  destruct HPx0 as [x0 Hx0|x0 Hx0].
   2: {
-    left.
-    apply H.
+    left. apply Hx0.
   }
-  inversion H; subst; clear H.
+  destruct Hx0.
   right.
   intros ?.
-  unshelve eapply (H0 _ _ Hxy).
+  unshelve eapply (Hx0_minimal _ _ Hxy).
   right. split; assumption.
 Qed.
 

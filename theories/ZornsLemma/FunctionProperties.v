@@ -41,7 +41,7 @@ transitivity (g0 (f (g1 y))).
 Qed.
 
 Lemma unique_inverse: forall {X Y:Type} (f:X->Y), invertible f ->
-  exists! g:Y->X, inverse_map f g. 
+  exists! g:Y->X, inverse_map f g.
 Proof.
 intros X Y f [g Hfg].
 exists g.
@@ -60,44 +60,37 @@ Definition function_inverse {X Y:Type} (f:X->Y)
 Lemma bijective_impl_invertible: forall {X Y:Type} (f:X->Y),
   bijective f -> invertible f.
 Proof.
-intros.
-destruct H.
-assert (forall y:Y, {x:X | f x = y}).
-{ intro.
+intros X Y f [Hf_inj Hf_surj].
+assert (forall y:Y, {x:X | f x = y}) as G.
+{ intro y.
   apply constructive_definite_description.
-  pose proof (H0 y).
-  destruct H1.
+  destruct (Hf_surj y) as [x Hxy].
   exists x.
   red; split.
   - assumption.
-  - intros.
-    apply H.
-    transitivity y;
-      auto with *.
+  - intros x0 Hx0.
+    apply Hf_inj. congruence.
 }
-pose (g := fun y:Y => proj1_sig (X0 y)).
-pose proof (fun y:Y => proj2_sig (X0 y)).
-simpl in H1.
+pose (g := fun y:Y => proj1_sig (G y)).
+pose proof (fun y:Y => proj2_sig (G y)) as Hg.
+simpl in Hg.
 exists g. split.
 - intro.
-  apply H.
-  unfold g; rewrite H1.
+  apply Hf_inj.
+  unfold g; rewrite Hg.
   reflexivity.
-- intro.
-  unfold g; apply H1.
+- intro. apply Hg.
 Qed.
 
 Lemma invertible_impl_bijective: forall {X Y:Type} (f:X->Y),
   invertible f -> bijective f.
 Proof.
-intros.
-destruct H as [g []].
+intros X Y f [g [Hgf Hfg]].
 split.
 - red; intros.
   congruence.
-- red; intro.
-  exists (g y).
-  apply H0.
+- red; intro y.
+  exists (g y). auto.
 Qed.
 
 Lemma id_bijective: forall {X:Type},
@@ -106,7 +99,7 @@ Proof.
 intros.
 red; split; red; intros.
 - assumption.
-- exists y. reflexivity.
+- eexists; reflexivity.
 Qed.
 
 Lemma id_inverse_map (X : Type) :

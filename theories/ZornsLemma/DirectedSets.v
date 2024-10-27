@@ -12,9 +12,9 @@ Record DirectedSet := {
     DS_ord i k /\ DS_ord j k
 }.
 
-Arguments DS_ord {d}.
-Arguments DS_ord_cond {d}.
-Arguments DS_join_cond {d}.
+Arguments DS_ord {d} : rename.
+Arguments DS_ord_cond {d} : rename.
+Arguments DS_join_cond {d} : rename.
 
 Section for_large.
 
@@ -28,13 +28,12 @@ Lemma eventually_and: forall (P Q : I -> Prop),
   eventually P -> eventually Q ->
   eventually (fun i : I => P i /\ Q i).
 Proof.
-intros.
-destruct H, H0.
-destruct (DS_join_cond x x0) as [? [? ?]].
-exists x1.
+intros P Q [i HPi] [j HQj].
+destruct (DS_join_cond i j) as [k [? ?]].
+exists k.
 intros; split;
-[ apply H | apply H0 ];
-  apply preord_trans with x1;
+[ apply HPi | apply HQj ];
+  apply preord_trans with k;
   trivial;
   apply DS_ord_cond.
 Qed.
@@ -43,18 +42,15 @@ Lemma eventually_impl_base: forall (P Q : I -> Prop),
   (forall i : I, P i -> Q i) ->
   eventually P -> eventually Q.
 Proof.
-intros.
-destruct H0.
-exists x.
-intros.
-auto.
+intros P Q HPQ [i HPi].
+exists i. auto.
 Qed.
 
 Lemma eventually_impl: forall (P Q : I -> Prop),
   eventually P -> eventually (fun i : I => P i -> Q i) ->
   eventually Q.
 Proof.
-intros.
+intros P Q HP HPQ.
 apply eventually_impl_base with (P := fun (i : I) =>
   P i /\ (P i -> Q i)).
 - tauto.
@@ -78,13 +74,13 @@ Lemma not_eal_eventually_not: forall (P : I -> Prop),
   ~ exists_arbitrarily_large P ->
   eventually (fun i : I => ~ P i).
 Proof.
-intros.
-apply not_all_ex_not in H.
-destruct H as [i].
+intros P HP.
+apply not_all_ex_not in HP.
+destruct HP as [i HPi].
 exists i.
-intros.
+intros j **.
 intro.
-contradiction H.
+contradiction HPi.
 exists j; split; trivial.
 Qed.
 
@@ -92,14 +88,13 @@ Lemma not_eventually_eal_not: forall (P : I -> Prop),
   ~ eventually P ->
   exists_arbitrarily_large (fun i : I => ~ P i).
 Proof.
-intros.
-red; intros.
-apply NNPP; intro.
-contradiction H.
+intros P HP i.
+apply NNPP; intro Hn.
+contradiction HP.
 exists i.
-intros.
+intros j Hj.
 apply NNPP; intro.
-contradiction H0.
+contradiction Hn.
 now exists j.
 Qed.
 
@@ -118,7 +113,7 @@ Section nat_DS.
 Definition nat_DS : DirectedSet.
 refine (Build_DirectedSet nat le _ _).
 - constructor; red; lia.
-- intros.
+- intros i j.
   case (lt_eq_lt_dec i j).
   + intro s.
     exists j.
